@@ -1,15 +1,13 @@
 import { PrismaClient } from '@prisma/client'
-import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
-import path from 'path'
+import { PrismaPg } from '@prisma/adapter-pg'
 
 function createPrismaClient() {
-  const dbUrl = process.env.DATABASE_URL ?? 'file:./prisma/dev.db'
-  const dbFilePath = dbUrl.replace(/^file:/, '')
-  const absolutePath = path.isAbsolute(dbFilePath)
-    ? dbFilePath
-    : path.resolve(process.cwd(), dbFilePath)
+  const connectionString = process.env.DATABASE_URL
+  if (!connectionString) {
+    throw new Error('DATABASE_URL is not set')
+  }
 
-  const adapter = new PrismaBetterSqlite3({ url: absolutePath })
+  const adapter = new PrismaPg({ connectionString })
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return new PrismaClient({ adapter } as any)
 }
