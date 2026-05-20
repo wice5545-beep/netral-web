@@ -1,0 +1,32 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id        String    @id @default(cuid())
+  name      String?
+  email     String    @unique
+  password  String?
+  image     String?
+  role      String    @default("user")
+  onboarded Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  settings  Settings?
+}
+
+model Settings {
+  id              String  @id @default(cuid())
+  userId          String  @unique
+  user            User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  theme           String  @default("system")
+  language        String  @default("fr")
+  notifications   Boolean @default(true)
+  emailDigest     Boolean @default(false)
+  twoFactor       Boolean @default(false)
+  parentalEnabled Boolean @default(false)
+  storageLimit    Int     @default(5)
+}
