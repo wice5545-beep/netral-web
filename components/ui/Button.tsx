@@ -2,21 +2,29 @@ import { cn } from '@/lib/utils'
 import { ButtonHTMLAttributes, forwardRef } from 'react'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'outline'
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'outline' | 'glow'
   size?: 'sm' | 'md' | 'lg'
   loading?: boolean
 }
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = 'primary', size = 'md', loading, children, disabled, ...props }, ref) => {
-    const base = 'inline-flex items-center justify-center gap-2 font-medium rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2'
+    const base =
+      'relative inline-flex items-center justify-center gap-2 font-medium rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] active:scale-[0.98] select-none'
 
     const variants = {
-      primary: 'bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white focus-visible:ring-[var(--accent)]',
-      secondary: 'bg-[var(--background-secondary)] hover:bg-[var(--border)] text-[var(--foreground)] border border-[var(--border)]',
-      ghost: 'hover:bg-[var(--background-secondary)] text-[var(--foreground)]',
-      danger: 'bg-[var(--danger)] hover:opacity-90 text-white',
-      outline: 'border border-[var(--border)] hover:bg-[var(--background-secondary)] text-[var(--foreground)]',
+      primary:
+        'bg-[var(--foreground)] text-[var(--background)] hover:opacity-90 shadow-sm',
+      glow:
+        'bg-gradient-to-r from-[var(--gradient-1)] via-[var(--gradient-2)] to-[var(--gradient-3)] text-white shadow-[0_0_30px_var(--accent-glow)] hover:shadow-[0_0_50px_var(--accent-glow)] hover:brightness-110',
+      secondary:
+        'bg-[var(--background-elevated)] hover:bg-[var(--border)] text-[var(--foreground)] border border-[var(--border)]',
+      ghost:
+        'hover:bg-[var(--border)] text-[var(--foreground-secondary)] hover:text-[var(--foreground)]',
+      danger:
+        'bg-red-500 hover:bg-red-600 text-white',
+      outline:
+        'border border-[var(--border-strong)] hover:bg-[var(--border)] text-[var(--foreground)] backdrop-blur-sm',
     }
 
     const sizes = {

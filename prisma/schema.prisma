@@ -7,26 +7,53 @@ datasource db {
 }
 
 model User {
-  id        String    @id @default(cuid())
-  name      String?
-  email     String    @unique
-  password  String?
-  image     String?
-  role      String    @default("user")
-  onboarded Boolean   @default(false)
-  createdAt DateTime  @default(now())
-  settings  Settings?
+  id            String         @id @default(cuid())
+  name          String?
+  email         String         @unique
+  password      String?
+  image         String?
+  role          String         @default("user")
+  onboarded     Boolean        @default(false)
+  preferredModel String        @default("ntrl-1.3")
+  createdAt     DateTime       @default(now())
+  memory        Memory?
+  conversations Conversation[]
 }
 
-model Settings {
-  id              String  @id @default(cuid())
-  userId          String  @unique
-  user            User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  theme           String  @default("system")
-  language        String  @default("fr")
-  notifications   Boolean @default(true)
-  emailDigest     Boolean @default(false)
-  twoFactor       Boolean @default(false)
-  parentalEnabled Boolean @default(false)
-  storageLimit    Int     @default(5)
+model Memory {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName     String?
+  profession   String?
+  interests    String?
+  tone         String   @default("balanced")
+  customInstructions String?
+  updatedAt    DateTime @updatedAt
+}
+
+model Conversation {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String    @default("New chat")
+  model     String    @default("ntrl-1.3")
+  pinned    Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  messages  Message[]
+
+  @@index([userId, updatedAt])
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role           String
+  content        String
+  model          String?
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId, createdAt])
 }

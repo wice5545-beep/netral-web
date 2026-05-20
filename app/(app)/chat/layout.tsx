@@ -1,8 +1,9 @@
 import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/session'
 import { prisma } from '@/lib/prisma'
+import { AppShell } from '@/components/layout/AppShell'
 
-export default async function AppLayout({ children }: { children: React.ReactNode }) {
+export default async function ChatLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession()
   if (!session?.userId) redirect('/login')
 
@@ -12,6 +13,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   })
 
   if (!user) redirect('/login')
+  if (!user.onboarded) redirect('/onboarding')
 
-  return <>{children}</>
+  return <AppShell user={user}>{children}</AppShell>
 }

@@ -12,7 +12,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="flex flex-col gap-1.5">
         {label && (
-          <label htmlFor={id} className="text-sm font-medium text-[var(--foreground)]">
+          <label htmlFor={id} className="text-sm font-medium text-[var(--foreground-secondary)]">
             {label}
           </label>
         )}
@@ -26,19 +26,19 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             ref={ref}
             id={id}
             className={cn(
-              'w-full h-10 px-3 rounded-xl border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)] text-sm',
-              'placeholder:text-[var(--foreground-muted)]',
+              'w-full h-11 px-4 rounded-xl bg-[var(--background-elevated)] border border-[var(--border-strong)] text-[var(--foreground)] text-sm',
+              'placeholder:text-[var(--foreground-subtle)]',
               'focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent',
               'transition-all duration-200',
               'disabled:opacity-50 disabled:cursor-not-allowed',
-              error && 'border-[var(--danger)] focus:ring-[var(--danger)]',
+              error && 'border-red-500 focus:ring-red-500',
               icon && 'pl-10',
               className
             )}
             {...props}
           />
         </div>
-        {error && <p className="text-xs text-[var(--danger)]">{error}</p>}
+        {error && <p className="text-xs text-red-500">{error}</p>}
       </div>
     )
   }

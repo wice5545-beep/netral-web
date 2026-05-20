@@ -9,7 +9,7 @@ export default async function OnboardingPage() {
 
   const user = await prisma.user.findUnique({ where: { id: session.userId } })
   if (!user) redirect('/login')
-  if (user.onboarded) redirect('/dashboard')
+  if (user.onboarded) redirect('/chat')
 
-  return <OnboardingWizard userId={user.id} />
+  return <OnboardingWizard userId={user.id} defaultName={user.name ?? undefined} />
 }

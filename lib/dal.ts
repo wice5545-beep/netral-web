@@ -28,8 +28,9 @@ export const getUser = cache(async () => {
         image: true,
         role: true,
         onboarded: true,
+        preferredModel: true,
         createdAt: true,
-        settings: true,
+        memory: true,
       },
     })
   } catch {

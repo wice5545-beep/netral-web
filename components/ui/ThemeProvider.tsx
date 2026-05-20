@@ -1,19 +1,50 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState } from 'react'
+
+type Theme = 'light' | 'dark' | 'system'
+
+interface ThemeContextType {
+  theme: Theme
+  resolvedTheme: 'light' | 'dark'
+  setTheme: (theme: Theme) => void
+}
+
+const ThemeContext = createContext<ThemeContextType>({
+  theme: 'dark',
+  resolvedTheme: 'dark',
+  setTheme: () => {},
+})
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [mounted, setMounted] = useState(false)
+  const [theme, setThemeState] = useState<Theme>('dark')
+  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('dark')
 
   useEffect(() => {
-    setMounted(true)
-    const saved = localStorage.getItem('theme')
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-    const theme = saved ?? (prefersDark ? 'dark' : 'light')
-    document.documentElement.classList.toggle('dark', theme === 'dark')
+    const saved = (localStorage.getItem('theme') as Theme) ?? 'dark'
+    setThemeState(saved)
+    applyTheme(saved)
   }, [])
 
-  if (!mounted) return <>{children}</>
+  const applyTheme = (next: Theme) => {
+    const isDark =
+      next === 'dark' ||
+      (next === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+    document.documentElement.classList.toggle('dark', isDark)
+    setResolvedTheme(isDark ? 'dark' : 'light')
+  }
 
-  return <>{children}</>
+  const setTheme = (next: Theme) => {
+    setThemeState(next)
+    localStorage.setItem('theme', next)
+    applyTheme(next)
+  }
+
+  return (
+    <ThemeContext.Provider value={{ theme, resolvedTheme, setTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  )
 }
+
+export const useTheme = () => useContext(ThemeContext)

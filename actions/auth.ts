@@ -7,18 +7,18 @@ import { prisma } from '@/lib/prisma'
 import { createSession, deleteSession } from '@/lib/session'
 
 const SignupSchema = z.object({
-  name: z.string().min(2, 'Le nom doit faire au moins 2 caractères').trim(),
-  email: z.string().email('Email invalide').trim(),
+  name: z.string().min(2, 'Name must be at least 2 characters').trim(),
+  email: z.string().email('Invalid email').trim(),
   password: z
     .string()
-    .min(8, 'Au moins 8 caractères')
-    .regex(/[a-zA-Z]/, 'Doit contenir une lettre')
-    .regex(/[0-9]/, 'Doit contenir un chiffre'),
+    .min(8, 'At least 8 characters')
+    .regex(/[a-zA-Z]/, 'Must contain a letter')
+    .regex(/[0-9]/, 'Must contain a number'),
 })
 
 const LoginSchema = z.object({
-  email: z.string().email('Email invalide').trim(),
-  password: z.string().min(1, 'Mot de passe requis'),
+  email: z.string().email('Invalid email').trim(),
+  password: z.string().min(1, 'Password required'),
 })
 
 export type AuthState = {
@@ -43,17 +43,21 @@ export async function signup(state: AuthState, formData: FormData): Promise<Auth
   try {
     const existing = await prisma.user.findUnique({ where: { email } })
     if (existing) {
-      return { errors: { email: ['Cet email est déjà utilisé'] } }
+      return { errors: { email: ['This email is already in use'] } }
     }
 
     const user = await prisma.user.create({
       data: { name, email, password: hashedPassword },
     })
 
-    await prisma.settings.create({ data: { userId: user.id } })
+    // Seed memory with initial name
+    await prisma.memory.create({
+      data: { userId: user.id, fullName: name },
+    })
+
     await createSession(user.id)
   } catch {
-    return { message: 'Une erreur est survenue lors de la création du compte.' }
+    return { message: 'An error occurred while creating your account.' }
   }
 
   redirect('/onboarding')
@@ -73,12 +77,12 @@ export async function login(state: AuthState, formData: FormData): Promise<AuthS
 
   const user = await prisma.user.findUnique({ where: { email } })
   if (!user || !user.password) {
-    return { errors: { email: ['Email ou mot de passe incorrect'] } }
+    return { errors: { email: ['Invalid email or password'] } }
   }
 
   const valid = await bcrypt.compare(password, user.password)
   if (!valid) {
-    return { errors: { email: ['Email ou mot de passe incorrect'] } }
+    return { errors: { email: ['Invalid email or password'] } }
   }
 
   await createSession(user.id)
@@ -86,7 +90,7 @@ export async function login(state: AuthState, formData: FormData): Promise<AuthS
   if (!user.onboarded) {
     redirect('/onboarding')
   }
-  redirect('/dashboard')
+  redirect('/chat')
 }
 
 export async function logout() {
@@ -94,10 +98,32 @@ export async function logout() {
   redirect('/login')
 }
 
-export async function completeOnboarding(userId: string) {
+export async function completeOnboarding(data: {
+  userId: string
+  fullName?: string
+  profession?: string
+  interests?: string
+  tone?: string
+}) {
+  await prisma.memory.upsert({
+    where: { userId: data.userId },
+    update: {
+      fullName: data.fullName ?? null,
+      profession: data.profession ?? null,
+      interests: data.interests ?? null,
+      tone: data.tone ?? 'balanced',
+    },
+    create: {
+      userId: data.userId,
+      fullName: data.fullName ?? null,
+      profession: data.profession ?? null,
+      interests: data.interests ?? null,
+      tone: data.tone ?? 'balanced',
+    },
+  })
   await prisma.user.update({
-    where: { id: userId },
+    where: { id: data.userId },
     data: { onboarded: true },
   })
-  redirect('/dashboard')
+  redirect('/chat')
 }
