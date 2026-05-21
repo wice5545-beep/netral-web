@@ -122,7 +122,9 @@ export async function POST(req: NextRequest) {
         model: model.upstreamModel,
         messages: [
           { role: 'system', content: systemPrompt },
-          ...messages.map((m) => ({ role: m.role, content: m.content })),
+          ...messages
+            .filter((m) => m.content.trim() !== '')
+            .map((m) => ({ role: m.role, content: m.content })),
         ],
         stream: true,
         temperature: 0.7,
