@@ -17,13 +17,11 @@ interface MessageProps {
   userInitial?: string
 }
 
-// Extraire les sources de la section markdown "Sources :"
 function extractSources(content: string): { title: string; url: string; domain: string }[] {
   const sourcesMatch = content.match(/\*\*Sources\s*:\*\*\n([\s\S]+?)(?:\n\n|$)/)
   if (!sourcesMatch) return []
-
-  const lines = sourcesMatch[1].split('\n')
-  return lines
+  return sourcesMatch[1]
+    .split('\n')
     .map((line) => {
       const match = line.match(/\d+\.\s+\[([^\]]+)\]\(([^)]+)\)/)
       if (!match) return null
@@ -35,7 +33,6 @@ function extractSources(content: string): { title: string; url: string; domain: 
     .filter(Boolean) as { title: string; url: string; domain: string }[]
 }
 
-// Contenu sans la section sources (elle est affichée en cartes)
 function contentWithoutSources(content: string): string {
   return content.replace(/\n\n---\n\*\*Sources\s*:\*\*\n[\s\S]+$/, '').trim()
 }
@@ -60,10 +57,10 @@ export function Message({ role, content, isStreaming, isLast, onRegenerate, user
         className="flex justify-end mb-6 group"
       >
         <div className="flex gap-3 max-w-[85%] md:max-w-[75%] items-start">
-          <div className="rounded-2xl rounded-tr-md px-4 py-2.5 bg-blue-50 dark:bg-[var(--accent-soft)] border border-blue-200/60 dark:border-[var(--accent)]/20 text-gray-900 dark:text-[var(--foreground)] text-sm leading-relaxed whitespace-pre-wrap break-words">
+          <div className="rounded-2xl rounded-tr-md px-4 py-2.5 bg-[#fdfaf5] border border-orange-100/80 text-gray-900 dark:text-[var(--foreground)] text-sm leading-relaxed whitespace-pre-wrap break-words">
             {content}
           </div>
-          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white text-xs font-semibold shrink-0 mt-0.5">
+          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-xs font-bold shrink-0 mt-0.5">
             {userInitial?.toUpperCase() ?? 'U'}
           </div>
         </div>
@@ -93,7 +90,6 @@ export function Message({ role, content, isStreaming, isLast, onRegenerate, user
             <Markdown content={displayContent} />
             {isStreaming && <span className="stream-cursor" />}
 
-            {/* Sources cards */}
             {!isStreaming && sources.length > 0 && (
               <motion.div
                 initial={{ opacity: 0, y: 6 }}
@@ -112,14 +108,13 @@ export function Message({ role, content, isStreaming, isLast, onRegenerate, user
                       target="_blank"
                       rel="noopener noreferrer"
                       className={cn(
-                        'group/src flex items-center gap-2 px-3 py-1.5 rounded-xl',
+                        'group/src flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs',
                         'bg-white dark:bg-[var(--background-elevated)]',
-                        'border border-gray-200 dark:border-[var(--border)]',
-                        'hover:border-blue-300 dark:hover:border-[var(--accent)]/40',
-                        'hover:shadow-sm transition-all text-xs'
+                        'border border-gray-100 dark:border-[var(--border)]',
+                        'hover:border-orange-200 dark:hover:border-[var(--accent)]/40',
+                        'hover:shadow-sm hover:shadow-orange-50/60 transition-all'
                       )}
                     >
-                      {/* Favicon via Google */}
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={`https://www.google.com/s2/favicons?domain=${s.domain}&sz=32`}
@@ -127,11 +122,11 @@ export function Message({ role, content, isStreaming, isLast, onRegenerate, user
                         className="w-3.5 h-3.5 rounded-sm"
                         onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
                       />
-                      <span className="text-gray-600 dark:text-[var(--foreground-muted)] group-hover/src:text-blue-600 dark:group-hover/src:text-[var(--accent)] transition-colors font-medium truncate max-w-[140px]">
+                      <span className="text-gray-600 dark:text-[var(--foreground-muted)] group-hover/src:text-orange-500 dark:group-hover/src:text-[var(--accent)] transition-colors font-medium truncate max-w-[140px]">
                         {s.domain}
                       </span>
-                      <span className="text-blue-500 dark:text-[var(--accent)] text-[9px] font-bold">[{i + 1}]</span>
-                      <ExternalLink size={10} className="text-gray-300 group-hover/src:text-blue-400 transition-colors shrink-0" />
+                      <span className="text-orange-400 dark:text-[var(--accent)] text-[9px] font-bold">[{i + 1}]</span>
+                      <ExternalLink size={10} className="text-gray-300 group-hover/src:text-orange-400 transition-colors shrink-0" />
                     </a>
                   ))}
                 </div>

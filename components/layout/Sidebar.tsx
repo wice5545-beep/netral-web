@@ -99,15 +99,15 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
                 className={cn(
                   'group flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all duration-150',
                   isActive
-                    ? 'bg-blue-50 dark:bg-[var(--border)] text-blue-700 dark:text-[var(--foreground)]'
-                    : 'text-gray-600 dark:text-[var(--foreground-muted)] hover:bg-gray-100 dark:hover:bg-[var(--border)] hover:text-gray-900 dark:hover:text-[var(--foreground)]'
+                    ? 'bg-orange-50 dark:bg-[var(--border)] text-orange-700 dark:text-[var(--foreground)] font-medium'
+                    : 'text-gray-600 dark:text-[var(--foreground-muted)] hover:bg-white dark:hover:bg-[var(--border)] hover:text-gray-900 dark:hover:text-[var(--foreground)]'
                 )}
               >
-                {c.pinned && <Pin size={11} className="shrink-0 text-blue-500" />}
+                {c.pinned && <Pin size={11} className="shrink-0 text-orange-400" />}
                 <span className="flex-1 truncate">{c.title}</span>
                 <button
                   onClick={(e) => handleDelete(c.id, e)}
-                  className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-100 hover:text-red-600 transition-all"
+                  className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-100 hover:text-red-500 transition-all"
                 >
                   <Trash2 size={11} />
                 </button>
@@ -130,12 +130,11 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             onClick={() => setSidebarOpen(false)}
-            className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 md:hidden"
+            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 md:hidden"
           />
         )}
       </AnimatePresence>
 
-      {/* Sidebar */}
       <motion.aside
         animate={{
           x: sidebarOpen ? 0 : isMobile ? '-100%' : 0,
@@ -143,9 +142,8 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
         }}
         transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
         className={cn(
-          'fixed md:relative top-0 left-0 z-50 h-screen flex flex-col',
-          'bg-[var(--sidebar-bg)] border-r border-gray-200 dark:border-[var(--border)]',
-          'shrink-0 overflow-hidden'
+          'fixed md:relative top-0 left-0 z-50 h-screen flex flex-col shrink-0 overflow-hidden',
+          'bg-[var(--sidebar-bg)] border-r border-orange-100/60 dark:border-[var(--border)]',
         )}
       >
         {/* Header */}
@@ -154,11 +152,11 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
             <>
               <Link href="/chat" className="flex items-center gap-2 px-1">
                 <NetralLogo size={22} />
-                <span className="font-semibold tracking-tight text-gray-900 dark:text-[var(--foreground)]">Netral</span>
+                <span className="font-bold tracking-tight text-gray-900 dark:text-[var(--foreground)]">Netral</span>
               </Link>
               <button
                 onClick={() => setSidebarOpen(false)}
-                className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-[var(--border)] text-gray-400 transition-colors"
+                className="p-1.5 rounded-lg hover:bg-orange-100 dark:hover:bg-[var(--border)] text-gray-400 transition-colors"
               >
                 {isMobile ? <X size={16} /> : <ChevronLeft size={16} />}
               </button>
@@ -166,7 +164,7 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
           ) : (
             <button
               onClick={() => setSidebarOpen(true)}
-              className="mx-auto p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-[var(--border)] text-gray-400 transition-colors"
+              className="mx-auto p-1.5 rounded-lg hover:bg-orange-100 dark:hover:bg-[var(--border)] text-gray-400 transition-colors"
             >
               <ChevronRight size={16} />
             </button>
@@ -179,7 +177,7 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
             <div className="px-3 space-y-2 shrink-0">
               <button
                 onClick={handleNewChat}
-                className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white transition-colors shadow-sm shadow-blue-500/20"
+                className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-colors shadow-sm shadow-orange-300/30"
               >
                 <Plus size={14} />
                 Nouvelle conversation
@@ -192,7 +190,7 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
                   placeholder="Rechercher…"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full pl-8 pr-3 h-8.5 py-2 rounded-lg bg-white dark:bg-[var(--background-elevated)] border border-gray-200 dark:border-[var(--border)] text-sm text-gray-700 dark:text-[var(--foreground)] placeholder:text-gray-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 dark:focus:ring-0 transition-all"
+                  className="w-full pl-8 pr-3 py-2 h-9 rounded-lg bg-white dark:bg-[var(--background-elevated)] border border-orange-100 dark:border-[var(--border)] text-sm text-gray-700 dark:text-[var(--foreground)] placeholder:text-gray-400 focus:outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100 dark:focus:ring-0 transition-all"
                 />
               </div>
             </div>
@@ -224,16 +222,16 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
             </div>
 
             {/* Profile */}
-            <div className="p-2 border-t border-gray-200 dark:border-[var(--border)] shrink-0 relative">
+            <div className="p-2 border-t border-orange-100/60 dark:border-[var(--border)] shrink-0 relative">
               <button
                 onClick={() => setProfileMenuOpen(!profileMenuOpen)}
-                className="w-full flex items-center gap-2.5 px-2 py-2 rounded-xl hover:bg-gray-100 dark:hover:bg-[var(--border)] transition-colors"
+                className="w-full flex items-center gap-2.5 px-2 py-2 rounded-xl hover:bg-orange-50 dark:hover:bg-[var(--border)] transition-colors"
               >
-                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white text-xs font-semibold shrink-0">
+                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
                   {user.name?.[0]?.toUpperCase() ?? user.email[0].toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0 text-left">
-                  <p className="text-sm font-medium text-gray-800 dark:text-[var(--foreground)] truncate">{user.name ?? 'Utilisateur'}</p>
+                  <p className="text-sm font-semibold text-gray-800 dark:text-[var(--foreground)] truncate">{user.name ?? 'Utilisateur'}</p>
                   <p className="text-xs text-gray-400 truncate">{user.email}</p>
                 </div>
                 <MoreHorizontal size={14} className="text-gray-400 shrink-0" />
@@ -246,11 +244,11 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 8, scale: 0.97 }}
                     transition={{ duration: 0.15 }}
-                    className="absolute bottom-full left-2 right-2 mb-1 bg-white dark:bg-[var(--background-elevated)] rounded-xl py-1 border border-gray-200 dark:border-[var(--border-strong)] shadow-xl"
+                    className="absolute bottom-full left-2 right-2 mb-1 bg-white dark:bg-[var(--background-elevated)] rounded-xl py-1 border border-gray-100 dark:border-[var(--border-strong)] shadow-xl shadow-orange-100/30"
                   >
                     <button
                       onClick={() => { setProfileMenuOpen(false); onOpenSettings() }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 dark:text-[var(--foreground-secondary)] hover:bg-gray-50 dark:hover:bg-[var(--border)] transition-colors"
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 dark:text-[var(--foreground-secondary)] hover:bg-orange-50 dark:hover:bg-[var(--border)] transition-colors"
                     >
                       <Settings size={14} />
                       Paramètres
@@ -274,7 +272,7 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
       {!sidebarOpen && isMobile && (
         <button
           onClick={() => setSidebarOpen(true)}
-          className="fixed top-3 left-3 z-40 p-2 rounded-xl bg-white border border-gray-200 shadow-md"
+          className="fixed top-3 left-3 z-40 p-2 rounded-xl bg-white border border-orange-100 shadow-md"
         >
           <Menu size={18} className="text-gray-600" />
         </button>

@@ -247,9 +247,9 @@ export function ChatInterface({
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.4, delay: 0.1 + i * 0.06 }}
                       onClick={() => handleSubmit(s.text)}
-                      className="group flex items-start gap-3 p-4 rounded-xl bg-white dark:bg-[var(--background-elevated)] border border-gray-200 dark:border-[var(--border)] hover:border-blue-300 dark:hover:border-[var(--accent)]/40 hover:shadow-md shadow-sm transition-all text-left"
+                      className="group flex items-start gap-3 p-4 rounded-xl bg-white dark:bg-[var(--background-elevated)] border border-gray-100 dark:border-[var(--border)] hover:border-orange-200 dark:hover:border-[var(--accent)]/40 hover:shadow-md hover:shadow-orange-50/60 shadow-sm transition-all text-left"
                     >
-                      <Icon size={15} className="text-blue-500 dark:text-[var(--accent)] mt-0.5 shrink-0" />
+                      <Icon size={15} className="text-orange-400 dark:text-[var(--accent)] mt-0.5 shrink-0" />
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-medium text-gray-400 dark:text-[var(--foreground-muted)] mb-0.5">{s.label}</p>
                         <p className="text-sm text-gray-800 dark:text-[var(--foreground)] line-clamp-2">{s.text}</p>
@@ -285,7 +285,7 @@ export function ChatInterface({
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            className="flex items-center justify-center gap-2 text-sm text-blue-600 dark:text-blue-400 font-medium mb-3 pointer-events-none"
+            className="flex items-center justify-center gap-2 text-sm text-orange-500 dark:text-orange-400 font-medium mb-3 pointer-events-none"
           >
             {(() => {
               const s = searchStatusLabels[searchStatus]

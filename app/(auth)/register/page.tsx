@@ -15,20 +15,24 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen flex bg-white">
       {/* Left — Visual */}
-      <div className="hidden lg:flex flex-1 bg-gradient-to-br from-blue-600 to-blue-800 items-center justify-center relative overflow-hidden">
-        <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 30% 60%, rgba(96,165,250,0.3) 0%, transparent 60%)' }} />
+      <div className="hidden lg:flex flex-1 items-center justify-center relative overflow-hidden"
+        style={{ background: 'linear-gradient(135deg, #fff7ed 0%, #fef3e2 50%, #fdf0d5 100%)' }}>
+        <div
+          className="absolute inset-0"
+          style={{ background: 'radial-gradient(ellipse at 40% 50%, rgba(249,115,22,0.12) 0%, transparent 60%)' }}
+        />
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-          className="relative z-10 px-14 text-white"
+          className="relative z-10 px-14"
         >
-          <NetralLogo size={56} animated />
-          <h2 className="text-3xl font-semibold mt-8 mb-4 leading-snug">
+          <NetralLogo size={52} animated />
+          <h2 className="text-3xl font-bold mt-8 mb-4 leading-snug text-gray-900">
             L&apos;IA qui<br />recherche pour vous.
           </h2>
-          <p className="text-blue-100 text-base leading-relaxed max-w-xs mb-10">
-            Créez votre compte et accédez à un assistant IA qui explore Internet en temps réel.
+          <p className="text-gray-500 text-base leading-relaxed max-w-xs mb-10">
+            Créez votre compte et accédez à un assistant qui explore Internet en temps réel.
           </p>
           <div className="space-y-3">
             {[
@@ -38,10 +42,10 @@ export default function RegisterPage() {
               'Gratuit et sans limite',
             ].map((item) => (
               <div key={item} className="flex items-center gap-3">
-                <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center shrink-0">
-                  <Check size={11} className="text-white" />
+                <div className="w-5 h-5 rounded-full bg-orange-100 border border-orange-200 flex items-center justify-center shrink-0">
+                  <Check size={10} className="text-orange-500" />
                 </div>
-                <span className="text-sm text-blue-50">{item}</span>
+                <span className="text-sm text-gray-600 font-medium">{item}</span>
               </div>
             ))}
           </div>
@@ -49,23 +53,28 @@ export default function RegisterPage() {
       </div>
 
       {/* Right — Form */}
-      <div className="flex-1 flex flex-col items-center justify-center px-8 py-12 lg:px-16">
+      <div className="flex-1 flex flex-col items-center justify-center px-8 py-12 lg:px-16 relative">
+        <div
+          className="absolute bottom-0 left-0 w-80 h-80 rounded-full pointer-events-none"
+          style={{ background: 'radial-gradient(circle, rgba(254,215,170,0.3) 0%, transparent 70%)', filter: 'blur(60px)' }}
+        />
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="w-full max-w-sm"
+          className="w-full max-w-sm relative z-10"
         >
-          <Link href="/" className="flex items-center gap-2 mb-10 lg:hidden">
+          <Link href="/" className="flex items-center gap-2 mb-12 lg:hidden">
             <NetralLogo size={26} />
-            <span className="font-semibold text-gray-900">Netral</span>
+            <span className="font-bold text-gray-900">Netral</span>
           </Link>
 
-          <h1 className="text-2xl font-semibold text-gray-900 mb-1 tracking-tight">Créer votre compte</h1>
-          <p className="text-sm text-gray-500 mb-8">Gratuit · Sans carte bancaire</p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-1 tracking-tight">Créer votre compte</h1>
+          <p className="text-sm text-gray-500 mb-8">Gratuit · Sans carte bancaire · 1 minute</p>
 
           {state?.message && (
-            <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm">
+            <div className="mb-5 p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm">
               {state.message}
             </div>
           )}
@@ -75,7 +84,7 @@ export default function RegisterPage() {
               id="name"
               name="name"
               type="text"
-              placeholder="Votre nom"
+              placeholder="Votre prénom"
               icon={<User size={15} />}
               error={state?.errors?.name?.[0]}
               autoComplete="name"
@@ -104,7 +113,7 @@ export default function RegisterPage() {
 
             <Button
               type="submit"
-              className="w-full rounded-xl py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium gap-2 border-0 mt-1"
+              className="w-full rounded-xl py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold gap-2 border-0 mt-2 shadow-lg shadow-orange-200/50"
               loading={pending}
             >
               Créer mon compte
@@ -121,7 +130,7 @@ export default function RegisterPage() {
 
           <div className="mt-6 pt-6 border-t border-gray-100 text-sm text-center text-gray-500">
             Déjà un compte ?{' '}
-            <Link href="/login" className="text-blue-600 hover:text-blue-700 font-medium">
+            <Link href="/login" className="text-orange-500 hover:text-orange-600 font-semibold">
               Se connecter
             </Link>
           </div>

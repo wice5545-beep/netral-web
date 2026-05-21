@@ -16,8 +16,8 @@ export function NetralLogo({ size = 32, className, animated = false, withText = 
       {animated && (
         <motion.div
           className="absolute inset-0 rounded-full"
-          style={{ filter: `blur(${size * 0.3}px)`, background: 'radial-gradient(circle at 40% 35%, #60a5fa, #2563eb)' }}
-          animate={{ scale: [1, 1.25, 1], opacity: [0.45, 0.7, 0.45] }}
+          style={{ filter: `blur(${size * 0.32}px)`, background: 'radial-gradient(circle at 40% 35%, #fb923c, #f97316)' }}
+          animate={{ scale: [1, 1.28, 1], opacity: [0.4, 0.65, 0.4] }}
           transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
         />
       )}
@@ -26,22 +26,21 @@ export function NetralLogo({ size = 32, className, animated = false, withText = 
         style={{
           width: size,
           height: size,
-          background: 'linear-gradient(135deg, #60a5fa 0%, #2563eb 45%, #1d4ed8 100%)',
-          boxShadow: `0 ${size * 0.1}px ${size * 0.5}px rgba(37,99,235,0.35)`,
+          background: 'linear-gradient(135deg, #fb923c 0%, #f97316 45%, #ea580c 100%)',
+          boxShadow: `0 ${size * 0.1}px ${size * 0.5}px rgba(249,115,22,0.32)`,
         }}
       >
-        {/* Subtle glare */}
+        {/* glare */}
         <div
           className="absolute rounded-full"
           style={{
             top: size * 0.08,
-            left: size * 0.15,
-            width: size * 0.45,
-            height: size * 0.3,
-            background: 'radial-gradient(ellipse, rgba(255,255,255,0.45) 0%, transparent 80%)',
+            left: size * 0.14,
+            width: size * 0.44,
+            height: size * 0.28,
+            background: 'radial-gradient(ellipse, rgba(255,255,255,0.42) 0%, transparent 80%)',
           }}
         />
-        {/* N letter */}
         <span
           style={{
             fontSize: size * 0.46,
@@ -49,7 +48,7 @@ export function NetralLogo({ size = 32, className, animated = false, withText = 
             color: 'white',
             lineHeight: 1,
             letterSpacing: '-0.03em',
-            textShadow: '0 1px 4px rgba(0,0,0,0.25)',
+            textShadow: '0 1px 4px rgba(0,0,0,0.2)',
             fontFamily: 'var(--font-inter), system-ui, sans-serif',
           }}
         >
