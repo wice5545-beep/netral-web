@@ -15,70 +15,61 @@ export interface WebSearchResponse {
 }
 
 /**
- * Hiérarchie des providers (du plus généreux au plus limité) :
- * 1. Jina AI Search   — sans clé : ~20 req/min = ~864k req/mois GRATUIT
- * 2. Brave Search     — avec BRAVE_API_KEY : 2 000 req/mois gratuit
- * 3. Tavily           — avec TAVILY_API_KEY : 1 000 req/mois gratuit
- * 4. DuckDuckGo HTML  — sans clé, illimité (fallback ultime)
+ * Provider hierarchy:
+ * 1. Tavily (TAVILY_API_KEY) — 1 000 req/month
+ * 2. Brave  (BRAVE_API_KEY)  — 2 000 req/month
+ * 3. Jina AI Search          — ~864k req/month gratuit
+ * 4. SearXNG public          — illimité (méta-moteur)
+ * 5. DuckDuckGo HTML         — fallback ultime
  */
 export async function webSearch(query: string, maxResults = 5): Promise<WebSearchResponse> {
-  // Tavily ou Brave en priorité si clé dispo (meilleure qualité)
   if (process.env.TAVILY_API_KEY) {
-    try {
-      return await tavilySearch(query, process.env.TAVILY_API_KEY, maxResults)
-    } catch { /* fallback */ }
+    try { return await tavilySearch(query, process.env.TAVILY_API_KEY, maxResults) }
+    catch (e) { console.error('[search] Tavily failed:', e) }
   }
 
   if (process.env.BRAVE_API_KEY) {
-    try {
-      return await braveSearch(query, process.env.BRAVE_API_KEY, maxResults)
-    } catch { /* fallback */ }
+    try { return await braveSearch(query, process.env.BRAVE_API_KEY, maxResults) }
+    catch (e) { console.error('[search] Brave failed:', e) }
   }
 
-  // Jina AI Search — par défaut, gratuit, très généreux
-  try {
-    return await jinaSearch(query, maxResults)
-  } catch { /* fallback */ }
+  try { return await jinaSearch(query, maxResults) }
+  catch (e) { console.error('[search] Jina failed:', e) }
 
-  // DuckDuckGo HTML — fallback ultime, illimité
+  try { return await searxngSearch(query, maxResults) }
+  catch (e) { console.error('[search] SearXNG failed:', e) }
+
   return duckduckgoSearch(query, maxResults)
 }
 
 // ─── Providers ────────────────────────────────────────────────────────────────
 
-async function jinaSearch(query: string, maxResults: number): Promise<WebSearchResponse> {
-  const encoded = encodeURIComponent(query)
-  const jinaKey = process.env.JINA_API_KEY
-
-  const headers: Record<string, string> = {
-    Accept: 'application/json',
-    'X-Return-Format': 'json',
-  }
-  if (jinaKey) headers['Authorization'] = `Bearer ${jinaKey}`
-
-  const res = await fetch(`https://s.jina.ai/${encoded}`, {
-    headers,
-    signal: AbortSignal.timeout(12000),
+async function tavilySearch(query: string, apiKey: string, maxResults: number): Promise<WebSearchResponse> {
+  const res = await fetch('https://api.tavily.com/search', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({ query, max_results: maxResults, include_answer: false }),
+    signal: AbortSignal.timeout(10000),
   })
 
-  if (!res.ok) throw new Error(`Jina ${res.status}`)
+  if (!res.ok) throw new Error(`Tavily ${res.status}: ${await res.text().catch(() => '')}`)
 
   const data = await res.json()
-
-  // Jina JSON format: { data: [{ title, url, description, content }] }
-  const items: { title?: string; url?: string; description?: string; content?: string }[] =
-    data?.data ?? data?.results ?? []
-
-  if (items.length === 0) throw new Error('Jina: no results')
+  const results = data.results ?? []
+  if (results.length === 0) throw new Error('Tavily: no results')
 
   return {
     query,
-    provider: 'jina',
-    results: items.slice(0, maxResults).map((r) => ({
-      title: r.title ?? '',
-      url: r.url ?? '',
-      snippet: (r.description ?? r.content ?? '').slice(0, 300),
-      domain: extractDomain(r.url ?? ''),
+    provider: 'tavily',
+    results: results.map((r: { title: string; url: string; content: string; published_date?: string }) => ({
+      title: r.title,
+      url: r.url,
+      snippet: (r.content ?? '').slice(0, 300),
+      domain: extractDomain(r.url),
+      publishedDate: r.published_date,
     })),
   }
 }
@@ -97,8 +88,8 @@ async function braveSearch(query: string, apiKey: string, maxResults: number): P
   if (!res.ok) throw new Error(`Brave ${res.status}`)
 
   const data = await res.json()
-  const items: { title?: string; url?: string; description?: string }[] =
-    data?.web?.results ?? []
+  const items: { title?: string; url?: string; description?: string }[] = data?.web?.results ?? []
+  if (items.length === 0) throw new Error('Brave: no results')
 
   return {
     query,
@@ -112,36 +103,83 @@ async function braveSearch(query: string, apiKey: string, maxResults: number): P
   }
 }
 
-async function tavilySearch(query: string, apiKey: string, maxResults: number): Promise<WebSearchResponse> {
-  const res = await fetch('https://api.tavily.com/search', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ api_key: apiKey, query, max_results: maxResults, include_answer: false }),
-    signal: AbortSignal.timeout(10000),
+async function jinaSearch(query: string, maxResults: number): Promise<WebSearchResponse> {
+  const encoded = encodeURIComponent(query)
+  const jinaKey = process.env.JINA_API_KEY
+
+  const headers: Record<string, string> = {
+    Accept: 'application/json',
+    'X-Return-Format': 'json',
+  }
+  if (jinaKey) headers['Authorization'] = `Bearer ${jinaKey}`
+
+  const res = await fetch(`https://s.jina.ai/${encoded}`, {
+    headers,
+    signal: AbortSignal.timeout(15000),
   })
 
-  if (!res.ok) throw new Error(`Tavily ${res.status}`)
+  if (!res.ok) throw new Error(`Jina ${res.status}`)
 
   const data = await res.json()
+  const items: { title?: string; url?: string; description?: string; content?: string }[] =
+    Array.isArray(data?.data) ? data.data :
+    Array.isArray(data?.results) ? data.results :
+    Array.isArray(data) ? data : []
+
+  if (items.length === 0) throw new Error('Jina: no results')
+
   return {
     query,
-    provider: 'tavily',
-    results: (data.results ?? []).map((r: { title: string; url: string; content: string; published_date?: string }) => ({
-      title: r.title,
-      url: r.url,
-      snippet: (r.content ?? '').slice(0, 300),
-      domain: extractDomain(r.url),
-      publishedDate: r.published_date,
-    })),
+    provider: 'jina',
+    results: items.slice(0, maxResults).map((r) => ({
+      title: r.title ?? '',
+      url: r.url ?? '',
+      snippet: (r.description ?? r.content ?? '').slice(0, 300),
+      domain: extractDomain(r.url ?? ''),
+    })).filter(r => r.url.startsWith('http')),
   }
+}
+
+async function searxngSearch(query: string, maxResults: number): Promise<WebSearchResponse> {
+  const instances = [
+    'https://searx.be/search',
+    'https://search.inetol.net/search',
+    'https://searxng.site/search',
+    'https://paulgo.io/search',
+  ]
+  const params = new URLSearchParams({ q: query, format: 'json', categories: 'general' })
+
+  for (const instance of instances) {
+    try {
+      const res = await fetch(`${instance}?${params}`, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Netral/1.0; +https://netral-web.vercel.app)' },
+        signal: AbortSignal.timeout(8000),
+      })
+      if (!res.ok) continue
+      const data = await res.json()
+      const items: { title?: string; url?: string; content?: string }[] = data?.results ?? []
+      const results = items
+        .slice(0, maxResults)
+        .map((r) => ({
+          title: r.title ?? '',
+          url: r.url ?? '',
+          snippet: (r.content ?? '').slice(0, 300),
+          domain: extractDomain(r.url ?? ''),
+        }))
+        .filter((r) => r.url.startsWith('http'))
+
+      if (results.length > 0) return { query, provider: 'searxng', results }
+    } catch { /* try next instance */ }
+  }
+  throw new Error('SearXNG: all instances failed')
 }
 
 async function duckduckgoSearch(query: string, maxResults: number): Promise<WebSearchResponse> {
   const encoded = encodeURIComponent(query)
   const res = await fetch(`https://html.duckduckgo.com/html/?q=${encoded}`, {
     headers: {
-      'User-Agent': 'Mozilla/5.0 (compatible; Netral/1.0)',
-      Accept: 'text/html',
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      Accept: 'text/html,application/xhtml+xml',
     },
     signal: AbortSignal.timeout(12000),
   })
@@ -151,7 +189,6 @@ async function duckduckgoSearch(query: string, maxResults: number): Promise<WebS
   const html = await res.text()
   const results: SearchResult[] = []
 
-  // Parser HTML DDG avec regex
   const resultBlocks = html.matchAll(
     /<a[^>]+class="result__a"[^>]*href="([^"]*)"[^>]*>(.*?)<\/a>[\s\S]*?<a[^>]+class="result__snippet"[^>]*>(.*?)<\/a>/g
   )
@@ -162,7 +199,6 @@ async function duckduckgoSearch(query: string, maxResults: number): Promise<WebS
     const title = stripHtml(block[2])
     const snippet = stripHtml(block[3])
 
-    // DDG utilise des redirects uddg=
     let url = rawUrl
     try {
       const u = new URL(rawUrl.startsWith('http') ? rawUrl : `https://duckduckgo.com${rawUrl}`)
@@ -174,7 +210,6 @@ async function duckduckgoSearch(query: string, maxResults: number): Promise<WebS
     results.push({ title, url, snippet, domain: extractDomain(url) })
   }
 
-  // Fallback si regex ne match rien — extraire les liens basiques
   if (results.length === 0) {
     const links = html.matchAll(/uddg=([^&"]+)/g)
     let count = 0
@@ -205,7 +240,8 @@ export async function readPage(url: string): Promise<string> {
   if (jinaKey) headers['Authorization'] = `Bearer ${jinaKey}`
 
   try {
-    const res = await fetch(`https://r.jina.ai/${encodeURIComponent(url)}`, {
+    // Jina Reader requires the raw URL appended (NOT encoded)
+    const res = await fetch(`https://r.jina.ai/${url}`, {
       headers,
       signal: AbortSignal.timeout(18000),
     })
@@ -216,37 +252,51 @@ export async function readPage(url: string): Promise<string> {
   }
 }
 
-// ─── Auto-détection : l'IA doit-elle chercher sur le web ? ───────────────────
+// ─── Auto-detection ───────────────────────────────────────────────────────────
 
 export function needsWebSearch(query: string): boolean {
-  const q = query.toLowerCase()
+  const q = query.toLowerCase().trim()
 
-  // Signaux temporels
-  const temporal = [
-    "aujourd'hui", "maintenant", "en ce moment", "actuellement", "récent",
-    "dernière", "dernier", "cette semaine", "ce mois", "cette année",
-    "tout à l'heure", "vient de", "nouveau", "nouvelle",
-    'today', 'now', 'current', 'latest', 'recent', 'this week', 'right now',
-    '2024', '2025', '2026',
+  // Short queries (< 4 words) likely need context
+  const wordCount = q.split(/\s+/).length
+  if (wordCount <= 3 && q.endsWith('?')) return true
+
+  // Explicit search/find signals
+  const searchIntents = [
+    'cherche', 'recherche', 'trouve', 'montre', 'donne moi',
+    'search', 'find', 'look up', 'lookup',
+    'c\'est quoi', "qu'est-ce que", "qu'est-ce qu'",
+    "c'est qui", 'qui est', 'what is', 'who is', 'what are',
   ]
 
-  // Signaux de connaissance externe
+  // Temporal signals
+  const temporal = [
+    "aujourd'hui", "maintenant", "en ce moment", "actuellement", "récemment",
+    "dernière", "dernier", "cette semaine", "ce mois", "cette année",
+    "tout à l'heure", "vient de", "nouveau", "nouvelle", "récent",
+    'today', 'now', 'current', 'latest', 'recent', 'this week', 'right now',
+    '2023', '2024', '2025', '2026',
+  ]
+
+  // External knowledge signals
   const external = [
     'prix', 'coût', 'tarif', 'combien', 'météo', 'température', 'résultat',
     'score', 'classement', 'actualité', 'news', 'article', 'sortie',
-    'disponible', 'site', 'www', 'http', 'url',
-    'qui est', 'c\'est qui', 'c\'est quoi', 'où se trouve', 'quand est',
+    'disponible', 'site', 'www', 'http', 'url', 'acheter', 'commander',
+    'horaire', 'ouvert', 'fermé', 'adresse', 'téléphone',
     'price', 'cost', 'how much', 'weather', 'result', 'score', 'ranking',
-    'release', 'available', 'who is', 'what is the', 'when is',
+    'release', 'available', 'buy', 'order', 'hours', 'address', 'phone',
   ]
 
-  // Questions de fait qui changent
+  // Factual signals that change
   const factual = [
-    'président', 'premier ministre', 'ceo', 'pdg', 'directeur',
+    'président', 'premier ministre', 'ceo', 'pdg', 'directeur général',
     'population', 'capitale', 'monnaie', 'hymne', 'superficie',
+    'record', 'champion', 'vainqueur', 'gagnant',
   ]
 
   return (
+    searchIntents.some((t) => q.includes(t)) ||
     temporal.some((t) => q.includes(t)) ||
     external.some((t) => q.includes(t)) ||
     factual.some((t) => q.includes(t))
@@ -261,5 +311,9 @@ function extractDomain(url: string): string {
 }
 
 function stripHtml(html: string): string {
-  return html.replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").trim()
+  return html
+    .replace(/<[^>]+>/g, '')
+    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+    .trim()
 }
