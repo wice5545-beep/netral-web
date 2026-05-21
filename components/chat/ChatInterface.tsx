@@ -31,7 +31,7 @@ const statusConfig = {
   thinking: { icon: Brain, label: 'Analyse et synthèse…' },
 }
 
-const spring = { type: 'spring', stiffness: 500, damping: 35 }
+const spring = { type: 'spring' as const, stiffness: 500, damping: 35 }
 
 export function ChatInterface({ initialMessages = [], conversationId: initialConversationId, userInitial, userName }: ChatInterfaceProps) {
   const router = useRouter()
