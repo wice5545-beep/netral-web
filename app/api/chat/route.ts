@@ -3,7 +3,7 @@ import { getSession } from '@/lib/session'
 import { prisma } from '@/lib/prisma'
 import { getModel } from '@/lib/ai/models'
 import { buildSystemPrompt } from '@/lib/ai/prompt'
-import { webSearch, readPage, type SearchResult } from '@/lib/ai/websearch'
+import { webSearch, readPage, needsWebSearch, type SearchResult } from '@/lib/ai/websearch'
 
 export const runtime = 'nodejs'
 export const maxDuration = 90
@@ -89,9 +89,10 @@ export async function POST(req: NextRequest) {
 
       send({ type: 'meta', conversationId: convId, model: model.id })
 
-      // Web search phase
+      // Web search phase — manuel OU auto-détecté
+      const shouldSearch = useWebSearch || (userMessage?.content ? needsWebSearch(userMessage.content) : false)
       let searchResults: SearchResult[] = []
-      if (useWebSearch && userMessage?.content) {
+      if (shouldSearch && userMessage?.content) {
         try {
           send({ type: 'status', status: 'searching' })
           const searchRes = await webSearch(userMessage.content, 4)
