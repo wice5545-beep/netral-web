@@ -7,7 +7,7 @@ import { useChatStore, type ChatMessage } from '@/lib/store/chat'
 import { Message } from './Message'
 import { ChatComposer } from './ChatComposer'
 import { NetralLogo } from '@/components/ui/NetralLogo'
-import { Sparkles, BookOpen, Code2, Lightbulb } from 'lucide-react'
+import { Sparkles, BookOpen, Code2, Lightbulb, Globe, FileSearch, Brain } from 'lucide-react'
 
 interface ChatInterfaceProps {
   initialMessages?: ChatMessage[]
@@ -16,12 +16,20 @@ interface ChatInterfaceProps {
   userName?: string
 }
 
+export type SearchStatus = null | 'searching' | 'reading' | 'thinking'
+
 const suggestionPrompts = [
-  { icon: Lightbulb, text: 'Explain quantum entanglement simply', label: 'Explain' },
-  { icon: Code2, text: 'Write a TypeScript debounce function', label: 'Code' },
-  { icon: BookOpen, text: 'Summarize the principles of stoicism', label: 'Summarize' },
-  { icon: Sparkles, text: 'Brainstorm names for an AI product', label: 'Brainstorm' },
+  { icon: Lightbulb, text: "Explique l'informatique quantique simplement", label: 'Expliquer' },
+  { icon: Code2, text: 'Écris une fonction debounce en TypeScript', label: 'Code' },
+  { icon: BookOpen, text: 'Résume les principes du stoïcisme', label: 'Résumer' },
+  { icon: Sparkles, text: 'Génère des noms pour une startup IA', label: 'Brainstorm' },
 ]
+
+const searchStatusLabels: Record<NonNullable<SearchStatus>, { icon: typeof Globe; label: string }> = {
+  searching: { icon: Globe, label: 'Recherche en cours…' },
+  reading: { icon: FileSearch, label: 'Lecture des sources…' },
+  thinking: { icon: Brain, label: 'Analyse en cours…' },
+}
 
 export function ChatInterface({
   initialMessages = [],
@@ -44,11 +52,12 @@ export function ChatInterface({
   } = useChatStore()
 
   const [input, setInput] = useState('')
+  const [webSearchEnabled, setWebSearchEnabled] = useState(false)
+  const [searchStatus, setSearchStatus] = useState<SearchStatus>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const abortRef = useRef<AbortController | null>(null)
   const [didInit, setDidInit] = useState(false)
 
-  // Initialize messages on mount or when conversation changes
   useEffect(() => {
     setMessages(initialMessages)
     setConversationId(initialConversationId ?? null)
@@ -56,7 +65,6 @@ export function ChatInterface({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialConversationId])
 
-  // Auto-scroll
   useEffect(() => {
     if (!scrollRef.current) return
     const el = scrollRef.current
@@ -93,7 +101,6 @@ export function ChatInterface({
     abortRef.current = abort
 
     try {
-      // Build the history we send to the API (exclude the empty assistant placeholder)
       const history = [...messages, userMessage].map((m) => ({
         role: m.role,
         content: m.content,
@@ -106,13 +113,14 @@ export function ChatInterface({
           messages: history,
           modelId: currentModel,
           conversationId,
+          webSearch: webSearchEnabled,
         }),
         signal: abort.signal,
       })
 
       if (!response.ok || !response.body) {
         const errText = await response.text().catch(() => 'unknown')
-        updateLastMessage(`\n\n⚠️ Error: ${errText.slice(0, 200)}`)
+        updateLastMessage(`\n\n⚠️ Erreur : ${errText.slice(0, 200)}`)
         return
       }
 
@@ -138,16 +146,21 @@ export function ChatInterface({
                 newConversationId = parsed.conversationId
                 setConversationId(parsed.conversationId)
               }
+            } else if (parsed.type === 'status') {
+              setSearchStatus(parsed.status as SearchStatus)
             } else if (parsed.type === 'chunk') {
+              setSearchStatus(null)
               updateLastMessage(parsed.text)
             } else if (parsed.type === 'error') {
+              setSearchStatus(null)
               updateLastMessage(`\n\n⚠️ ${parsed.message}`)
+            } else if (parsed.type === 'done') {
+              setSearchStatus(null)
             }
           } catch {}
         }
       }
 
-      // Update URL if new conversation created
       if (newConversationId && !initialConversationId) {
         router.replace(`/chat/${newConversationId}`, { scroll: false })
         upsertConversation({
@@ -167,13 +180,13 @@ export function ChatInterface({
         })
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unknown error'
+      const message = err instanceof Error ? err.message : 'Erreur inconnue'
       if (message !== 'AbortError' && !(err instanceof DOMException)) {
         updateLastMessage(`\n\n⚠️ ${message}`)
       }
     } finally {
       setStreaming(false)
-      // mark last assistant as not streaming
+      setSearchStatus(null)
       const last = useChatStore.getState().messages
       if (last.length > 0) {
         const lastMsg = last[last.length - 1]
@@ -189,15 +202,14 @@ export function ChatInterface({
   const handleStop = () => {
     abortRef.current?.abort()
     setStreaming(false)
+    setSearchStatus(null)
   }
 
   const handleRegenerate = () => {
     if (messages.length < 2) return
     const lastUser = [...messages].reverse().find((m) => m.role === 'user')
     if (!lastUser) return
-    // Remove last assistant message
-    const newMessages = messages.slice(0, -1)
-    setMessages(newMessages)
+    setMessages(messages.slice(0, -1))
     handleSubmit(lastUser.content)
   }
 
@@ -208,26 +220,24 @@ export function ChatInterface({
       {/* Messages area */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto">
         {isEmpty ? (
-          <div className="min-h-full flex flex-col items-center justify-center px-6 pt-12 pb-32">
+          <div className="min-h-full flex flex-col items-center justify-center px-6 pt-12 pb-36">
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0, scale: 0.92 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5 }}
               className="text-center"
             >
-              <div className="flex justify-center mb-6">
-                <NetralLogo size={56} animated />
+              <div className="flex justify-center mb-5">
+                <NetralLogo size={52} animated />
               </div>
-              <h2 className="text-3xl md:text-4xl font-semibold tracking-tight mb-3">
-                <span className="glow-text">
-                  {userName ? `Hello, ${userName.split(' ')[0]}` : 'Hello there'}
-                </span>
+              <h2 className="text-3xl md:text-4xl font-semibold tracking-tight mb-2.5 text-gray-900 dark:text-[var(--foreground)]">
+                {userName ? `Bonjour, ${userName.split(' ')[0]}` : 'Bonjour'}
               </h2>
-              <p className="text-[var(--foreground-muted)] text-base mb-10">
-                What would you like to explore today?
+              <p className="text-gray-400 dark:text-[var(--foreground-muted)] text-base mb-10">
+                Comment puis-je vous aider aujourd'hui ?
               </p>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-w-2xl mx-auto">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-w-xl mx-auto">
                 {suggestionPrompts.map((s, i) => {
                   const Icon = s.icon
                   return (
@@ -235,14 +245,14 @@ export function ChatInterface({
                       key={s.text}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.4, delay: 0.1 + i * 0.05 }}
+                      transition={{ duration: 0.4, delay: 0.1 + i * 0.06 }}
                       onClick={() => handleSubmit(s.text)}
-                      className="group flex items-start gap-3 p-4 rounded-xl glass border border-[var(--border)] hover:border-[var(--accent)]/40 hover:bg-[var(--border)] transition-all text-left"
+                      className="group flex items-start gap-3 p-4 rounded-xl bg-white dark:bg-[var(--background-elevated)] border border-gray-200 dark:border-[var(--border)] hover:border-blue-300 dark:hover:border-[var(--accent)]/40 hover:shadow-md shadow-sm transition-all text-left"
                     >
-                      <Icon size={16} className="text-[var(--accent)] mt-0.5 shrink-0" />
+                      <Icon size={15} className="text-blue-500 dark:text-[var(--accent)] mt-0.5 shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-[var(--foreground-muted)] mb-0.5">{s.label}</p>
-                        <p className="text-sm text-[var(--foreground)] line-clamp-2">{s.text}</p>
+                        <p className="text-xs font-medium text-gray-400 dark:text-[var(--foreground-muted)] mb-0.5">{s.label}</p>
+                        <p className="text-sm text-gray-800 dark:text-[var(--foreground)] line-clamp-2">{s.text}</p>
                       </div>
                     </motion.button>
                   )
@@ -251,7 +261,7 @@ export function ChatInterface({
             </motion.div>
           </div>
         ) : (
-          <div className="max-w-3xl mx-auto w-full px-4 md:px-6 pt-6 pb-32">
+          <div className="max-w-3xl mx-auto w-full px-4 md:px-6 pt-6 pb-36">
             {messages.map((m, i) => (
               <Message
                 key={m.id}
@@ -268,7 +278,27 @@ export function ChatInterface({
       </div>
 
       {/* Composer */}
-      <div className="absolute bottom-0 left-0 right-0 px-4 pb-4 md:pb-6 pb-safe bg-gradient-to-t from-[var(--background)] via-[var(--background)] to-transparent pt-8 pointer-events-none">
+      <div className="absolute bottom-0 left-0 right-0 px-4 pb-4 md:pb-6 pb-safe bg-gradient-to-t from-white dark:from-[var(--background)] via-white/90 dark:via-[var(--background)]/90 to-transparent pt-10 pointer-events-none">
+        {/* Search status */}
+        {searchStatus && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className="flex items-center justify-center gap-2 text-sm text-blue-600 dark:text-blue-400 font-medium mb-3 pointer-events-none"
+          >
+            {(() => {
+              const s = searchStatusLabels[searchStatus]
+              const Icon = s.icon
+              return (
+                <>
+                  <Icon size={14} className="search-pulse" />
+                  <span className="search-pulse">{s.label}</span>
+                </>
+              )
+            })()}
+          </motion.div>
+        )}
         <div className="pointer-events-auto">
           <ChatComposer
             value={input}
@@ -277,6 +307,8 @@ export function ChatInterface({
             onStop={handleStop}
             isStreaming={isStreaming}
             autoFocus={isEmpty}
+            webSearchEnabled={webSearchEnabled}
+            onToggleWebSearch={() => setWebSearchEnabled(!webSearchEnabled)}
           />
         </div>
       </div>
