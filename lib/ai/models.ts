@@ -28,7 +28,7 @@ export const MODELS: Record<ModelId, ModelConfig> = {
     displayName: 'NTRL 1.2',
     description: 'Multimodal — images & texte. Rapide et précis.',
     provider: 'google',
-    upstreamModel: 'gemini-1.5-flash',
+    upstreamModel: 'gemini-2.5-flash',
     apiUrl: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
     envKey: 'GEMINI_API_KEY',
     contextLength: 1000000,
