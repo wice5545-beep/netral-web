@@ -13,10 +13,10 @@ export const maxDuration = 90
 const ChatRequestSchema = z.object({
   messages: z.array(z.object({
     role: z.enum(['user', 'assistant', 'system']),
-    content: z.string().min(1).max(8000),
-  })).min(1).max(100),
+    content: z.string().max(32000),
+  })).min(1).max(200),
   modelId: z.string().max(50).optional(),
-  conversationId: z.string().min(1).max(100).optional().nullable(),
+  conversationId: z.string().max(200).optional().nullable(),
   webSearch: z.boolean().optional(),
 })
 

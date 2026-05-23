@@ -10,9 +10,11 @@ import { login } from '@/actions/auth'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { NetralLogo } from '@/components/ui/NetralLogo'
+import { useI18n } from '@/lib/i18n'
 
 export default function LoginPage() {
   const [state, action, pending] = useActionState(login, undefined)
+  const { t } = useI18n()
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[var(--bg)] px-6 py-12">
@@ -28,8 +30,8 @@ export default function LoginPage() {
         </Link>
 
         <div className="text-center mb-8">
-          <h1 className="text-[26px] font-semibold tracking-[-0.01em] mb-1.5">Bienvenue</h1>
-          <p className="text-[14px] text-[var(--fg-muted)]">Connectez-vous à votre compte</p>
+          <h1 className="text-[26px] font-semibold tracking-[-0.01em] mb-1.5">{t.chat.loginTitle}</h1>
+          <p className="text-[14px] text-[var(--fg-muted)]">{t.chat.loginSubtitle}</p>
         </div>
 
         {state?.message && (
@@ -39,38 +41,17 @@ export default function LoginPage() {
         )}
 
         <form action={action} className="space-y-3">
-          <Input
-            id="email"
-            name="email"
-            type="email"
-            placeholder="vous@exemple.com"
-            icon={<MailCheckIcon size={14} />}
-            error={state?.errors?.email?.[0]}
-            autoComplete="email"
-            required
-          />
-          <Input
-            id="password"
-            name="password"
-            type="password"
-            placeholder="Mot de passe"
-            icon={<LockIcon size={14} />}
-            error={state?.errors?.password?.[0]}
-            autoComplete="current-password"
-            required
-          />
-
+          <Input id="email" name="email" type="email" placeholder="you@example.com" icon={<MailCheckIcon size={14} />} error={state?.errors?.email?.[0]} autoComplete="email" required />
+          <Input id="password" name="password" type="password" placeholder="••••••••" icon={<LockIcon size={14} />} error={state?.errors?.password?.[0]} autoComplete="current-password" required />
           <Button type="submit" variant="primary" size="lg" className="w-full mt-1" loading={pending}>
-            Se connecter
+            {t.chat.signIn}
             <ArrowRight size={14} />
           </Button>
         </form>
 
         <p className="mt-6 text-[13px] text-center text-[var(--fg-muted)]">
-          Pas encore de compte ?{' '}
-          <Link href="/register" className="text-[var(--fg)] font-medium hover:underline underline-offset-2">
-            En créer un
-          </Link>
+          {t.chat.noAccount}{' '}
+          <Link href="/register" className="text-[var(--fg)] font-medium hover:underline underline-offset-2">{t.chat.createOne}</Link>
         </p>
       </motion.div>
     </div>

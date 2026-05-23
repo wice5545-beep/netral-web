@@ -11,9 +11,11 @@ import { signup } from '@/actions/auth'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { NetralLogo } from '@/components/ui/NetralLogo'
+import { useI18n } from '@/lib/i18n'
 
 export default function RegisterPage() {
   const [state, action, pending] = useActionState(signup, undefined)
+  const { t } = useI18n()
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[var(--bg)] px-6 py-12">
@@ -29,8 +31,8 @@ export default function RegisterPage() {
         </Link>
 
         <div className="text-center mb-8">
-          <h1 className="text-[26px] font-semibold tracking-[-0.01em] mb-1.5">Créer un compte</h1>
-          <p className="text-[14px] text-[var(--fg-muted)]">Gratuit, en moins d'une minute</p>
+          <h1 className="text-[26px] font-semibold tracking-[-0.01em] mb-1.5">{t.chat.signupTitle}</h1>
+          <p className="text-[14px] text-[var(--fg-muted)]">{t.chat.signupSubtitle}</p>
         </div>
 
         {state?.message && (
@@ -40,58 +42,20 @@ export default function RegisterPage() {
         )}
 
         <form action={action} className="space-y-3">
-          <Input
-            id="name"
-            name="name"
-            type="text"
-            placeholder="Prénom"
-            icon={<UserIcon size={14} />}
-            error={state?.errors?.name?.[0]}
-            autoComplete="name"
-            required
-          />
-          <Input
-            id="email"
-            name="email"
-            type="email"
-            placeholder="vous@exemple.com"
-            icon={<MailCheckIcon size={14} />}
-            error={state?.errors?.email?.[0]}
-            autoComplete="email"
-            required
-          />
-          <Input
-            id="password"
-            name="password"
-            type="password"
-            placeholder="Mot de passe (min. 8 caractères)"
-            icon={<LockIcon size={14} />}
-            error={state?.errors?.password?.[0]}
-            autoComplete="new-password"
-            minLength={8}
-            required
-          />
-
+          <Input id="name" name="name" type="text" placeholder="Name" icon={<UserIcon size={14} />} error={state?.errors?.name?.[0]} autoComplete="name" required />
+          <Input id="email" name="email" type="email" placeholder="you@example.com" icon={<MailCheckIcon size={14} />} error={state?.errors?.email?.[0]} autoComplete="email" required />
+          <Input id="password" name="password" type="password" placeholder="••••••••" icon={<LockIcon size={14} />} error={state?.errors?.password?.[0]} autoComplete="new-password" minLength={8} required />
           <Button type="submit" variant="primary" size="lg" className="w-full mt-1" loading={pending}>
-            Créer mon compte
+            {t.chat.createAccount}
             <ArrowRight size={14} />
           </Button>
         </form>
 
-        <p className="mt-4 text-[11px] text-center text-[var(--fg-subtle)] leading-relaxed">
-          En créant un compte, vous acceptez nos{' '}
-          <Link href="#" className="hover:text-[var(--fg-muted)] underline underline-offset-2">conditions</Link>{' '}
-          et notre{' '}
-          <Link href="#" className="hover:text-[var(--fg-muted)] underline underline-offset-2">politique de confidentialité</Link>.
-        </p>
-
         <div className="h-px bg-[var(--border)] my-6" />
 
         <p className="text-[13px] text-center text-[var(--fg-muted)]">
-          Déjà inscrit ?{' '}
-          <Link href="/login" className="text-[var(--fg)] font-medium hover:underline underline-offset-2">
-            Se connecter
-          </Link>
+          {t.chat.alreadyAccount}{' '}
+          <Link href="/login" className="text-[var(--fg)] font-medium hover:underline underline-offset-2">{t.chat.signIn}</Link>
         </p>
       </motion.div>
     </div>

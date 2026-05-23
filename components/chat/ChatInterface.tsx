@@ -41,9 +41,9 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
   useEffect(() => {
     if (!scrollRef.current) return
     const el = scrollRef.current
-    const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 200
-    if (isNearBottom || isStreaming) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
-  }, [messages, isStreaming])
+    const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 100
+    if (isNearBottom) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
+  }, [messages])
 
   const handleSubmit = async (overrideText?: string) => {
     const text = (overrideText ?? input).trim()
