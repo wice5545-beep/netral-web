@@ -95,6 +95,16 @@ export async function POST(req: NextRequest) {
 
   const { messages, modelId, conversationId: rawConvId, webSearch: useWebSearch } = parsed.data
   const model = getModel(modelId)
+
+  // Restrict model access by plan
+  try {
+    const { rows: planRows } = await db.query(`SELECT plan FROM "User" WHERE id = $1`, [userId])
+    const userPlan = planRows[0]?.plan || 'free'
+    if (model.id === 'ntrl-1.2' && userPlan !== 'pro' && userPlan !== 'pro_plus') {
+      return new Response('NTRL 1.2 nécessite un abonnement Pro ou Pro+.', { status: 403 })
+    }
+  } catch {}
+
   const primaryKey = getApiKey(model.envKey)
   const fallbackKeys = getFallbackKeys(model.envKey)
   const allKeys = [primaryKey, ...fallbackKeys].filter(Boolean)
