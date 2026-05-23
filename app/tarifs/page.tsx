@@ -41,43 +41,45 @@ export default function TarifsPage() {
       </section>
 
       <section className="max-w-5xl mx-auto px-6 pb-24">
-        <div className="grid md:grid-cols-3 gap-4">
-          {t.pricingPage.plans.map((plan: { name: string; price: string; period: string; desc: string; cta: string; features: string[] }, i: number) => {
-            const highlighted = i === 1
-            return (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 24 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                className={`relative p-6 rounded-xl border transition-all duration-300 hover:shadow-[var(--shadow-md)] ${highlighted ? 'bg-[var(--accent)] text-[var(--bg)] border-[var(--accent)]' : 'bg-[var(--bg-elevated)] border-[var(--border)] hover:border-[var(--border-strong)]'}`}
-              >
-                {highlighted && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 flex items-center gap-1 px-3 py-1 rounded-full bg-[var(--bg)] text-[var(--fg)] text-[11px] font-medium border border-[var(--border)]">
-                    <Sparkles size={11} />
-                    {t.pricingPage.popular}
-                  </div>
-                )}
-                <h3 className="text-[18px] font-semibold mb-1">{plan.name}</h3>
-                <p className={`text-[13px] mb-4 ${highlighted ? 'opacity-80' : 'text-[var(--fg-muted)]'}`}>{plan.desc}</p>
-                <div className="flex items-baseline gap-1 mb-6">
-                  <span className="text-[36px] font-bold tracking-tight">{plan.price}</span>
-                  <span className={`text-[13px] ${highlighted ? 'opacity-70' : 'text-[var(--fg-muted)]'}`}>{plan.period}</span>
+        <div className="grid md:grid-cols-4 gap-3">
+          {[
+            { name: 'Free', price: '0€', period: '/mois', desc: 'Pour découvrir.', cta: 'Commencer', features: ['1 message/jour', 'NTRL 1.0 uniquement', 'Pas de recherche web'], highlighted: false },
+            { name: 'Plus', price: '5€', period: '/mois', desc: 'Pour un usage régulier.', cta: 'Passer à Plus', features: ['150 messages/mois', 'NTRL 1.0 & 1.3', 'Recherche web', 'Historique illimité'], highlighted: false },
+            { name: 'Pro', price: '20€', period: '/mois', desc: 'Pour les professionnels.', cta: 'Passer à Pro', features: ['750 messages/mois', 'Tous les modèles', 'Upload images & fichiers', 'Recherche web avancée', 'Support prioritaire'], highlighted: true },
+            { name: 'Pro+', price: '60€', period: '/mois', desc: 'Pour les power users.', cta: 'Passer à Pro+', features: ['2000 messages/mois', 'Tous les modèles', 'Agent IA', 'Accès anticipé mises à jour', 'Fonctionnalités en avant-première', 'Support dédié'], highlighted: false },
+          ].map((plan, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.08, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              className={`relative p-5 rounded-xl border transition-all duration-300 hover:shadow-[var(--shadow-md)] ${plan.highlighted ? 'bg-[var(--accent)] text-[var(--bg)] border-[var(--accent)]' : 'bg-[var(--bg-elevated)] border-[var(--border)] hover:border-[var(--border-strong)]'}`}
+            >
+              {plan.highlighted && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 flex items-center gap-1 px-3 py-1 rounded-full bg-[var(--bg)] text-[var(--fg)] text-[11px] font-medium border border-[var(--border)]">
+                  <Sparkles size={11} />
+                  {t.pricingPage.popular}
                 </div>
-                <Link href="/register" className="block mb-6">
-                  <button className={`w-full h-10 text-[14px] font-medium rounded-[8px] transition-all ${highlighted ? 'bg-[var(--bg)] text-[var(--fg)] hover:opacity-90' : 'bg-[var(--accent)] text-[var(--bg)] hover:bg-[var(--accent-hover)]'}`}>{plan.cta}</button>
-                </Link>
-                <ul className="space-y-2.5">
-                  {plan.features.map((f: string, j: number) => (
-                    <li key={j} className="flex items-start gap-2.5">
-                      <Check size={14} className={`mt-0.5 shrink-0 ${highlighted ? 'opacity-80' : 'text-[var(--fg-subtle)]'}`} />
-                      <span className={`text-[13px] leading-snug ${highlighted ? 'opacity-90' : 'text-[var(--fg-muted)]'}`}>{f}</span>
-                    </li>
-                  ))}
-                </ul>
-              </motion.div>
-            )
-          })}
+              )}
+              <h3 className="text-[16px] font-semibold mb-1">{plan.name}</h3>
+              <p className={`text-[12px] mb-3 ${plan.highlighted ? 'opacity-80' : 'text-[var(--fg-muted)]'}`}>{plan.desc}</p>
+              <div className="flex items-baseline gap-0.5 mb-5">
+                <span className="text-[30px] font-bold tracking-tight">{plan.price}</span>
+                <span className={`text-[12px] ${plan.highlighted ? 'opacity-70' : 'text-[var(--fg-muted)]'}`}>{plan.period}</span>
+              </div>
+              <Link href="/register" className="block mb-5">
+                <button className={`w-full h-9 text-[13px] font-medium rounded-lg transition-all ${plan.highlighted ? 'bg-[var(--bg)] text-[var(--fg)] hover:opacity-90' : 'bg-[var(--accent)] text-[var(--bg)] hover:bg-[var(--accent-hover)]'}`}>{plan.cta}</button>
+              </Link>
+              <ul className="space-y-2">
+                {plan.features.map((f, j) => (
+                  <li key={j} className="flex items-start gap-2">
+                    <Check size={13} className={`mt-0.5 shrink-0 ${plan.highlighted ? 'opacity-80' : 'text-[var(--fg-subtle)]'}`} />
+                    <span className={`text-[12px] leading-snug ${plan.highlighted ? 'opacity-90' : 'text-[var(--fg-muted)]'}`}>{f}</span>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+          ))}
         </div>
       </section>
 
