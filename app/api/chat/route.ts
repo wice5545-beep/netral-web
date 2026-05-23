@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
   // Try session auth first, then Bearer token (for VS Code extension)
   const session = await getSession()
   if (session?.userId) {
-    userId = userId
+    userId = session.userId
   } else {
     const authHeader = req.headers.get('authorization')
     const token = authHeader?.replace('Bearer ', '')
