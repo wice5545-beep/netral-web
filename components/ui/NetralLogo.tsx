@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { cn } from '@/lib/utils'
 
 interface NetralLogoProps {
@@ -8,23 +9,15 @@ interface NetralLogoProps {
   withText?: boolean
 }
 
-/**
- * Minimal mark — solid black square with white "n".
- * Inverts in dark mode. No gradients, no effects.
- */
 export function NetralLogo({ size = 28, className, withText = false }: NetralLogoProps) {
   const mark = (
-    <div
-      className="inline-flex items-center justify-center rounded-md bg-[var(--fg)] text-[var(--bg)] shrink-0"
-      style={{ width: size, height: size }}
-    >
-      <span
-        className="font-semibold leading-none"
-        style={{ fontSize: size * 0.55 }}
-      >
-        n
-      </span>
-    </div>
+    <Image
+      src="/logo.png"
+      alt="Netral"
+      width={size}
+      height={size}
+      className="rounded-md shrink-0"
+    />
   )
 
   if (!withText) return <span className={className}>{mark}</span>
@@ -32,10 +25,7 @@ export function NetralLogo({ size = 28, className, withText = false }: NetralLog
   return (
     <div className={cn('flex items-center gap-2', className)}>
       {mark}
-      <span
-        className="font-semibold tracking-tight text-[var(--fg)]"
-        style={{ fontSize: size * 0.62 }}
-      >
+      <span className="font-semibold tracking-tight text-[var(--fg)]" style={{ fontSize: size * 0.62 }}>
         Netral
       </span>
     </div>
