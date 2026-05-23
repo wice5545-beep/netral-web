@@ -19,7 +19,7 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: 'Netral',
   description: 'Un assistant IA précis qui consulte le web en temps réel.',
-  icons: { icon: '/favicon.ico' },
+  icons: { icon: '/logo.png', apple: '/logo.png' },
   robots: { index: true, follow: true },
 }
 

@@ -219,6 +219,13 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
     setTimeout(() => document.querySelector<HTMLTextAreaElement>('textarea')?.focus(), 50)
   }
 
+  const handleEdit = (msgIndex: number, newContent: string) => {
+    // Replace the message and remove everything after it, then re-submit
+    const newMessages = messages.slice(0, msgIndex)
+    setMessages(newMessages)
+    handleSubmit(newContent)
+  }
+
   const isEmpty = didInit && messages.length === 0
   const firstName = userName?.split(' ')[0]
 
@@ -282,6 +289,7 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
                     isStreaming={m.isStreaming && i === messages.length - 1}
                     isLast={i === messages.length - 1 && !isStreaming}
                     onRegenerate={handleRegenerate}
+                    onEdit={m.role === 'user' ? (newContent) => handleEdit(i, newContent) : undefined}
                     userInitial={userInitial}
                   />
                 </motion.div>

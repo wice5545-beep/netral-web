@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Copy, Check, RotateCw, ExternalLink, ThumbsUp, ThumbsDown } from 'lucide-react'
+import { SquarePenIcon } from '@/components/ui/square-pen'
 import { Markdown } from './Markdown'
 import { TypingOrb } from './TypingOrb'
 import { NetralLogo } from '@/components/ui/NetralLogo'
@@ -14,6 +15,7 @@ interface MessageProps {
   isStreaming?: boolean
   isLast?: boolean
   onRegenerate?: () => void
+  onEdit?: (newContent: string) => void
   userInitial?: string
 }
 
@@ -37,9 +39,11 @@ function contentWithoutSources(content: string): string {
   return content.replace(/\n\n---\n\*\*Sources\s*:\*\*\n[\s\S]+$/, '').trim()
 }
 
-export function Message({ role, content, isStreaming, isLast, onRegenerate, userInitial }: MessageProps) {
+export function Message({ role, content, isStreaming, isLast, onRegenerate, onEdit, userInitial }: MessageProps) {
   const [copied, setCopied] = useState(false)
   const [feedback, setFeedback] = useState<'up' | 'down' | null>(null)
+  const [editing, setEditing] = useState(false)
+  const [editValue, setEditValue] = useState(content)
 
   const handleFeedback = (type: 'up' | 'down') => {
     const newFeedback = feedback === type ? null : type
@@ -69,11 +73,37 @@ export function Message({ role, content, isStreaming, isLast, onRegenerate, user
   // ━━ USER ━━
   if (role === 'user') {
     return (
-      <div className="flex justify-end mb-6">
+      <div className="flex justify-end mb-6 group">
         <div className="max-w-[85%] md:max-w-[75%]">
-          <div className="rounded-2xl rounded-br-md px-4 py-2.5 bg-[var(--bg-soft)] border border-[var(--border)] text-[14.5px] leading-[1.55] text-[var(--fg)] whitespace-pre-wrap break-words">
-            {content}
-          </div>
+          {editing ? (
+            <div className="space-y-2">
+              <textarea
+                value={editValue}
+                onChange={(e) => setEditValue(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-2xl bg-[var(--bg-soft)] border border-[var(--border-strong)] text-[14.5px] leading-[1.55] text-[var(--fg)] resize-none focus:outline-none min-h-[60px]"
+                autoFocus
+              />
+              <div className="flex justify-end gap-1.5">
+                <button onClick={() => setEditing(false)} className="px-3 py-1 rounded-lg text-[12px] text-[var(--fg-muted)] hover:bg-[var(--bg-soft)]">Annuler</button>
+                <button onClick={() => { if (onEdit && editValue.trim()) { onEdit(editValue.trim()); setEditing(false) } }} className="px-3 py-1 rounded-lg text-[12px] bg-[var(--accent)] text-[var(--bg)] font-medium">Envoyer</button>
+              </div>
+            </div>
+          ) : (
+            <div className="relative">
+              <div className="rounded-2xl rounded-br-md px-4 py-2.5 bg-[var(--bg-soft)] border border-[var(--border)] text-[14.5px] leading-[1.55] text-[var(--fg)] whitespace-pre-wrap break-words">
+                {content}
+              </div>
+              {onEdit && (
+                <button
+                  onClick={() => { setEditValue(content); setEditing(true) }}
+                  className="absolute -left-8 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md hover:bg-[var(--bg-soft)]"
+                  aria-label="Modifier"
+                >
+                  <SquarePenIcon size={14} className="text-[var(--fg-muted)]" />
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
     )
