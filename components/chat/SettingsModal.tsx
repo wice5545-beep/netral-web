@@ -409,18 +409,23 @@ export function SettingsModal({ open, onClose, user }: SettingsModalProps) {
                         <h2 className="text-[18px] font-semibold mb-1">Abonnement</h2>
                         <p className="text-[13px] text-[var(--fg-muted)]">Gérez votre plan.</p>
                       </div>
-                      <div className="rounded-lg border border-[var(--border)] p-5">
-                        <div className="flex items-start justify-between mb-3">
-                          <div>
-                            <p className="text-[11px] font-medium text-[var(--fg-muted)] uppercase tracking-wider mb-1">Plan actuel</p>
-                            <p className="text-[20px] font-semibold">Free</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        {[
+                          { id: 'free', name: 'Free', price: '0€', msgs: '1 msg/mois' },
+                          { id: 'plus', name: 'Plus', price: '5€', msgs: '150 msgs/mois' },
+                          { id: 'pro', name: 'Pro', price: '20€', msgs: '750 msgs/mois' },
+                          { id: 'pro_plus', name: 'Pro+', price: '60€', msgs: '2000 msgs/mois' },
+                        ].map((p) => (
+                          <div key={p.id} className={cn('rounded-lg border p-3 transition-all', 'free' === p.id ? 'border-[var(--accent)] bg-[var(--accent-soft)]' : 'border-[var(--border)] hover:border-[var(--border-strong)]')}>
+                            <p className="text-[14px] font-semibold">{p.name}</p>
+                            <p className="text-[18px] font-bold mt-1">{p.price}<span className="text-[11px] text-[var(--fg-muted)] font-normal">/mois</span></p>
+                            <p className="text-[11px] text-[var(--fg-muted)] mt-1">{p.msgs}</p>
                           </div>
-                        </div>
-                        <p className="text-[13px] text-[var(--fg-muted)] mb-4">Accès limité aux fonctionnalités essentielles.</p>
-                        <button className="w-full h-10 rounded-md bg-[var(--accent)] text-[var(--bg)] text-[13px] font-medium hover:bg-[var(--accent-hover)] transition-colors">
-                          Passer à Pro
-                        </button>
+                        ))}
                       </div>
+                      <button className="w-full h-10 rounded-md bg-[var(--accent)] text-[var(--bg)] text-[13px] font-medium hover:bg-[var(--accent-hover)] transition-colors">
+                        Changer de plan
+                      </button>
                     </div>
                   )}
                 </div>
