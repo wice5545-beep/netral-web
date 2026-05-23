@@ -43,27 +43,27 @@ export async function POST(req: NextRequest) {
   if (!session?.userId) return new Response('Unauthorized', { status: 401 })
 
   // Plan-based message limit
-  const { rows: userRows } = await db.query(
-    `SELECT plan, "messagesUsed", "messagesResetAt" FROM "User" WHERE id = $1`, [session.userId]
-  )
-  const userData = userRows[0]
-  if (userData) {
-    const now = new Date()
-    const resetAt = new Date(userData.messagesResetAt)
-    // Reset counter monthly
-    if (now > resetAt) {
-      const nextReset = new Date(now.getFullYear(), now.getMonth() + 1, 1)
-      await db.query(`UPDATE "User" SET "messagesUsed" = 0, "messagesResetAt" = $1 WHERE id = $2`, [nextReset, session.userId])
-      userData.messagesUsed = 0
+  try {
+    const { rows: userRows } = await db.query(
+      `SELECT plan, "messagesUsed", "messagesResetAt" FROM "User" WHERE id = $1`, [session.userId]
+    )
+    const userData = userRows[0]
+    if (userData) {
+      const now = new Date()
+      const resetAt = new Date(userData.messagesResetAt)
+      if (now > resetAt) {
+        const nextReset = new Date(now.getFullYear(), now.getMonth() + 1, 1)
+        await db.query(`UPDATE "User" SET "messagesUsed" = 0, "messagesResetAt" = $1 WHERE id = $2`, [nextReset, session.userId])
+        userData.messagesUsed = 0
+      }
+      const { getPlanLimit } = await import('@/lib/plans')
+      const limit = getPlanLimit(userData.plan || 'free')
+      if (userData.messagesUsed >= limit) {
+        return new Response('Limite de messages atteinte. Passez à un plan supérieur.', { status: 429 })
+      }
+      await db.query(`UPDATE "User" SET "messagesUsed" = "messagesUsed" + 1 WHERE id = $1`, [session.userId])
     }
-    const { getPlanLimit } = await import('@/lib/plans')
-    const limit = getPlanLimit(userData.plan || 'free')
-    if (userData.messagesUsed >= limit) {
-      return new Response('Limite de messages atteinte. Passez à un plan supérieur.', { status: 429 })
-    }
-    // Increment usage
-    await db.query(`UPDATE "User" SET "messagesUsed" = "messagesUsed" + 1 WHERE id = $1`, [session.userId])
-  }
+  } catch {}
 
   const rl = rateLimit(`chat:${session.userId}`, 30, 60_000)
   if (!rl.allowed) {
@@ -135,7 +135,7 @@ export async function POST(req: NextRequest) {
       // Stream LLM
       const payload = {
         model: model.upstreamModel,
-        messages: [{ role: 'system', content: systemPrompt }, ...messages.filter((m) => m.content.trim()).map((m) => ({ role: m.role, content: m.content }))],
+        messages: [{ role: 'system', content: systemPrompt }, ...messages.filter((m) => typeof m.content === 'string' ? m.content.trim() : true).map((m) => ({ role: m.role, content: m.content }))],
         stream: true,
         temperature: 0.7,
         max_tokens: 4096,
