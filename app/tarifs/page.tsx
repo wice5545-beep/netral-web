@@ -1,0 +1,99 @@
+'use client'
+
+import Link from 'next/link'
+import { motion } from 'framer-motion'
+import { ArrowLeft, Check, Sparkles } from 'lucide-react'
+import { NetralLogo } from '@/components/ui/NetralLogo'
+import { useI18n } from '@/lib/i18n'
+import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher'
+
+export default function TarifsPage() {
+  const { t } = useI18n()
+
+  return (
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--fg)]">
+      <nav className="sticky top-0 z-40 backdrop-blur-md bg-[var(--bg-overlay)] border-b border-[var(--border)]">
+        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2">
+            <NetralLogo size={24} />
+            <span className="font-semibold text-[15px]">Netral</span>
+          </Link>
+          <div className="flex items-center gap-4">
+            <LanguageSwitcher />
+            <Link href="/register">
+              <button className="h-8 px-3.5 text-[13px] font-medium rounded-[8px] bg-[var(--accent)] text-[var(--bg)] hover:bg-[var(--accent-hover)] transition-colors">{t.nav.start}</button>
+            </Link>
+          </div>
+        </div>
+      </nav>
+
+      <section className="max-w-4xl mx-auto px-6 pt-16 pb-12">
+        <Link href="/" className="inline-flex items-center gap-1.5 text-[13px] text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors mb-8">
+          <ArrowLeft size={14} />
+          {t.pricingPage.back}
+        </Link>
+        <motion.h1 initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }} className="text-[36px] md:text-[48px] font-semibold tracking-[-0.025em] leading-[1.1] mb-4">
+          {t.pricingPage.title1}<br /><span className="text-[var(--fg-muted)]">{t.pricingPage.title2}</span>
+        </motion.h1>
+        <motion.p initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.4 }} className="text-[17px] text-[var(--fg-muted)] max-w-xl leading-relaxed">
+          {t.pricingPage.subtitle}
+        </motion.p>
+      </section>
+
+      <section className="max-w-5xl mx-auto px-6 pb-24">
+        <div className="grid md:grid-cols-3 gap-4">
+          {t.pricingPage.plans.map((plan: { name: string; price: string; period: string; desc: string; cta: string; features: string[] }, i: number) => {
+            const highlighted = i === 1
+            return (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                className={`relative p-6 rounded-xl border transition-all duration-300 hover:shadow-[var(--shadow-md)] ${highlighted ? 'bg-[var(--accent)] text-[var(--bg)] border-[var(--accent)]' : 'bg-[var(--bg-elevated)] border-[var(--border)] hover:border-[var(--border-strong)]'}`}
+              >
+                {highlighted && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 flex items-center gap-1 px-3 py-1 rounded-full bg-[var(--bg)] text-[var(--fg)] text-[11px] font-medium border border-[var(--border)]">
+                    <Sparkles size={11} />
+                    {t.pricingPage.popular}
+                  </div>
+                )}
+                <h3 className="text-[18px] font-semibold mb-1">{plan.name}</h3>
+                <p className={`text-[13px] mb-4 ${highlighted ? 'opacity-80' : 'text-[var(--fg-muted)]'}`}>{plan.desc}</p>
+                <div className="flex items-baseline gap-1 mb-6">
+                  <span className="text-[36px] font-bold tracking-tight">{plan.price}</span>
+                  <span className={`text-[13px] ${highlighted ? 'opacity-70' : 'text-[var(--fg-muted)]'}`}>{plan.period}</span>
+                </div>
+                <Link href="/register" className="block mb-6">
+                  <button className={`w-full h-10 text-[14px] font-medium rounded-[8px] transition-all ${highlighted ? 'bg-[var(--bg)] text-[var(--fg)] hover:opacity-90' : 'bg-[var(--accent)] text-[var(--bg)] hover:bg-[var(--accent-hover)]'}`}>{plan.cta}</button>
+                </Link>
+                <ul className="space-y-2.5">
+                  {plan.features.map((f: string, j: number) => (
+                    <li key={j} className="flex items-start gap-2.5">
+                      <Check size={14} className={`mt-0.5 shrink-0 ${highlighted ? 'opacity-80' : 'text-[var(--fg-subtle)]'}`} />
+                      <span className={`text-[13px] leading-snug ${highlighted ? 'opacity-90' : 'text-[var(--fg-muted)]'}`}>{f}</span>
+                    </li>
+                  ))}
+                </ul>
+              </motion.div>
+            )
+          })}
+        </div>
+      </section>
+
+      <section className="border-t border-[var(--border)] py-20">
+        <div className="max-w-2xl mx-auto px-6">
+          <h2 className="text-[24px] font-semibold tracking-[-0.02em] mb-8 text-center">{t.pricingPage.faqTitle}</h2>
+          <div className="space-y-4">
+            {t.pricingPage.faq.map((faq: { q: string; a: string }, i: number) => (
+              <div key={i} className="p-4 rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)]">
+                <h4 className="text-[14px] font-medium mb-1.5">{faq.q}</h4>
+                <p className="text-[13px] text-[var(--fg-muted)] leading-relaxed">{faq.a}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    </div>
+  )
+}
