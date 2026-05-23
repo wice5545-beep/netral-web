@@ -71,7 +71,7 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
           if (a.type === 'image') {
             content.push({ type: 'image_url', image_url: { url: a.data } })
           } else {
-            content.push({ type: 'text', text: `[Fichier: ${a.name}]\n${atob(a.data.split(',')[1] || ''').slice(0, 4000)}` })
+            content.push({ type: 'text', text: '[Fichier: ' + a.name + ']' })
           }
         }
         history[history.length - 1] = { role: 'user', content: content as unknown as string }
