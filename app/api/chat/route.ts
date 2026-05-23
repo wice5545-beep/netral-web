@@ -110,7 +110,7 @@ export async function POST(req: NextRequest) {
   const allKeys = [primaryKey, ...fallbackKeys].filter(Boolean)
   if (!allKeys.length) return new Response(`Missing ${model.envKey}`, { status: 500 })
 
-  let systemPrompt = buildSystemPrompt()
+  let systemPrompt = buildSystemPrompt(parsed.data.messages as any)
 
   const stream = new ReadableStream({
     async start(controller) {
