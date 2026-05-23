@@ -8,7 +8,7 @@ import { useI18n } from '@/lib/i18n'
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher'
 
 export default function TarifsPage() {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--fg)]">
@@ -43,10 +43,10 @@ export default function TarifsPage() {
       <section className="max-w-5xl mx-auto px-6 pb-24">
         <div className="grid md:grid-cols-4 gap-3">
           {[
-            { name: 'Free', price: '0€', period: '/mois', desc: 'Pour découvrir.', cta: 'Commencer', features: ['1 message/jour', 'NTRL 1.0 uniquement', 'Pas de recherche web'], highlighted: false },
-            { name: 'Plus', price: '5€', period: '/mois', desc: 'Pour un usage régulier.', cta: 'Passer à Plus', features: ['150 messages/mois', 'NTRL 1.0 & 1.3', 'Recherche web', 'Historique illimité'], highlighted: false },
-            { name: 'Pro', price: '20€', period: '/mois', desc: 'Pour les professionnels.', cta: 'Passer à Pro', features: ['750 messages/mois', 'Tous les modèles', 'Upload images & fichiers', 'Recherche web avancée', 'Support prioritaire'], highlighted: true },
-            { name: 'Pro+', price: '60€', period: '/mois', desc: 'Pour les power users.', cta: 'Passer à Pro+', features: ['2000 messages/mois', 'Tous les modèles', 'Agent IA', 'Accès anticipé mises à jour', 'Fonctionnalités en avant-première', 'Support dédié'], highlighted: false },
+            { name: 'Free', price: '0€', period: '/mois', desc: locale === 'en' ? 'To discover.' : locale === 'es' ? 'Para descubrir.' : locale === 'de' ? 'Zum Entdecken.' : 'Pour découvrir.', cta: locale === 'en' ? 'Get started' : locale === 'es' ? 'Empezar' : locale === 'de' ? 'Starten' : 'Commencer', features: locale === 'en' ? ['1 message/day', 'NTRL 1.0 only', 'No web search'] : locale === 'es' ? ['1 mensaje/día', 'Solo NTRL 1.0', 'Sin búsqueda web'] : locale === 'de' ? ['1 Nachricht/Tag', 'Nur NTRL 1.0', 'Keine Websuche'] : ['1 message/jour', 'NTRL 1.0 uniquement', 'Pas de recherche web'], highlighted: false },
+            { name: 'Plus', price: '5€', period: '/mois', desc: locale === 'en' ? 'For regular use.' : locale === 'es' ? 'Para uso regular.' : locale === 'de' ? 'Für regelmäßige Nutzung.' : 'Pour un usage régulier.', cta: locale === 'en' ? 'Upgrade to Plus' : locale === 'es' ? 'Pasar a Plus' : locale === 'de' ? 'Zu Plus wechseln' : 'Passer à Plus', features: locale === 'en' ? ['150 messages/month', 'NTRL 1.0 & 1.3', 'Web search', 'Unlimited history'] : locale === 'es' ? ['150 mensajes/mes', 'NTRL 1.0 & 1.3', 'Búsqueda web', 'Historial ilimitado'] : locale === 'de' ? ['150 Nachrichten/Monat', 'NTRL 1.0 & 1.3', 'Websuche', 'Unbegrenzter Verlauf'] : ['150 messages/mois', 'NTRL 1.0 & 1.3', 'Recherche web', 'Historique illimité'], highlighted: false },
+            { name: 'Pro', price: '20€', period: '/mois', desc: locale === 'en' ? 'For professionals.' : locale === 'es' ? 'Para profesionales.' : locale === 'de' ? 'Für Profis.' : 'Pour les professionnels.', cta: locale === 'en' ? 'Upgrade to Pro' : locale === 'es' ? 'Pasar a Pro' : locale === 'de' ? 'Zu Pro wechseln' : 'Passer à Pro', features: locale === 'en' ? ['750 messages/month', 'All models', 'Image & file upload', 'Advanced web search', 'Priority support'] : locale === 'es' ? ['750 mensajes/mes', 'Todos los modelos', 'Subir imágenes y archivos', 'Búsqueda web avanzada', 'Soporte prioritario'] : locale === 'de' ? ['750 Nachrichten/Monat', 'Alle Modelle', 'Bild- & Datei-Upload', 'Erweiterte Websuche', 'Prioritäts-Support'] : ['750 messages/mois', 'Tous les modèles', 'Upload images & fichiers', 'Recherche web avancée', 'Support prioritaire'], highlighted: true },
+            { name: 'Pro+', price: '60€', period: '/mois', desc: locale === 'en' ? 'For power users.' : locale === 'es' ? 'Para power users.' : locale === 'de' ? 'Für Power-User.' : 'Pour les power users.', cta: locale === 'en' ? 'Upgrade to Pro+' : locale === 'es' ? 'Pasar a Pro+' : locale === 'de' ? 'Zu Pro+ wechseln' : 'Passer à Pro+', features: locale === 'en' ? ['2000 messages/month', 'All models', 'AI Agent', 'Early access to updates', 'Preview features', 'Dedicated support'] : locale === 'es' ? ['2000 mensajes/mes', 'Todos los modelos', 'Agente IA', 'Acceso anticipado', 'Funciones en vista previa', 'Soporte dedicado'] : locale === 'de' ? ['2000 Nachrichten/Monat', 'Alle Modelle', 'KI-Agent', 'Früher Zugang zu Updates', 'Vorschau-Funktionen', 'Dedizierter Support'] : ['2000 messages/mois', 'Tous les modèles', 'Agent IA', 'Accès anticipé mises à jour', 'Fonctionnalités en avant-première', 'Support dédié'], highlighted: false },
           ].map((plan, i) => (
             <motion.div
               key={i}

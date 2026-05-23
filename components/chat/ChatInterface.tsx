@@ -8,6 +8,7 @@ import { getRandomSuggestions } from '@/lib/suggestions'
 import { useI18n } from '@/lib/i18n'
 import { Message } from './Message'
 import { ChatComposer } from './ChatComposer'
+import { UpgradePopup } from './UpgradePopup'
 import { Globe, FileText, Sparkles } from 'lucide-react'
 
 interface ChatInterfaceProps {
@@ -20,11 +21,14 @@ interface ChatInterfaceProps {
 export type SearchStatus = null | 'searching' | 'reading' | 'thinking'
 
 function friendlyError(msg: string): string {
+  if (msg.includes('model_unavailable')) {
+    return 'Ce modèle est temporairement indisponible (quota atteint). Essayez un autre modèle ou réessayez plus tard. ⏳'
+  }
   if (msg.includes('429') || msg.includes('quota') || msg.includes('rate') || msg.includes('capacity') || msg.includes('Limit') || msg.includes('TPM') || msg.includes('too large') || msg.includes('upstream') || msg.includes('service_tier')) {
     return 'Netral rencontre une forte demande en ce moment. Réessayez dans quelques secondes. 🙏'
   }
   if (msg.includes('Limite de messages')) return msg
-  if (msg.includes('Trop de messages')) return msg
+  if (msg.includes('Trop de messages') || msg.includes('Trop de requêtes')) return msg
   return 'Netral a rencontré un problème temporaire. Veuillez réessayer. 🔄'
 }
 
@@ -37,6 +41,7 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
   const [searchStatus, setSearchStatus] = useState<SearchStatus>(null)
   const [selectionPopup, setSelectionPopup] = useState<{ text: string; x: number; y: number } | null>(null)
   const [userScrolledUp, setUserScrolledUp] = useState(false)
+  const [showUpgrade, setShowUpgrade] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const abortRef = useRef<AbortController | null>(null)
   const [didInit, setDidInit] = useState(false)
@@ -125,6 +130,9 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
 
       if (!response.ok || !response.body) {
         const errText = await response.text().catch(() => '')
+        if (errText.includes('Limite') || response.status === 429) {
+          setShowUpgrade(true)
+        }
         updateLastMessage(`\n\n${friendlyError(errText)}`)
         return
       }
@@ -325,6 +333,8 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
         {/* Bottom fade */}
         <div className="absolute inset-x-0 bottom-0 h-8 -z-10 bg-[var(--bg)] pointer-events-none" />
       </div>
+
+      <UpgradePopup open={showUpgrade} onClose={() => setShowUpgrade(false)} />
 
       {/* Text selection popup */}
       <AnimatePresence>

@@ -42,6 +42,13 @@ export async function POST(req: NextRequest) {
   const session = await getSession()
   if (!session?.userId) return new Response('Unauthorized', { status: 401 })
 
+  // IP-based anti-abuse for free users (even with VPN, limits per IP)
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || 'unknown'
+  const ipRl = rateLimit(`ip:${ip}`, 5, 60_000) // max 5 msgs/min per IP
+  if (!ipRl.allowed) {
+    return new Response('Trop de requêtes depuis cette adresse.', { status: 429 })
+  }
+
   // Plan-based message limit
   try {
     const { rows: userRows } = await db.query(
@@ -159,7 +166,12 @@ export async function POST(req: NextRequest) {
         }
 
         if (!upstream || !upstream.ok || !upstream.body) {
-          send({ type: 'error', message: `Erreur upstream: ${(await upstream?.text().catch(() => '') ?? '').slice(0, 200)}` })
+          const errBody = await upstream?.text().catch(() => '') ?? ''
+          if (upstream?.status === 429 || errBody.includes('capacity') || errBody.includes('quota')) {
+            send({ type: 'error', message: `model_unavailable:${model.id}` })
+          } else {
+            send({ type: 'error', message: `Erreur upstream: ${errBody.slice(0, 200)}` })
+          }
           controller.close()
           return
         }
