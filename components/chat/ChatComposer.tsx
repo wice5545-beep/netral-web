@@ -2,7 +2,7 @@
 
 import { useRef, useEffect, KeyboardEvent, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowUp, Square, Plus, Globe, Image, Paperclip, X } from 'lucide-react'
+import { ArrowUp, Square, Plus, Globe, Image, Paperclip, X, Mic } from 'lucide-react'
 import { ModelSelector } from './ModelSelector'
 import { cn } from '@/lib/utils'
 
@@ -24,7 +24,7 @@ export function ChatComposer({
   onSubmit,
   onStop,
   isStreaming,
-  placeholder = 'Envoyez un message…',
+  placeholder = 'Message NTRL…',
   autoFocus,
   webSearchEnabled = false,
   onToggleWebSearch,
@@ -32,6 +32,7 @@ export function ChatComposer({
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const drawerRef = useRef<HTMLDivElement>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [focused, setFocused] = useState(false)
 
   useEffect(() => {
     if (autoFocus) textareaRef.current?.focus()
@@ -66,46 +67,60 @@ export function ChatComposer({
   const drawerItems = [
     {
       icon: Globe,
-      label: 'Recherche web',
-      description: 'Cherche sur Internet en temps réel',
+      label: 'Web search',
+      description: 'Search the internet in real time',
       active: webSearchEnabled,
       onClick: () => { onToggleWebSearch?.(); setDrawerOpen(false) },
       disabled: false,
-      color: 'orange',
+      gradient: 'from-violet-400 to-indigo-500',
     },
     {
       icon: Image,
       label: 'Image',
-      description: 'Envoyer une image',
+      description: 'Send an image',
       active: false,
       onClick: () => {},
       disabled: true,
-      color: 'violet',
+      gradient: 'from-pink-400 to-rose-500',
     },
     {
       icon: Paperclip,
-      label: 'Fichier',
-      description: 'Joindre un document',
+      label: 'File',
+      description: 'Attach a document',
       active: false,
       onClick: () => {},
       disabled: true,
-      color: 'emerald',
+      gradient: 'from-amber-400 to-orange-500',
     },
   ]
 
   return (
     <div className="relative w-full max-w-3xl mx-auto">
       <motion.div
-        className={cn(
-          'relative rounded-2xl bg-white border shadow-lg shadow-gray-100/80',
-          'dark:bg-[var(--background-elevated)] dark:shadow-none transition-all duration-200',
-          webSearchEnabled
-            ? 'border-orange-300 shadow-orange-50/60 dark:border-orange-500/40'
-            : 'border-gray-200 dark:border-[var(--border-strong)]',
-          'focus-within:border-orange-300 focus-within:shadow-orange-50 dark:focus-within:border-[var(--accent)] dark:focus-within:shadow-[0_0_20px_var(--accent-glow)]'
-        )}
+        animate={{
+          boxShadow: focused
+            ? '0 0 0 1.5px var(--accent), 0 12px 48px var(--accent-glow), 0 4px 12px rgba(0,0,0,0.15)'
+            : webSearchEnabled
+            ? '0 0 0 1px var(--accent), 0 6px 24px rgba(0,0,0,0.1)'
+            : '0 0 0 1px var(--glass-border), 0 4px 20px rgba(0,0,0,0.08)',
+        }}
+        transition={{ duration: 0.25 }}
+        className="relative rounded-2xl glass-panel overflow-hidden"
       >
-        {/* Web search chip */}
+        {/* Top accent line when focused */}
+        <AnimatePresence>
+          {focused && (
+            <motion.div
+              initial={{ scaleX: 0, opacity: 0 }}
+              animate={{ scaleX: 1, opacity: 1 }}
+              exit={{ scaleX: 0, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[var(--accent)] to-transparent"
+            />
+          )}
+        </AnimatePresence>
+
+        {/* Web search indicator */}
         <AnimatePresence>
           {webSearchEnabled && (
             <motion.div
@@ -115,10 +130,10 @@ export function ChatComposer({
               className="overflow-hidden"
             >
               <div className="flex items-center gap-1.5 px-4 pt-3 pb-0">
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-50 border border-orange-200 dark:bg-orange-500/15 dark:border-orange-500/30">
-                  <Globe size={11} className="text-orange-500 dark:text-orange-400" />
-                  <span className="text-xs font-semibold text-orange-600 dark:text-orange-400">Recherche web activée</span>
-                  <button onClick={onToggleWebSearch} className="ml-0.5 text-orange-400 hover:text-orange-600 transition-colors">
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[var(--accent-soft)] border border-[var(--accent)]/30">
+                  <Globe size={11} className="text-[var(--accent)]" />
+                  <span className="text-xs font-semibold text-[var(--accent)]">Web search on</span>
+                  <button onClick={onToggleWebSearch} className="ml-0.5 text-[var(--accent)]/60 hover:text-[var(--accent)] transition-colors">
                     <X size={10} />
                   </button>
                 </div>
@@ -132,80 +147,81 @@ export function ChatComposer({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={onKeyDown}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
           placeholder={placeholder}
           rows={1}
-          className="w-full resize-none bg-transparent px-4 pt-4 pb-2 text-[15px] leading-relaxed text-gray-900 dark:text-[var(--foreground)] placeholder:text-gray-400 dark:placeholder:text-[var(--foreground-subtle)] focus:outline-none max-h-[200px]"
+          className="w-full resize-none bg-transparent px-4 pt-4 pb-2 text-[15px] leading-relaxed text-[var(--foreground)] placeholder:text-[var(--foreground-subtle)] focus:outline-none max-h-[200px]"
         />
 
         <div className="flex items-center justify-between px-2 pb-2.5 pt-1">
           <div className="flex items-center gap-1" ref={drawerRef}>
             <div className="relative">
-              <button
+              <motion.button
                 type="button"
+                whileTap={{ scale: 0.9 }}
                 onClick={() => setDrawerOpen(!drawerOpen)}
                 className={cn(
-                  'w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-150',
+                  'w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-200',
                   drawerOpen
-                    ? 'bg-orange-500 text-white'
-                    : 'bg-gray-100 dark:bg-[var(--border)] text-gray-500 dark:text-[var(--foreground-muted)] hover:bg-orange-50 hover:text-orange-500 dark:hover:bg-[var(--border-strong)]'
+                    ? 'bg-[var(--accent)] text-white shadow-lg shadow-[var(--accent-glow)]'
+                    : 'bg-[var(--border)]/80 text-[var(--foreground-muted)] hover:bg-[var(--accent-soft)] hover:text-[var(--accent)]'
                 )}
               >
-                <motion.div animate={{ rotate: drawerOpen ? 45 : 0 }} transition={{ duration: 0.2 }}>
+                <motion.div animate={{ rotate: drawerOpen ? 45 : 0 }} transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}>
                   <Plus size={15} />
                 </motion.div>
-              </button>
+              </motion.button>
 
               <AnimatePresence>
                 {drawerOpen && (
                   <motion.div
-                    initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                    initial={{ opacity: 0, y: 10, scale: 0.93 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 8, scale: 0.95 }}
-                    transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
-                    className="absolute bottom-full left-0 mb-2 w-60 bg-white dark:bg-[var(--background-elevated)] rounded-2xl border border-gray-100 dark:border-[var(--border-strong)] shadow-xl shadow-orange-50/40 dark:shadow-black/30 overflow-hidden z-50"
+                    exit={{ opacity: 0, y: 10, scale: 0.93 }}
+                    transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                    className="absolute bottom-full left-0 mb-2 w-64 glass-panel rounded-2xl overflow-hidden z-50"
                   >
                     <div className="p-1.5">
-                      {drawerItems.map((item) => {
+                      {drawerItems.map((item, i) => {
                         const Icon = item.icon
-                        const colorMap: Record<string, string> = {
-                          orange: 'bg-orange-50 text-orange-500 dark:bg-orange-500/15 dark:text-orange-400',
-                          violet: 'bg-violet-50 text-violet-500 dark:bg-violet-500/15 dark:text-violet-400',
-                          emerald: 'bg-emerald-50 text-emerald-500 dark:bg-emerald-500/15 dark:text-emerald-400',
-                        }
                         return (
-                          <button
+                          <motion.button
                             key={item.label}
+                            initial={{ opacity: 0, x: -8 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: i * 0.05 }}
                             type="button"
                             onClick={item.onClick}
                             disabled={item.disabled}
                             className={cn(
                               'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left',
-                              item.disabled ? 'opacity-40 cursor-not-allowed' : 'hover:bg-orange-50/60 dark:hover:bg-[var(--border)] cursor-pointer',
-                              item.active && 'bg-orange-50 dark:bg-orange-500/10'
+                              item.disabled ? 'opacity-40 cursor-not-allowed' : 'hover:bg-[var(--border)]/60 cursor-pointer',
+                              item.active && 'bg-[var(--accent-soft)]'
                             )}
                           >
-                            <div className={cn('w-8 h-8 rounded-xl flex items-center justify-center shrink-0', colorMap[item.color])}>
-                              <Icon size={15} />
+                            <div className={`w-8 h-8 rounded-xl bg-gradient-to-br ${item.gradient} flex items-center justify-center shrink-0 shadow-sm`}>
+                              <Icon size={14} className="text-white" />
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-1.5">
-                                <p className="text-sm font-semibold text-gray-800 dark:text-[var(--foreground)]">{item.label}</p>
+                                <p className="text-[13px] font-semibold text-[var(--foreground)]">{item.label}</p>
                                 {item.disabled && (
-                                  <span className="text-[9px] font-bold uppercase tracking-wide text-gray-400 bg-gray-100 dark:bg-[var(--border)] px-1.5 py-0.5 rounded-full">Bientôt</span>
+                                  <span className="text-[9px] font-bold uppercase tracking-wide text-[var(--foreground-subtle)] bg-[var(--border)] px-1.5 py-0.5 rounded-full">Soon</span>
                                 )}
                                 {item.active && (
-                                  <span className="text-[9px] font-bold uppercase tracking-wide text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-500/20 px-1.5 py-0.5 rounded-full">Actif</span>
+                                  <span className="text-[9px] font-bold uppercase tracking-wide text-[var(--accent)] bg-[var(--accent-soft)] px-1.5 py-0.5 rounded-full">On</span>
                                 )}
                               </div>
-                              <p className="text-xs text-gray-400 dark:text-[var(--foreground-subtle)] mt-0.5 truncate">{item.description}</p>
+                              <p className="text-[11px] text-[var(--foreground-muted)] mt-0.5 truncate">{item.description}</p>
                             </div>
-                          </button>
+                          </motion.button>
                         )
                       })}
                     </div>
-                    <div className="px-3 pb-2.5">
-                      <p className="text-[10px] text-gray-400 dark:text-[var(--foreground-subtle)]">
-                        L&apos;IA active aussi la recherche automatiquement si besoin.
+                    <div className="px-3 pb-2.5 pt-0.5">
+                      <p className="text-[10px] text-[var(--foreground-subtle)]">
+                        NTRL may also activate search automatically when needed.
                       </p>
                     </div>
                   </motion.div>
@@ -216,35 +232,50 @@ export function ChatComposer({
             <ModelSelector />
           </div>
 
-          {isStreaming ? (
+          <div className="flex items-center gap-1.5">
+            {/* Mic button (decorative) */}
             <motion.button
-              initial={{ scale: 0.8 }}
-              animate={{ scale: 1 }}
-              onClick={onStop}
-              className="w-8 h-8 rounded-lg flex items-center justify-center bg-gray-900 dark:bg-[var(--foreground)] text-white dark:text-[var(--background)] hover:opacity-80 transition-opacity"
-            >
-              <Square size={12} fill="currentColor" />
-            </motion.button>
-          ) : (
-            <button
               type="button"
-              onClick={onSubmit}
-              disabled={!canSend}
-              className={cn(
-                'w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-150',
-                canSend
-                  ? 'bg-orange-500 text-white hover:bg-orange-600 hover:scale-105 shadow-sm shadow-orange-400/30'
-                  : 'bg-gray-100 dark:bg-[var(--border)] text-gray-400 dark:text-[var(--foreground-subtle)] cursor-not-allowed'
-              )}
+              whileTap={{ scale: 0.9 }}
+              className="w-8 h-8 rounded-xl flex items-center justify-center bg-[var(--border)]/80 text-[var(--foreground-muted)] hover:bg-[var(--accent-soft)] hover:text-[var(--accent)] transition-all duration-200"
             >
-              <ArrowUp size={14} />
-            </button>
-          )}
+              <Mic size={13} />
+            </motion.button>
+
+            {isStreaming ? (
+              <motion.button
+                initial={{ scale: 0.7, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.7, opacity: 0 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={onStop}
+                className="w-8 h-8 rounded-xl flex items-center justify-center bg-[var(--foreground)] text-[var(--background)] hover:opacity-80 transition-opacity shadow-lg"
+              >
+                <Square size={11} fill="currentColor" />
+              </motion.button>
+            ) : (
+              <motion.button
+                type="button"
+                whileHover={canSend ? { scale: 1.08 } : {}}
+                whileTap={canSend ? { scale: 0.92 } : {}}
+                onClick={onSubmit}
+                disabled={!canSend}
+                className={cn(
+                  'w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-200',
+                  canSend
+                    ? 'bg-[var(--accent)] text-white shadow-lg shadow-[var(--accent-glow)]'
+                    : 'bg-[var(--border)]/80 text-[var(--foreground-subtle)] cursor-not-allowed'
+                )}
+              >
+                <ArrowUp size={14} />
+              </motion.button>
+            )}
+          </div>
         </div>
       </motion.div>
 
-      <p className="text-[10px] text-center text-gray-400 dark:text-[var(--foreground-subtle)] mt-2">
-        Netral peut faire des erreurs. Vérifiez les informations importantes.
+      <p className="text-[10px] text-center text-[var(--foreground-subtle)] mt-2.5">
+        NTRL can make mistakes. Always verify important information.
       </p>
     </div>
   )

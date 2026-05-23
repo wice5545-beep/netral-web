@@ -1,49 +1,55 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --background-secondary: #fdfaf5;
-  --background-elevated: #fdfaf5;
-  --background-overlay: rgba(255, 255, 255, 0.88);
-  --foreground: #111827;
-  --foreground-secondary: #374151;
-  --foreground-muted: #6b7280;
-  --foreground-subtle: #9ca3af;
-  --border: rgba(0, 0, 0, 0.07);
-  --border-strong: rgba(0, 0, 0, 0.12);
-  --accent: #f97316;
-  --accent-hover: #ea580c;
-  --accent-glow: rgba(249, 115, 22, 0.22);
-  --accent-soft: rgba(249, 115, 22, 0.09);
-  --gradient-1: #f97316;
-  --gradient-2: #fb923c;
-  --gradient-3: #fbbf24;
-  --code-bg: #fdf8f3;
-  --shadow-glow: 0 0 60px rgba(249, 115, 22, 0.1);
-  --sidebar-bg: #faf6ef;
+  --background: #f8f7ff;
+  --background-secondary: #f2f0fc;
+  --background-elevated: #ffffff;
+  --background-overlay: rgba(255, 255, 255, 0.8);
+  --foreground: #0d0b18;
+  --foreground-secondary: #3a3650;
+  --foreground-muted: #6e6a8a;
+  --foreground-subtle: #b0adc8;
+  --border: rgba(110, 100, 200, 0.1);
+  --border-strong: rgba(110, 100, 200, 0.2);
+  --accent: #7c6fff;
+  --accent-2: #a78bfa;
+  --accent-hover: #6a5eff;
+  --accent-glow: rgba(124, 111, 255, 0.3);
+  --accent-soft: rgba(124, 111, 255, 0.1);
+  --gradient-1: #7c6fff;
+  --gradient-2: #a78bfa;
+  --gradient-3: #c4b5fd;
+  --code-bg: #f4f2ff;
+  --shadow-glow: 0 0 80px rgba(124, 111, 255, 0.14);
+  --sidebar-bg: rgba(248, 247, 255, 0.97);
+  --glass-bg: rgba(255, 255, 255, 0.65);
+  --glass-border: rgba(124, 111, 255, 0.14);
 }
 
 .dark {
-  --background: #0c0a08;
-  --background-secondary: #131008;
-  --background-elevated: #1a1509;
-  --background-overlay: rgba(12, 10, 8, 0.78);
-  --foreground: #f5f0e8;
-  --foreground-secondary: #c8bfb0;
-  --foreground-muted: #8a7f72;
-  --foreground-subtle: #5a5248;
-  --border: rgba(255, 255, 255, 0.07);
-  --border-strong: rgba(255, 255, 255, 0.13);
-  --accent: #f97316;
-  --accent-hover: #fb923c;
-  --accent-glow: rgba(249, 115, 22, 0.4);
-  --accent-soft: rgba(249, 115, 22, 0.12);
-  --gradient-1: #f97316;
-  --gradient-2: #fb923c;
-  --gradient-3: #fbbf24;
-  --code-bg: #120f08;
-  --shadow-glow: 0 0 80px rgba(249, 115, 22, 0.18);
-  --sidebar-bg: #100d08;
+  --background: #06050f;
+  --background-secondary: #0c0a18;
+  --background-elevated: #110f1e;
+  --background-overlay: rgba(6, 5, 15, 0.75);
+  --foreground: #ede9ff;
+  --foreground-secondary: #c4bef0;
+  --foreground-muted: #7a7598;
+  --foreground-subtle: #44415a;
+  --border: rgba(130, 110, 255, 0.1);
+  --border-strong: rgba(130, 110, 255, 0.2);
+  --accent: #8b7fff;
+  --accent-2: #a78bfa;
+  --accent-hover: #7c6fff;
+  --accent-glow: rgba(139, 127, 255, 0.38);
+  --accent-soft: rgba(139, 127, 255, 0.14);
+  --gradient-1: #8b7fff;
+  --gradient-2: #a78bfa;
+  --gradient-3: #c4b5fd;
+  --code-bg: #0d0b1a;
+  --shadow-glow: 0 0 100px rgba(139, 127, 255, 0.24);
+  --sidebar-bg: rgba(8, 7, 18, 0.96);
+  --glass-bg: rgba(16, 14, 28, 0.7);
+  --glass-border: rgba(139, 127, 255, 0.16);
 }
 
 @theme inline {
@@ -78,7 +84,7 @@ body {
   color: var(--accent);
 }
 
-::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
   background: var(--border-strong);
@@ -86,36 +92,52 @@ body {
 }
 ::-webkit-scrollbar-thumb:hover { background: var(--foreground-subtle); }
 
+/* ─── Glassmorphism ────────────────────────────────────────────── */
 .glass {
-  background: var(--background-overlay);
-  backdrop-filter: blur(20px) saturate(160%);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
-  border: 1px solid var(--border);
+  background: var(--glass-bg);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid var(--glass-border);
 }
 
 .glass-strong {
-  background: var(--background-elevated);
-  backdrop-filter: blur(40px) saturate(180%);
-  -webkit-backdrop-filter: blur(40px) saturate(180%);
-  border: 1px solid var(--border-strong);
+  background: var(--background-overlay);
+  backdrop-filter: blur(40px) saturate(200%);
+  -webkit-backdrop-filter: blur(40px) saturate(200%);
+  border: 1px solid var(--glass-border);
 }
 
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(32px) saturate(160%);
+  -webkit-backdrop-filter: blur(32px) saturate(160%);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255,255,255,0.1);
+}
+
+.dark .glass-panel {
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255,255,255,0.04);
+}
+
+/* ─── Shadows ──────────────────────────────────────────────────── */
 .card-shadow {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 16px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(0, 0, 0, 0.04);
 }
 .dark .card-shadow {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 4px 20px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), 0 8px 32px rgba(0, 0, 0, 0.5);
 }
 
+/* ─── Text gradients ───────────────────────────────────────────── */
 .glow-text {
   background: linear-gradient(135deg, var(--gradient-1) 0%, var(--gradient-2) 50%, var(--gradient-3) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   background-size: 200% 200%;
-  animation: shimmer 6s ease-in-out infinite;
+  animation: shimmer 5s ease-in-out infinite;
 }
 
+/* ─── Animations ───────────────────────────────────────────────── */
 @keyframes shimmer {
   0%, 100% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
@@ -123,7 +145,7 @@ body {
 
 @keyframes pulse-glow {
   0%, 100% { box-shadow: 0 0 30px var(--accent-glow); }
-  50% { box-shadow: 0 0 60px var(--accent-glow); }
+  50% { box-shadow: 0 0 70px var(--accent-glow), 0 0 120px var(--accent-glow); }
 }
 .pulse-glow { animation: pulse-glow 3s ease-in-out infinite; }
 
@@ -154,15 +176,41 @@ body {
 }
 .orb-float { animation: orb-float 6s ease-in-out infinite; }
 
-.btn-glow:hover { box-shadow: 0 0 40px var(--accent-glow); }
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.spin-slow { animation: spin-slow 8s linear infinite; }
 
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes particle-orbit {
+  from { transform: rotate(0deg) translateX(var(--orbit-r, 40px)) rotate(0deg); }
+  to { transform: rotate(360deg) translateX(var(--orbit-r, 40px)) rotate(-360deg); }
+}
+
+@keyframes aurora {
+  0%, 100% { transform: translate(0%, 0%) scale(1); opacity: 0.5; }
+  25% { transform: translate(5%, -5%) scale(1.05); opacity: 0.7; }
+  50% { transform: translate(-3%, 8%) scale(0.95); opacity: 0.4; }
+  75% { transform: translate(-6%, -3%) scale(1.08); opacity: 0.65; }
+}
+.aurora { animation: aurora 18s ease-in-out infinite; }
+
+.btn-glow:hover { box-shadow: 0 0 40px var(--accent-glow), 0 4px 16px rgba(0,0,0,0.1); }
+
+/* ─── Grid ─────────────────────────────────────────────────────── */
 .bg-grid {
   background-image:
     linear-gradient(to right, var(--border) 1px, transparent 1px),
     linear-gradient(to bottom, var(--border) 1px, transparent 1px);
-  background-size: 60px 60px;
+  background-size: 48px 48px;
 }
 
+/* ─── Skeleton ─────────────────────────────────────────────────── */
 @keyframes skeleton {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
@@ -173,6 +221,7 @@ body {
   animation: skeleton 1.5s ease-in-out infinite;
 }
 
+/* ─── Stream cursor ────────────────────────────────────────────── */
 @keyframes blink { 50% { opacity: 0; } }
 .stream-cursor::after {
   content: '▍';
@@ -182,6 +231,7 @@ body {
   margin-left: 2px;
 }
 
+/* ─── Search pulse ─────────────────────────────────────────────── */
 @keyframes search-pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.35; }
@@ -206,15 +256,16 @@ body {
 .prose-chat code:not(pre code) {
   background: var(--code-bg);
   padding: 0.15em 0.4em;
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: 0.875em;
   font-family: var(--font-mono);
   border: 1px solid var(--border);
+  color: var(--accent-2);
 }
 .prose-chat pre {
   background: var(--code-bg);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 14px;
   padding: 16px;
   overflow-x: auto;
   margin: 0.8em 0;
@@ -245,6 +296,7 @@ body {
 }
 .prose-chat a[data-citation]:hover { background: var(--accent); color: white; }
 
+/* ─── Safe area ────────────────────────────────────────────────── */
 @supports (padding: max(0px)) {
   .pb-safe { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
   .pt-safe { padding-top: max(0px, env(safe-area-inset-top)); }

@@ -7,7 +7,7 @@ import { useChatStore, type ChatMessage } from '@/lib/store/chat'
 import { Message } from './Message'
 import { ChatComposer } from './ChatComposer'
 import { NetralLogo } from '@/components/ui/NetralLogo'
-import { Lightbulb, Code2, BookOpen, Sparkles, Globe, FileSearch, Brain } from 'lucide-react'
+import { Lightbulb, Code2, BookOpen, Sparkles, Globe, FileSearch, Brain, Zap, Palette, Music } from 'lucide-react'
 
 interface ChatInterfaceProps {
   initialMessages?: ChatMessage[]
@@ -19,16 +19,18 @@ interface ChatInterfaceProps {
 export type SearchStatus = null | 'searching' | 'reading' | 'thinking'
 
 const suggestions = [
-  { icon: Lightbulb, text: "Explique l'informatique quantique simplement", label: 'Expliquer', color: 'text-amber-500' },
-  { icon: Code2, text: 'Écris une fonction debounce en TypeScript', label: 'Code', color: 'text-orange-500' },
-  { icon: BookOpen, text: 'Résume les principes du stoïcisme', label: 'Résumer', color: 'text-rose-500' },
-  { icon: Sparkles, text: 'Génère des noms créatifs pour une startup IA', label: 'Brainstorm', color: 'text-violet-500' },
+  { icon: Lightbulb, text: 'Explain quantum computing simply', label: 'Explain', gradient: 'from-amber-400 to-orange-500' },
+  { icon: Code2, text: 'Write a debounce function in TypeScript', label: 'Code', gradient: 'from-violet-400 to-indigo-500' },
+  { icon: Sparkles, text: 'Generate creative names for an AI startup', label: 'Brainstorm', gradient: 'from-pink-400 to-rose-500' },
+  { icon: BookOpen, text: 'Summarize the principles of stoicism', label: 'Summarize', gradient: 'from-emerald-400 to-teal-500' },
+  { icon: Zap, text: 'Optimize this React component for performance', label: 'Optimize', gradient: 'from-yellow-400 to-amber-500' },
+  { icon: Palette, text: 'Design a color palette for a fintech app', label: 'Design', gradient: 'from-blue-400 to-cyan-500' },
 ]
 
 const statusConfig = {
-  searching: { icon: Globe, label: 'Recherche en cours…' },
-  reading: { icon: FileSearch, label: 'Lecture des sources…' },
-  thinking: { icon: Brain, label: 'Analyse et synthèse…' },
+  searching: { icon: Globe, label: 'Searching the web…' },
+  reading: { icon: FileSearch, label: 'Reading sources…' },
+  thinking: { icon: Brain, label: 'Thinking…' },
 }
 
 const spring = { type: 'spring' as const, stiffness: 500, damping: 35 }
@@ -83,7 +85,7 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
 
       if (!response.ok || !response.body) {
         const errText = await response.text().catch(() => 'unknown')
-        updateLastMessage(`\n\n⚠️ Erreur : ${errText.slice(0, 200)}`)
+        updateLastMessage(`\n\n⚠️ Error: ${errText.slice(0, 200)}`)
         return
       }
 
@@ -131,7 +133,7 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
         upsertConversation({ id: conversationId, title: text.slice(0, 60), model: currentModel, pinned: false, updatedAt: new Date().toISOString() })
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Erreur inconnue'
+      const message = err instanceof Error ? err.message : 'Unknown error'
       if (message !== 'AbortError' && !(err instanceof DOMException)) updateLastMessage(`\n\n⚠️ ${message}`)
     } finally {
       setStreaming(false)
@@ -156,78 +158,115 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
   }
 
   const isEmpty = didInit && messages.length === 0
+  const firstName = userName?.split(' ')[0]
 
   return (
-    <div className="flex flex-col h-full relative bg-white dark:bg-[var(--background)]">
+    <div className="flex flex-col h-full relative">
       <div ref={scrollRef} className="flex-1 overflow-y-auto scroll-smooth">
         {isEmpty ? (
-          <div className="min-h-full flex flex-col items-center justify-center px-6 py-20 pb-44">
-            {/* Orb hero */}
+          <div className="min-h-full flex flex-col items-center justify-center px-6 py-20 pb-52">
+
+            {/* Animated logo hero */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
+              initial={{ opacity: 0, scale: 0.6 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ ...spring, delay: 0 }}
-              className="relative mb-8 flex items-center justify-center"
+              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+              className="relative mb-10 flex items-center justify-center"
             >
-              {/* Rings */}
-              {[60, 96, 132].map((size, i) => (
+              {/* Pulsing rings */}
+              {[80, 120, 164].map((size, i) => (
                 <motion.div
                   key={size}
-                  className="absolute rounded-full border border-orange-200/50"
-                  style={{ width: size, height: size }}
-                  animate={{ scale: [1, 1.06, 1], opacity: [0.4, 0.7, 0.4] }}
-                  transition={{ duration: 3 + i, repeat: Infinity, ease: 'easeInOut', delay: i * 0.5 }}
+                  className="absolute rounded-full"
+                  style={{
+                    width: size,
+                    height: size,
+                    border: `1px solid rgba(139,127,255,${0.25 - i * 0.07})`,
+                  }}
+                  animate={{
+                    scale: [1, 1.08, 1],
+                    opacity: [0.4, 0.7, 0.4],
+                  }}
+                  transition={{
+                    duration: 3 + i * 0.8,
+                    repeat: Infinity,
+                    ease: 'easeInOut',
+                    delay: i * 0.5,
+                  }}
                 />
               ))}
+
+              {/* Rotating gradient ring */}
               <motion.div
-                animate={{ y: [0, -6, 0] }}
+                className="absolute rounded-full"
+                style={{
+                  width: 96,
+                  height: 96,
+                  background: 'conic-gradient(from 0deg, transparent 60%, rgba(139,127,255,0.6) 80%, transparent 100%)',
+                }}
+                animate={{ rotate: 360 }}
+                transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
+              />
+
+              <motion.div
+                animate={{ y: [0, -8, 0] }}
                 transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
               >
-                <NetralLogo size={56} animated />
+                <NetralLogo size={58} animated />
               </motion.div>
             </motion.div>
 
             {/* Greeting */}
             <motion.div
-              initial={{ opacity: 0, y: 16 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ ...spring, delay: 0.1 }}
-              className="text-center mb-10"
+              transition={{ delay: 0.15, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              className="text-center mb-3"
             >
-              <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-gray-900 dark:text-[var(--foreground)] mb-3">
-                {userName ? `Bonjour, ${userName.split(' ')[0]}` : 'Bonjour'}
+              <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-2">
+                {firstName ? (
+                  <>
+                    <span className="text-[var(--foreground)]">Hello, </span>
+                    <span className="glow-text">{firstName}</span>
+                  </>
+                ) : (
+                  <span className="glow-text">Hello there</span>
+                )}
               </h2>
-              <p className="text-gray-400 dark:text-[var(--foreground-muted)] text-lg">
-                Comment puis-je vous aider aujourd&apos;hui ?
+              <p className="text-[var(--foreground-muted)] text-lg font-light">
+                What can I help you with today?
               </p>
             </motion.div>
 
-            {/* Suggestions */}
+            {/* Suggestion cards */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ ...spring, delay: 0.18 }}
-              className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full max-w-lg"
+              transition={{ delay: 0.25, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 w-full max-w-2xl mt-8"
             >
               {suggestions.map((s, i) => {
                 const Icon = s.icon
                 return (
                   <motion.button
                     key={s.text}
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ ...spring, delay: 0.22 + i * 0.05 }}
-                    whileHover={{ y: -2, boxShadow: '0 8px 24px rgba(249,115,22,0.1)' }}
-                    whileTap={{ scale: 0.98 }}
+                    initial={{ opacity: 0, y: 16, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{ delay: 0.3 + i * 0.06, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                    whileHover={{ y: -3, scale: 1.02 }}
+                    whileTap={{ scale: 0.97 }}
                     onClick={() => handleSubmit(s.text)}
-                    className="group flex items-start gap-3 p-4 rounded-2xl bg-white dark:bg-[var(--background-elevated)] border border-gray-100 dark:border-[var(--border)] text-left cursor-pointer transition-colors hover:border-orange-200"
+                    className="group relative flex items-start gap-3 p-4 rounded-2xl glass-panel text-left cursor-pointer transition-all duration-200 hover:border-[var(--accent)]/30 overflow-hidden"
                   >
-                    <div className="w-8 h-8 rounded-xl bg-gray-50 dark:bg-[var(--border)] flex items-center justify-center shrink-0 mt-0.5">
-                      <Icon size={15} className={s.color} />
+                    {/* Hover shimmer */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/0 via-white/0 to-white/0 group-hover:from-[var(--accent)]/5 group-hover:to-transparent transition-all duration-300 rounded-2xl" />
+
+                    <div className={`w-8 h-8 rounded-xl bg-gradient-to-br ${s.gradient} flex items-center justify-center shrink-0 mt-0.5 shadow-lg`}>
+                      <Icon size={14} className="text-white" />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[11px] font-semibold text-gray-400 dark:text-[var(--foreground-subtle)] uppercase tracking-wider mb-0.5">{s.label}</p>
-                      <p className="text-sm text-gray-700 dark:text-[var(--foreground)] line-clamp-2 leading-relaxed">{s.text}</p>
+                    <div className="flex-1 min-w-0 relative z-10">
+                      <p className="text-[10px] font-bold text-[var(--foreground-subtle)] uppercase tracking-[0.12em] mb-1">{s.label}</p>
+                      <p className="text-[13px] text-[var(--foreground)] line-clamp-2 leading-relaxed">{s.text}</p>
                     </div>
                   </motion.button>
                 )
@@ -235,12 +274,12 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
             </motion.div>
           </div>
         ) : (
-          <div className="max-w-2xl mx-auto w-full px-4 md:px-6 pt-8 pb-44">
+          <div className="max-w-2xl mx-auto w-full px-4 md:px-6 pt-8 pb-52">
             <AnimatePresence initial={false}>
               {messages.map((m, i) => (
                 <motion.div
                   key={m.id}
-                  initial={{ opacity: 0, y: 16, scale: 0.99 }}
+                  initial={{ opacity: 0, y: 18, scale: 0.98 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   transition={spring}
                 >
@@ -259,16 +298,16 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
         )}
       </div>
 
-      {/* Bottom area */}
+      {/* Bottom input area */}
       <div className="absolute bottom-0 left-0 right-0 pointer-events-none">
         <div className="max-w-2xl mx-auto px-4 md:px-6 pb-5 md:pb-7 pb-safe">
-          {/* Search status pill */}
+          {/* Status pill */}
           <AnimatePresence>
             {searchStatus && (
               <motion.div
-                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                initial={{ opacity: 0, y: 12, scale: 0.92 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 6, scale: 0.97 }}
+                exit={{ opacity: 0, y: 6, scale: 0.96 }}
                 transition={spring}
                 className="flex justify-center mb-3"
               >
@@ -276,7 +315,7 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
                   const s = statusConfig[searchStatus]
                   const Icon = s.icon
                   return (
-                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white dark:bg-[var(--background-elevated)] border border-orange-200/80 shadow-sm shadow-orange-100/60 text-sm font-medium text-orange-600 dark:text-orange-400">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-[var(--accent)]/30 shadow-lg text-sm font-medium text-[var(--accent)]">
                       <Icon size={13} className="search-pulse" />
                       <span className="search-pulse">{s.label}</span>
                     </div>
@@ -301,7 +340,7 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
         </div>
 
         {/* Fade gradient */}
-        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-white dark:from-[var(--background)] via-white/80 dark:via-[var(--background)]/80 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-[var(--background)] via-[var(--background)]/85 to-transparent pointer-events-none" />
       </div>
     </div>
   )

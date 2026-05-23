@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { motion } from 'framer-motion'
-import { Copy, Check, RotateCw, ExternalLink } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Copy, Check, RotateCw, ExternalLink, ThumbsUp, ThumbsDown } from 'lucide-react'
 import { Markdown } from './Markdown'
 import { TypingOrb } from './TypingOrb'
 import { NetralLogo } from '@/components/ui/NetralLogo'
@@ -39,6 +39,7 @@ function contentWithoutSources(content: string): string {
 
 export function Message({ role, content, isStreaming, isLast, onRegenerate, userInitial }: MessageProps) {
   const [copied, setCopied] = useState(false)
+  const [liked, setLiked] = useState<boolean | null>(null)
 
   const copy = async () => {
     try {
@@ -51,16 +52,24 @@ export function Message({ role, content, isStreaming, isLast, onRegenerate, user
   if (role === 'user') {
     return (
       <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.25 }}
+        initial={{ opacity: 0, y: 10, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
         className="flex justify-end mb-6 group"
       >
-        <div className="flex gap-3 max-w-[85%] md:max-w-[75%] items-start">
-          <div className="rounded-2xl rounded-tr-md px-4 py-2.5 bg-[#fdfaf5] border border-orange-100/80 text-gray-900 dark:text-[var(--foreground)] text-sm leading-relaxed whitespace-pre-wrap break-words">
-            {content}
+        <div className="flex gap-3 max-w-[85%] md:max-w-[75%] items-end">
+          <div className="relative rounded-2xl rounded-br-sm px-4 py-3 text-[var(--foreground)] text-[14.5px] leading-relaxed whitespace-pre-wrap break-words overflow-hidden"
+            style={{
+              background: 'var(--glass-bg)',
+              border: '1px solid var(--glass-border)',
+              backdropFilter: 'blur(24px)',
+            }}
+          >
+            {/* Subtle inner glow */}
+            <div className="absolute inset-0 rounded-2xl rounded-br-sm bg-gradient-to-br from-[var(--accent)]/5 to-transparent pointer-events-none" />
+            <span className="relative z-10">{content}</span>
           </div>
-          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-xs font-bold shrink-0 mt-0.5">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-lg shadow-[var(--accent-glow)]">
             {userInitial?.toUpperCase() ?? 'U'}
           </div>
         </div>
@@ -74,13 +83,13 @@ export function Message({ role, content, isStreaming, isLast, onRegenerate, user
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25 }}
-      className="flex gap-3 mb-6 group"
+      transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+      className="flex gap-3.5 mb-7 group"
     >
       <div className="shrink-0 mt-0.5">
-        <NetralLogo size={26} animated={isStreaming} />
+        <NetralLogo size={28} animated={isStreaming} />
       </div>
       <div className="flex-1 min-w-0">
         {showOrb ? (
@@ -90,29 +99,32 @@ export function Message({ role, content, isStreaming, isLast, onRegenerate, user
             <Markdown content={displayContent} />
             {isStreaming && <span className="stream-cursor" />}
 
+            {/* Sources */}
             {!isStreaming && sources.length > 0 && (
               <motion.div
-                initial={{ opacity: 0, y: 6 }}
+                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: 0.1 }}
                 className="mt-4"
               >
-                <p className="text-xs font-semibold text-gray-400 dark:text-[var(--foreground-subtle)] uppercase tracking-wider mb-2">
+                <p className="text-[9px] font-bold text-[var(--foreground-subtle)] uppercase tracking-[0.15em] mb-2 flex items-center gap-1.5">
+                  <span className="w-3 h-px bg-[var(--foreground-subtle)]/40" />
                   Sources
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {sources.map((s, i) => (
-                    <a
+                    <motion.a
                       key={i}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: i * 0.05 }}
                       href={s.url}
                       target="_blank"
                       rel="noopener noreferrer"
                       className={cn(
                         'group/src flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs',
-                        'bg-white dark:bg-[var(--background-elevated)]',
-                        'border border-gray-100 dark:border-[var(--border)]',
-                        'hover:border-orange-200 dark:hover:border-[var(--accent)]/40',
-                        'hover:shadow-sm hover:shadow-orange-50/60 transition-all'
+                        'glass border border-[var(--glass-border)]',
+                        'hover:border-[var(--accent)]/40 hover:shadow-sm transition-all duration-200'
                       )}
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -122,36 +134,78 @@ export function Message({ role, content, isStreaming, isLast, onRegenerate, user
                         className="w-3.5 h-3.5 rounded-sm"
                         onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
                       />
-                      <span className="text-gray-600 dark:text-[var(--foreground-muted)] group-hover/src:text-orange-500 dark:group-hover/src:text-[var(--accent)] transition-colors font-medium truncate max-w-[140px]">
+                      <span className="text-[var(--foreground-muted)] group-hover/src:text-[var(--accent)] transition-colors font-medium truncate max-w-[140px]">
                         {s.domain}
                       </span>
-                      <span className="text-orange-400 dark:text-[var(--accent)] text-[9px] font-bold">[{i + 1}]</span>
-                      <ExternalLink size={10} className="text-gray-300 group-hover/src:text-orange-400 transition-colors shrink-0" />
-                    </a>
+                      <span className="text-[var(--accent)] text-[9px] font-bold">[{i + 1}]</span>
+                      <ExternalLink size={9} className="text-[var(--foreground-subtle)] group-hover/src:text-[var(--accent)] transition-colors shrink-0" />
+                    </motion.a>
                   ))}
                 </div>
               </motion.div>
             )}
 
+            {/* Action bar */}
             {!isStreaming && (
-              <div className="flex items-center gap-1 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 0 }}
+                whileHover={{ opacity: 1 }}
+                className="flex items-center gap-0.5 mt-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+              >
                 <button
                   onClick={copy}
-                  className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs text-gray-400 dark:text-[var(--foreground-muted)] hover:bg-gray-100 dark:hover:bg-[var(--border)] hover:text-gray-700 dark:hover:text-[var(--foreground)] transition-colors"
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] text-[var(--foreground-muted)] hover:bg-[var(--border)]/60 hover:text-[var(--foreground)] transition-all duration-150"
                 >
-                  {copied ? <Check size={11} /> : <Copy size={11} />}
-                  {copied ? 'Copié' : 'Copier'}
+                  <AnimatePresence mode="wait">
+                    {copied ? (
+                      <motion.span key="check" initial={{ scale: 0.5 }} animate={{ scale: 1 }} exit={{ scale: 0.5 }}>
+                        <Check size={11} className="text-emerald-400" />
+                      </motion.span>
+                    ) : (
+                      <motion.span key="copy" initial={{ scale: 0.5 }} animate={{ scale: 1 }} exit={{ scale: 0.5 }}>
+                        <Copy size={11} />
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                  {copied ? 'Copied!' : 'Copy'}
                 </button>
+
                 {isLast && onRegenerate && (
                   <button
                     onClick={onRegenerate}
-                    className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs text-gray-400 dark:text-[var(--foreground-muted)] hover:bg-gray-100 dark:hover:bg-[var(--border)] hover:text-gray-700 dark:hover:text-[var(--foreground)] transition-colors"
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] text-[var(--foreground-muted)] hover:bg-[var(--border)]/60 hover:text-[var(--foreground)] transition-all duration-150"
                   >
                     <RotateCw size={11} />
-                    Régénérer
+                    Retry
                   </button>
                 )}
-              </div>
+
+                <div className="w-px h-3.5 bg-[var(--glass-border)] mx-0.5" />
+
+                <button
+                  onClick={() => setLiked(true)}
+                  className={cn(
+                    'p-1.5 rounded-lg text-[11px] transition-all duration-150',
+                    liked === true
+                      ? 'text-emerald-400 bg-emerald-400/10'
+                      : 'text-[var(--foreground-muted)] hover:bg-[var(--border)]/60 hover:text-emerald-400'
+                  )}
+                >
+                  <ThumbsUp size={11} />
+                </button>
+                <button
+                  onClick={() => setLiked(false)}
+                  className={cn(
+                    'p-1.5 rounded-lg text-[11px] transition-all duration-150',
+                    liked === false
+                      ? 'text-red-400 bg-red-400/10'
+                      : 'text-[var(--foreground-muted)] hover:bg-[var(--border)]/60 hover:text-red-400'
+                  )}
+                >
+                  <ThumbsDown size={11} />
+                </button>
+              </motion.div>
             )}
           </>
         )}
