@@ -13,6 +13,7 @@ import { LogoutIcon } from '@/components/ui/logout'
 import { MessageSquareIcon } from '@/components/ui/message-square'
 import { useChatStore } from '@/lib/store/chat'
 import { NetralLogo } from '@/components/ui/NetralLogo'
+import { useI18n } from '@/lib/i18n'
 import { logout } from '@/actions/auth'
 import { cn } from '@/lib/utils'
 
@@ -41,6 +42,7 @@ function groupConversations(convs: ReturnType<typeof useChatStore.getState>['con
 }
 
 export function Sidebar({ user, onOpenSettings }: SidebarProps) {
+  const { t } = useI18n()
   const router = useRouter()
   const pathname = usePathname()
   const { conversations, conversationId, sidebarOpen, setSidebarOpen, removeConversation, setConversations, conversationsLoaded } = useChatStore()
@@ -92,7 +94,7 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
   const [renameValue, setRenameValue] = useState('')
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Supprimer cette conversation ?')) return
+    if (!confirm(t.chat.deleteConfirm)) return
     await fetch(`/api/conversations/${id}`, { method: 'DELETE' })
     removeConversation(id)
     if (conversationId === id) router.push('/chat')
@@ -183,20 +185,20 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
                         onClick={() => { setRenameValue(c.title); setRenaming(c.id); setMenuOpen(null) }}
                         className="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-[var(--fg-soft)] hover:bg-[var(--bg-soft)] transition-colors"
                       >
-                        <Pencil size={11} /> Renommer
+                        <Pencil size={11} /> {t.chat.rename}
                       </button>
                       <button
                         onClick={() => handleRemix(c.id)}
                         className="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-[var(--fg-soft)] hover:bg-[var(--bg-soft)] transition-colors"
                       >
-                        <Copy size={11} /> Remixer
+                        <Copy size={11} /> {t.chat.remix}
                       </button>
                       <div className="h-px bg-[var(--border)] my-1 mx-2" />
                       <button
                         onClick={() => handleDelete(c.id)}
                         className="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
                       >
-                        <Trash2 size={11} /> Supprimer
+                        <Trash2 size={11} /> {t.chat.delete}
                       </button>
                     </motion.div>
                   )}
@@ -258,7 +260,7 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
           >
             <span className="flex items-center gap-2">
               <Plus size={14} strokeWidth={2.2} />
-              Nouvelle conversation
+              {t.chat.newConversation}
             </span>
             <span className="kbd opacity-60 group-hover:opacity-100 transition-opacity">⌘N</span>
           </button>
@@ -270,7 +272,7 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
             <SearchIcon size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--fg-muted)] pointer-events-none" />
             <input
               type="text"
-              placeholder="Rechercher"
+              placeholder={t.chat.search}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full h-8 pl-8 pr-3 rounded-md bg-transparent border border-transparent text-[13px] text-[var(--fg)] placeholder:text-[var(--fg-subtle)] hover:bg-[var(--bg)] focus:outline-none focus:border-[var(--border)] focus:bg-[var(--bg)] transition-all"
@@ -289,19 +291,19 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
           ) : conversations.length === 0 ? (
             <div className="px-3 py-12 text-center">
               <MessageSquareIcon size={16} className="text-[var(--fg-subtle)] mx-auto mb-2" />
-              <p className="text-[12px] text-[var(--fg-muted)]">Aucune conversation</p>
+              <p className="text-[12px] text-[var(--fg-muted)]">{t.chat.noConversations}</p>
             </div>
           ) : filtered.length === 0 ? (
             <div className="px-3 py-12 text-center">
-              <p className="text-[12px] text-[var(--fg-muted)]">Aucun résultat</p>
+              <p className="text-[12px] text-[var(--fg-muted)]">{t.chat.noResults}</p>
             </div>
           ) : (
             <>
-              {renderGroup("Aujourd'hui", groups.today)}
-              {renderGroup('Hier', groups.yesterday)}
-              {renderGroup('7 derniers jours', groups.week)}
-              {renderGroup('30 derniers jours', groups.month)}
-              {renderGroup('Plus ancien', groups.older)}
+              {renderGroup(t.chat.today, groups.today)}
+              {renderGroup(t.chat.yesterday, groups.yesterday)}
+              {renderGroup(t.chat.last7days, groups.week)}
+              {renderGroup(t.chat.last30days, groups.month)}
+              {renderGroup(t.chat.older, groups.older)}
             </>
           )}
         </div>
@@ -335,7 +337,7 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
                   className="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] text-[var(--fg-soft)] hover:bg-[var(--bg-soft)] transition-colors"
                 >
                   <SettingsIcon size={13} className="opacity-60" />
-                  Paramètres
+                  {t.chat.settings}
                   <span className="ml-auto kbd">⌘,</span>
                 </button>
                 <div className="h-px bg-[var(--border)] my-1 mx-2" />
@@ -344,7 +346,7 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
                   className="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
                 >
                   <LogoutIcon size={13} className="opacity-60" />
-                  Déconnexion
+                  {t.chat.logout}
                 </button>
               </motion.div>
             )}

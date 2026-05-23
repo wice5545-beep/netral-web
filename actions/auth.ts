@@ -41,6 +41,13 @@ export async function signup(state: AuthState, formData: FormData): Promise<Auth
     return { message: error.message }
   }
 
+  // Also create user in Neon DB for conversations
+  const { db } = await import('@/lib/db')
+  await db.query(
+    `INSERT INTO "User" (id, name, email, password, onboarded, "preferredModel", "createdAt") VALUES ($1, $2, $3, '', false, 'ntrl-1.3', now()) ON CONFLICT (id) DO NOTHING`,
+    [data.user.id, name, email]
+  )
+
   await createSession(data.user.id)
   redirect('/chat')
 }
@@ -69,6 +76,13 @@ export async function login(state: AuthState, formData: FormData): Promise<AuthS
   )
   const { error: signInError } = await tempClient.auth.signInWithPassword({ email, password })
   if (signInError) return { errors: { email: ['Invalid email or password'] } }
+
+  // Ensure user exists in Neon DB
+  const { db } = await import('@/lib/db')
+  await db.query(
+    `INSERT INTO "User" (id, name, email, password, onboarded, "preferredModel", "createdAt") VALUES ($1, $2, $3, '', true, 'ntrl-1.3', now()) ON CONFLICT (id) DO NOTHING`,
+    [user.id, user.user_metadata?.name ?? email.split('@')[0], email]
+  )
 
   await createSession(user.id)
   redirect('/chat')

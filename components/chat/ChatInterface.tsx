@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useChatStore, type ChatMessage } from '@/lib/store/chat'
 import { getRandomSuggestions } from '@/lib/suggestions'
+import { useI18n } from '@/lib/i18n'
 import { Message } from './Message'
 import { ChatComposer } from './ChatComposer'
 import { Globe, FileText, Sparkles } from 'lucide-react'
@@ -18,13 +19,8 @@ interface ChatInterfaceProps {
 
 export type SearchStatus = null | 'searching' | 'reading' | 'thinking'
 
-const statusLabels = {
-  searching: 'Recherche en cours…',
-  reading: 'Lecture des sources…',
-  thinking: 'Réflexion…',
-}
-
 export function ChatInterface({ initialMessages = [], conversationId: initialConversationId, userInitial, userName }: ChatInterfaceProps) {
+  const { t } = useI18n()
   const router = useRouter()
   const { messages, setMessages, appendMessage, updateLastMessage, setStreaming, isStreaming, currentModel, conversationId, setConversationId, upsertConversation } = useChatStore()
   const [input, setInput] = useState('')
@@ -164,7 +160,7 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
               transition={{ duration: 0.4 }}
               className="text-[28px] md:text-[32px] font-semibold tracking-[-0.02em] text-center mb-2"
             >
-              {firstName ? `Bonjour, ${firstName}` : 'Bonjour'}
+              {firstName ? t.chat.helloName.replace('{name}', firstName) : t.chat.hello}
             </motion.h1>
             <motion.p
               initial={{ opacity: 0, y: 8 }}
@@ -172,7 +168,7 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
               transition={{ delay: 0.05, duration: 0.4 }}
               className="text-[15px] text-[var(--fg-muted)] text-center mb-10"
             >
-              Comment puis-je vous aider aujourd'hui ?
+              {t.chat.howCanIHelp}
             </motion.p>
 
             <motion.div
@@ -241,7 +237,7 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
                     <span className="w-1 h-1 rounded-full bg-[var(--fg)] typing-dot" style={{ animationDelay: '150ms' }} />
                     <span className="w-1 h-1 rounded-full bg-[var(--fg)] typing-dot" style={{ animationDelay: '300ms' }} />
                   </span>
-                  {statusLabels[searchStatus]}
+                  {t.chat[searchStatus as 'searching' | 'reading' | 'thinking']}
                 </div>
               </motion.div>
             )}
