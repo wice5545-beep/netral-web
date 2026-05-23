@@ -261,7 +261,7 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
         </div>
 
         {/* Bottom fade */}
-        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-[var(--bg)] via-[var(--bg)] to-transparent pointer-events-none" />
+        <div className="absolute inset-x-0 bottom-0 h-8 -z-10 bg-[var(--bg)] pointer-events-none" />
       </div>
     </div>
   )
