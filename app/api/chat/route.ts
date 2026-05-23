@@ -164,9 +164,14 @@ export async function POST(req: NextRequest) {
       }
 
       // Stream LLM
+      // Merge any client system messages into the server system prompt
+      const clientSystemMsgs = messages.filter((m: any) => m.role === 'system').map((m: any) => m.content).join('\n')
+      const finalSystemPrompt = clientSystemMsgs ? systemPrompt + '\n\n' + clientSystemMsgs : systemPrompt
+      const userAndAssistantMsgs = messages.filter((m: any) => m.role !== 'system')
+
       const payload = {
         model: model.upstreamModel,
-        messages: [{ role: 'system', content: systemPrompt }, ...messages.filter((m) => typeof m.content === 'string' ? m.content.trim() : true).map((m) => ({ role: m.role, content: m.content }))],
+        messages: [{ role: 'system', content: finalSystemPrompt }, ...userAndAssistantMsgs.filter((m: any) => typeof m.content === 'string' ? m.content.trim() : true).map((m: any) => ({ role: m.role, content: m.content }))],
         stream: true,
         temperature: 0.7,
         max_tokens: 4096,
