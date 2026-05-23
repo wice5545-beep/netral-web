@@ -171,11 +171,17 @@ export async function POST(req: NextRequest) {
                 `SELECT COUNT(*) as cnt FROM "Message" WHERE "conversationId" = $1 AND role = 'user'`, [convId]
               )
               if (parseInt(msgCount[0]?.cnt) <= 1) {
-                // First exchange - generate title from user message (short) or AI response
-                const userText = textContent ?? ''
-                const title = userText.length > 3 && userText.length <= 50
-                  ? userText
-                  : userText.slice(0, 45).trim() || accumulated.replace(/[#*_\n`]/g, ' ').trim().slice(0, 45)
+                // Generate a meaningful title from the AI response
+                const clean = accumulated.replace(/[#*_`\n]/g, ' ').replace(/\s+/g, ' ').trim()
+                const firstSentence = clean.split(/[.!?]/)[0]?.trim()
+                let title = ''
+                if (firstSentence && firstSentence.length >= 5 && firstSentence.length <= 55) {
+                  title = firstSentence
+                } else if (clean.length > 5) {
+                  title = clean.slice(0, 45).trim()
+                } else {
+                  title = textContent.slice(0, 45).trim()
+                }
                 if (title) {
                   await db.query(`UPDATE "Conversation" SET title = $1 WHERE id = $2`, [title, convId])
                   send({ type: 'title', title })

@@ -136,8 +136,6 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
       if (newConversationId && !initialConversationId) {
         router.replace(`/chat/${newConversationId}`, { scroll: false })
         upsertConversation({ id: newConversationId, title: text.slice(0, 60), model: currentModel, pinned: false, updatedAt: new Date().toISOString() })
-      } else if (conversationId) {
-        upsertConversation({ id: conversationId, title: text.slice(0, 60), model: currentModel, pinned: false, updatedAt: new Date().toISOString() })
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erreur inconnue'
