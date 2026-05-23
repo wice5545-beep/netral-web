@@ -1,19 +1,17 @@
 import { NextRequest } from 'next/server'
 import { getSession } from '@/lib/session'
-import { prisma } from '@/lib/prisma'
+import { db } from '@/lib/db'
 
 export async function GET() {
   const session = await getSession()
   if (!session?.userId) return Response.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const conversations = await prisma.conversation.findMany({
-    where: { userId: session.userId },
-    orderBy: { updatedAt: 'desc' },
-    select: { id: true, title: true, model: true, pinned: true, updatedAt: true, createdAt: true },
-    take: 100,
-  })
+  const { rows } = await db.query(
+    `SELECT id, title, model, pinned, "updatedAt", "createdAt" FROM "Conversation" WHERE "userId" = $1 ORDER BY "updatedAt" DESC LIMIT 100`,
+    [session.userId]
+  )
 
-  return Response.json({ conversations })
+  return Response.json({ conversations: rows })
 }
 
 export async function POST(req: NextRequest) {
@@ -23,24 +21,18 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}))
   const { title, model } = body as { title?: string; model?: string }
 
-  const safeTitle = (title ?? 'Nouvelle conversation').slice(0, 200)
-  const safeModel = (model ?? 'ntrl-1.3').slice(0, 50)
+  const { rows } = await db.query(
+    `INSERT INTO "Conversation" ("id", "userId", "title", "model", "createdAt", "updatedAt") VALUES (gen_random_uuid(), $1, $2, $3, now(), now()) RETURNING *`,
+    [session.userId, (title ?? 'Nouvelle conversation').slice(0, 200), (model ?? 'ntrl-1.3').slice(0, 50)]
+  )
 
-  const conv = await prisma.conversation.create({
-    data: {
-      userId: session.userId,
-      title: safeTitle,
-      model: safeModel,
-    },
-  })
-
-  return Response.json({ conversation: conv })
+  return Response.json({ conversation: rows[0] })
 }
 
 export async function DELETE() {
   const session = await getSession()
   if (!session?.userId) return Response.json({ error: 'Unauthorized' }, { status: 401 })
 
-  await prisma.conversation.deleteMany({ where: { userId: session.userId } })
+  await db.query(`DELETE FROM "Conversation" WHERE "userId" = $1`, [session.userId])
   return Response.json({ ok: true })
 }

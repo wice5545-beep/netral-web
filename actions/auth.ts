@@ -1,19 +1,14 @@
 'use server'
 
 import { z } from 'zod'
-import bcrypt from 'bcryptjs'
 import { redirect } from 'next/navigation'
-import { prisma } from '@/lib/prisma'
+import { supabaseAdmin } from '@/lib/supabase'
 import { createSession, deleteSession } from '@/lib/session'
 
 const SignupSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters').trim(),
   email: z.string().email('Invalid email').trim(),
-  password: z
-    .string()
-    .min(8, 'At least 8 characters')
-    .regex(/[a-zA-Z]/, 'Must contain a letter')
-    .regex(/[0-9]/, 'Must contain a number'),
+  password: z.string().min(8, 'At least 8 characters').regex(/[a-zA-Z]/, 'Must contain a letter').regex(/[0-9]/, 'Must contain a number'),
 })
 
 const LoginSchema = z.object({
@@ -21,10 +16,7 @@ const LoginSchema = z.object({
   password: z.string().min(1, 'Password required'),
 })
 
-export type AuthState = {
-  errors?: Record<string, string[]>
-  message?: string
-} | undefined
+export type AuthState = { errors?: Record<string, string[]>; message?: string } | undefined
 
 export async function signup(state: AuthState, formData: FormData): Promise<AuthState> {
   const result = SignupSchema.safeParse({
@@ -32,35 +24,25 @@ export async function signup(state: AuthState, formData: FormData): Promise<Auth
     email: formData.get('email'),
     password: formData.get('password'),
   })
-
-  if (!result.success) {
-    return { errors: result.error.flatten().fieldErrors }
-  }
+  if (!result.success) return { errors: result.error.flatten().fieldErrors }
 
   const { name, email, password } = result.data
-  const hashedPassword = await bcrypt.hash(password, 10)
 
-  try {
-    const existing = await prisma.user.findUnique({ where: { email } })
-    if (existing) {
-      return { errors: { email: ['This email is already in use'] } }
-    }
+  // Create user via Supabase Auth
+  const { data, error } = await supabaseAdmin.auth.admin.createUser({
+    email,
+    password,
+    user_metadata: { name },
+    email_confirm: true,
+  })
 
-    const user = await prisma.user.create({
-      data: { name, email, password: hashedPassword },
-    })
-
-    // Seed memory with initial name
-    await prisma.memory.create({
-      data: { userId: user.id, fullName: name },
-    })
-
-    await createSession(user.id)
-  } catch {
-    return { message: 'An error occurred while creating your account.' }
+  if (error) {
+    if (error.message.includes('already')) return { errors: { email: ['This email is already in use'] } }
+    return { message: error.message }
   }
 
-  redirect('/onboarding')
+  await createSession(data.user.id)
+  redirect('/chat')
 }
 
 export async function login(state: AuthState, formData: FormData): Promise<AuthState> {
@@ -68,28 +50,27 @@ export async function login(state: AuthState, formData: FormData): Promise<AuthS
     email: formData.get('email'),
     password: formData.get('password'),
   })
-
-  if (!result.success) {
-    return { errors: result.error.flatten().fieldErrors }
-  }
+  if (!result.success) return { errors: result.error.flatten().fieldErrors }
 
   const { email, password } = result.data
 
-  const user = await prisma.user.findUnique({ where: { email } })
-  if (!user || !user.password) {
-    return { errors: { email: ['Invalid email or password'] } }
-  }
+  // Verify credentials via Supabase Auth
+  const { data, error } = await supabaseAdmin.auth.admin.listUsers()
+  if (error) return { message: 'Server error' }
 
-  const valid = await bcrypt.compare(password, user.password)
-  if (!valid) {
-    return { errors: { email: ['Invalid email or password'] } }
-  }
+  const user = data.users.find(u => u.email === email)
+  if (!user) return { errors: { email: ['Invalid email or password'] } }
+
+  // Verify password by attempting sign in with service client
+  const { createClient } = await import('@supabase/supabase-js')
+  const tempClient = createClient(
+    'https://ehheyoyadhbynblnfort.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaGV5b3lhZGhieW5ibG5mb3J0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyNjM5MDAsImV4cCI6MjA5NDgzOTkwMH0.1tcPepldz4HLzonCyzd-JhS2m5y0ffRZWTqvL9zQq2M'
+  )
+  const { error: signInError } = await tempClient.auth.signInWithPassword({ email, password })
+  if (signInError) return { errors: { email: ['Invalid email or password'] } }
 
   await createSession(user.id)
-
-  if (!user.onboarded) {
-    redirect('/onboarding')
-  }
   redirect('/chat')
 }
 
@@ -98,6 +79,7 @@ export async function logout() {
   redirect('/login')
 }
 
+
 export async function completeOnboarding(data: {
   userId: string
   fullName?: string
@@ -105,25 +87,20 @@ export async function completeOnboarding(data: {
   interests?: string
   tone?: string
 }) {
-  await prisma.memory.upsert({
-    where: { userId: data.userId },
-    update: {
-      fullName: data.fullName ?? null,
-      profession: data.profession ?? null,
-      interests: data.interests ?? null,
-      tone: data.tone ?? 'balanced',
-    },
-    create: {
-      userId: data.userId,
-      fullName: data.fullName ?? null,
-      profession: data.profession ?? null,
-      interests: data.interests ?? null,
-      tone: data.tone ?? 'balanced',
-    },
-  })
-  await prisma.user.update({
-    where: { id: data.userId },
-    data: { onboarded: true },
-  })
+  const { db } = await import('@/lib/db')
+  // Upsert memory
+  const { rows } = await db.query(`SELECT id FROM "Memory" WHERE "userId" = $1`, [data.userId])
+  if (rows[0]) {
+    await db.query(
+      `UPDATE "Memory" SET "fullName" = $1, profession = $2, interests = $3, tone = $4, "updatedAt" = now() WHERE "userId" = $5`,
+      [data.fullName ?? null, data.profession ?? null, data.interests ?? null, data.tone ?? 'balanced', data.userId]
+    )
+  } else {
+    await db.query(
+      `INSERT INTO "Memory" (id, "userId", "fullName", profession, interests, tone, "updatedAt") VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, now())`,
+      [data.userId, data.fullName ?? null, data.profession ?? null, data.interests ?? null, data.tone ?? 'balanced']
+    )
+  }
+  await db.query(`UPDATE "User" SET onboarded = true WHERE id = $1`, [data.userId])
   redirect('/chat')
 }

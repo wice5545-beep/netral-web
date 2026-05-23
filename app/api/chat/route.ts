@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
 import { getSession } from '@/lib/session'
-import { prisma } from '@/lib/prisma'
+import { db } from '@/lib/db'
 import { getModel } from '@/lib/ai/models'
 import { buildSystemPrompt } from '@/lib/ai/prompt'
 import { webSearch, readPage, needsWebSearch, type SearchResult } from '@/lib/ai/websearch'
@@ -9,8 +9,6 @@ import { rateLimit } from '@/lib/rate-limit'
 
 export const runtime = 'nodejs'
 export const maxDuration = 90
-
-type ChatMessage = { role: 'user' | 'assistant' | 'system'; content: string }
 
 const ChatRequestSchema = z.object({
   messages: z.array(z.object({
@@ -23,7 +21,6 @@ const ChatRequestSchema = z.object({
 })
 
 const encoder = new TextEncoder()
-
 function sseEvent(data: object): Uint8Array {
   return encoder.encode(`data: ${JSON.stringify(data)}\n\n`)
 }
@@ -31,8 +28,7 @@ function sseEvent(data: object): Uint8Array {
 function buildSearchContext(results: SearchResult[], pagesContent: { url: string; content: string }[]): string {
   let ctx = '## Résultats de recherche web\n\n'
   results.forEach((r, i) => {
-    ctx += `### [${i + 1}] ${r.title}\n`
-    ctx += `URL : ${r.url}\n`
+    ctx += `### [${i + 1}] ${r.title}\nURL : ${r.url}\n`
     if (r.snippet) ctx += `Extrait : ${r.snippet}\n`
     const page = pagesContent.find((p) => p.url === r.url)
     if (page?.content) ctx += `Contenu : ${page.content.slice(0, 1500)}\n`
@@ -44,70 +40,54 @@ function buildSearchContext(results: SearchResult[], pagesContent: { url: string
 
 export async function POST(req: NextRequest) {
   const session = await getSession()
-  if (!session?.userId) {
-    return new Response('Unauthorized', { status: 401 })
-  }
+  if (!session?.userId) return new Response('Unauthorized', { status: 401 })
 
-  // Rate limit: 30 messages / minute per user
   const rl = rateLimit(`chat:${session.userId}`, 30, 60_000)
   if (!rl.allowed) {
-    return new Response('Too many requests. Please wait a moment.', {
-      status: 429,
-      headers: { 'Retry-After': String(Math.ceil((rl.resetAt - Date.now()) / 1000)) },
-    })
+    return new Response('Too many requests.', { status: 429, headers: { 'Retry-After': String(Math.ceil((rl.resetAt - Date.now()) / 1000)) } })
   }
 
   const rawBody = await req.json().catch(() => null)
   const parsed = ChatRequestSchema.safeParse(rawBody)
-  if (!parsed.success) {
-    return new Response('Invalid request body', { status: 400 })
-  }
+  if (!parsed.success) return new Response('Invalid request body', { status: 400 })
 
   const { messages, modelId, conversationId: rawConvId, webSearch: useWebSearch } = parsed.data
-  const conversationId: string | undefined = rawConvId ?? undefined
-
   const model = getModel(modelId)
   const apiKey = process.env[model.envKey]
-  if (!apiKey) {
-    return new Response(`Missing ${model.envKey}`, { status: 500 })
-  }
+  if (!apiKey) return new Response(`Missing ${model.envKey}`, { status: 500 })
 
-  const memory = await prisma.memory.findUnique({ where: { userId: session.userId } })
-  let systemPrompt = buildSystemPrompt(memory)
+  let systemPrompt = buildSystemPrompt()
 
   const stream = new ReadableStream({
     async start(controller) {
       const send = (data: object) => controller.enqueue(sseEvent(data))
-
-      // Persist user message & create conversation
       const userMessage = messages[messages.length - 1]
-      let convId = conversationId
+      let convId: string | undefined = rawConvId ?? undefined
       let assistantMessageId: string | null = null
 
       if (userMessage?.role === 'user') {
         if (!convId) {
-          const conv = await prisma.conversation.create({
-            data: {
-              userId: session.userId,
-              model: model.id,
-              title: userMessage.content.slice(0, 60),
-            },
-          })
-          convId = conv.id
+          const { rows } = await db.query(
+            `INSERT INTO "Conversation" ("id", "userId", "title", "model", "createdAt", "updatedAt") VALUES (gen_random_uuid(), $1, $2, $3, now(), now()) RETURNING id`,
+            [session.userId, userMessage.content.slice(0, 60), model.id]
+          )
+          convId = rows[0].id
         }
-        await prisma.message.create({
-          data: { conversationId: convId, role: 'user', content: userMessage.content, model: model.id },
-        })
-        const ass = await prisma.message.create({
-          data: { conversationId: convId, role: 'assistant', content: '', model: model.id },
-        })
-        assistantMessageId = ass.id
-        await prisma.conversation.update({ where: { id: convId }, data: { updatedAt: new Date() } })
+        await db.query(
+          `INSERT INTO "Message" ("id", "conversationId", "role", "content", "model", "createdAt") VALUES (gen_random_uuid(), $1, 'user', $2, $3, now())`,
+          [convId, userMessage.content, model.id]
+        )
+        const { rows: assRows } = await db.query(
+          `INSERT INTO "Message" ("id", "conversationId", "role", "content", "model", "createdAt") VALUES (gen_random_uuid(), $1, 'assistant', '', $2, now()) RETURNING id`,
+          [convId, model.id]
+        )
+        assistantMessageId = assRows[0].id
+        await db.query(`UPDATE "Conversation" SET "updatedAt" = now() WHERE id = $1`, [convId])
       }
 
       send({ type: 'meta', conversationId: convId, model: model.id })
 
-      // Web search phase — manuel OU auto-détecté
+      // Web search
       const shouldSearch = useWebSearch || (userMessage?.content ? needsWebSearch(userMessage.content) : false)
       let searchResults: SearchResult[] = []
       if (shouldSearch && userMessage?.content) {
@@ -115,42 +95,27 @@ export async function POST(req: NextRequest) {
           send({ type: 'status', status: 'searching' })
           const searchRes = await webSearch(userMessage.content, 4)
           searchResults = searchRes.results
-
           if (searchResults.length > 0) {
             send({ type: 'status', status: 'reading' })
-            // Lire les 2 premières pages en parallèle
             const pagesContent = await Promise.all(
-              searchResults.slice(0, 2).map(async (r) => ({
-                url: r.url,
-                content: await readPage(r.url).catch(() => ''),
-              }))
+              searchResults.slice(0, 2).map(async (r) => ({ url: r.url, content: await readPage(r.url).catch(() => '') }))
             )
-
             send({ type: 'status', status: 'thinking' })
-            const searchCtx = buildSearchContext(searchResults, pagesContent)
-            systemPrompt += '\n\n' + searchCtx
+            systemPrompt += '\n\n' + buildSearchContext(searchResults, pagesContent)
           }
-        } catch {
-          // Silently continue without web search if it fails
-        }
+        } catch {}
       }
 
-      // Stream LLM response
+      // Stream LLM
       const payload = {
         model: model.upstreamModel,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          ...messages
-            .filter((m) => m.content.trim() !== '')
-            .map((m) => ({ role: m.role, content: m.content })),
-        ],
+        messages: [{ role: 'system', content: systemPrompt }, ...messages.filter((m) => m.content.trim()).map((m) => ({ role: m.role, content: m.content }))],
         stream: true,
         temperature: 0.7,
         max_tokens: 4096,
       }
 
       let accumulated = ''
-
       try {
         const upstream = await fetch(model.apiUrl, {
           method: 'POST',
@@ -159,8 +124,7 @@ export async function POST(req: NextRequest) {
         })
 
         if (!upstream.ok || !upstream.body) {
-          const errText = await upstream.text().catch(() => 'unknown')
-          send({ type: 'error', message: `Erreur upstream: ${errText.slice(0, 200)}` })
+          send({ type: 'error', message: `Erreur upstream: ${(await upstream.text().catch(() => '')).slice(0, 200)}` })
           controller.close()
           return
         }
@@ -172,53 +136,32 @@ export async function POST(req: NextRequest) {
         while (true) {
           const { done, value } = await reader.read()
           if (done) break
-
           buffer += decoder.decode(value, { stream: true })
           const lines = buffer.split('\n')
           buffer = lines.pop() ?? ''
-
           for (const line of lines) {
             const trimmed = line.trim()
             if (!trimmed || !trimmed.startsWith('data:')) continue
             const data = trimmed.slice(5).trim()
-            if (data === '[DONE]') {
-              send({ type: 'done' })
-              continue
-            }
+            if (data === '[DONE]') { send({ type: 'done' }); continue }
             try {
-              const json = JSON.parse(data)
-              const delta = json.choices?.[0]?.delta?.content
-              if (delta) {
-                accumulated += delta
-                send({ type: 'chunk', text: delta })
-              }
+              const delta = JSON.parse(data).choices?.[0]?.delta?.content
+              if (delta) { accumulated += delta; send({ type: 'chunk', text: delta }) }
             } catch {}
           }
         }
 
-        // Append sources section if web search was used
         if (searchResults.length > 0) {
-          const sourcesSection = '\n\n---\n**Sources :**\n' +
-            searchResults.map((r, i) => `${i + 1}. [${r.title}](${r.url}) — *${r.domain}*`).join('\n')
+          const sourcesSection = '\n\n---\n**Sources :**\n' + searchResults.map((r, i) => `${i + 1}. [${r.title}](${r.url}) — *${r.domain}*`).join('\n')
           accumulated += sourcesSection
           send({ type: 'chunk', text: sourcesSection })
         }
       } catch (err) {
         send({ type: 'error', message: String(err) })
       } finally {
-        // Persist assistant message
         if (assistantMessageId && accumulated) {
           try {
-            await prisma.message.update({ where: { id: assistantMessageId }, data: { content: accumulated } })
-            if (convId) {
-              const conv = await prisma.conversation.findUnique({ where: { id: convId } })
-              if (conv && (conv.title === 'New chat' || conv.title === '')) {
-                await prisma.conversation.update({
-                  where: { id: convId },
-                  data: { title: (userMessage?.content ?? '').slice(0, 60).trim() || 'Nouvelle conversation' },
-                })
-              }
-            }
+            await db.query(`UPDATE "Message" SET content = $1 WHERE id = $2`, [accumulated, assistantMessageId])
           } catch {}
         }
         controller.close()
@@ -227,11 +170,6 @@ export async function POST(req: NextRequest) {
   })
 
   return new Response(stream, {
-    headers: {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache, no-transform',
-      Connection: 'keep-alive',
-      'X-Accel-Buffering': 'no',
-    },
+    headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache, no-transform', Connection: 'keep-alive', 'X-Accel-Buffering': 'no' },
   })
 }
