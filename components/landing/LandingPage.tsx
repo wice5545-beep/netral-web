@@ -3,12 +3,20 @@
 import Link from 'next/link'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { useRef } from 'react'
-import { ArrowRight, Globe, Zap, Lock, MessageSquare, Brain, Search, Sparkles } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import { NetralLogo } from '@/components/ui/NetralLogo'
 import { useI18n } from '@/lib/i18n'
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher'
+import { EarthIcon } from '@/components/ui/earth'
+import { BrainIcon } from '@/components/ui/brain'
+import { MessageSquareIcon } from '@/components/ui/message-square'
+import { ZapIcon } from '@/components/ui/zap'
+import { SearchIcon } from '@/components/ui/search'
+import { LockIcon } from '@/components/ui/lock'
+import { SparklesIcon } from '@/components/ui/sparkles'
+import { RocketIcon } from '@/components/ui/rocket'
 
-const featureIcons = [Globe, Brain, MessageSquare, Zap, Search, Lock]
+const featureIcons = [EarthIcon, BrainIcon, MessageSquareIcon, ZapIcon, SearchIcon, LockIcon]
 
 const stats = [
   { value: '< 200ms' },
@@ -66,7 +74,7 @@ export function LandingPage() {
           transition={{ duration: 0.6 }}
           className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[var(--bg-soft)] border border-[var(--border)] text-[12px] text-[var(--fg-muted)] mb-8 hover:border-[var(--border-strong)] transition-colors"
         >
-          <Sparkles size={12} className="text-[var(--fg-subtle)]" />
+          <SparklesIcon size={12} className="text-[var(--fg-subtle)]" />
           {t.hero.badge}
         </motion.div>
 
@@ -141,7 +149,7 @@ export function LandingPage() {
               <div className="max-w-[80%] px-4 py-2.5 rounded-2xl rounded-br-md bg-[var(--accent)] text-[var(--bg)] text-[14px]">{t.demo.userMsg}</div>
             </motion.div>
             <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.6 }} className="flex items-center gap-2 text-[12px] text-[var(--fg-muted)]">
-              <Globe size={11} className="animate-pulse" />
+              <EarthIcon size={11} className="animate-pulse" />
               <span className="animate-pulse">{t.demo.searching}</span>
             </motion.div>
             <motion.div initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.8, duration: 0.6 }} className="flex gap-3">
@@ -191,7 +199,7 @@ export function LandingPage() {
               return (
                 <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-40px' }} transition={{ duration: 0.5, delay: i * 0.07 }} className="group p-5 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border)] hover:border-[var(--border-strong)] hover:shadow-[var(--shadow-md)] transition-all duration-300 cursor-default">
                   <div className="w-9 h-9 rounded-lg bg-[var(--bg-soft)] border border-[var(--border)] flex items-center justify-center mb-3 group-hover:scale-110 group-hover:border-[var(--border-strong)] transition-all duration-300">
-                    <Icon size={16} className="text-[var(--fg)]" strokeWidth={1.8} />
+                    <Icon size={16} className="text-[var(--fg)]" />
                   </div>
                   <h3 className="text-[14px] font-semibold mb-1">{f.title}</h3>
                   <p className="text-[13px] text-[var(--fg-muted)] leading-relaxed">{f.desc}</p>

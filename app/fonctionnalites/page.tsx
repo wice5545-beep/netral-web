@@ -2,12 +2,20 @@
 
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Globe, Zap, Lock, MessageSquare, Brain, Search, Code, BookOpen } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { NetralLogo } from '@/components/ui/NetralLogo'
 import { useI18n } from '@/lib/i18n'
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher'
+import { EarthIcon } from '@/components/ui/earth'
+import { BrainIcon } from '@/components/ui/brain'
+import { MessageSquareIcon } from '@/components/ui/message-square'
+import { ZapIcon } from '@/components/ui/zap'
+import { TerminalIcon } from '@/components/ui/terminal'
+import { SearchIcon } from '@/components/ui/search'
+import { LockIcon } from '@/components/ui/lock'
+import { EyeIcon } from '@/components/ui/eye'
 
-const featureIcons = [Globe, Brain, MessageSquare, Zap, Code, Search, Lock, BookOpen]
+const featureIcons = [EarthIcon, BrainIcon, MessageSquareIcon, ZapIcon, TerminalIcon, SearchIcon, LockIcon, EyeIcon]
 
 const container = { hidden: {}, show: { transition: { staggerChildren: 0.06 } } }
 const item = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] as const } } }
@@ -52,7 +60,7 @@ export default function FonctionnalitesPage() {
             return (
               <motion.div key={i} variants={item} className="group p-6 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border)] hover:border-[var(--border-strong)] hover:shadow-[var(--shadow-md)] transition-all duration-300">
                 <div className="w-10 h-10 rounded-lg bg-[var(--bg-soft)] border border-[var(--border)] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                  <Icon size={18} className="text-[var(--fg)]" strokeWidth={1.8} />
+                  <Icon size={18} className="text-[var(--fg)]" />
                 </div>
                 <h3 className="text-[16px] font-semibold mb-2">{f.title}</h3>
                 <p className="text-[14px] text-[var(--fg-muted)] leading-relaxed mb-4">{f.desc}</p>
