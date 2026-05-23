@@ -15,6 +15,7 @@ import { SearchIcon } from '@/components/ui/search'
 import { LockIcon } from '@/components/ui/lock'
 import { SparklesIcon } from '@/components/ui/sparkles'
 import { RocketIcon } from '@/components/ui/rocket'
+import { AutoAnimate } from '@/components/ui/AutoAnimate'
 
 const featureIcons = [EarthIcon, BrainIcon, MessageSquareIcon, ZapIcon, SearchIcon, LockIcon]
 
@@ -74,7 +75,7 @@ export function LandingPage() {
           transition={{ duration: 0.6 }}
           className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[var(--bg-soft)] border border-[var(--border)] text-[12px] text-[var(--fg-muted)] mb-8 hover:border-[var(--border-strong)] transition-colors"
         >
-          <SparklesIcon size={12} className="text-[var(--fg-subtle)]" />
+          <AutoAnimate icon={SparklesIcon} size={12} className="text-[var(--fg-subtle)]" interval={3000} />
           {t.hero.badge}
         </motion.div>
 
@@ -104,7 +105,7 @@ export function LandingPage() {
           className="flex flex-col sm:flex-row items-center justify-center gap-3"
         >
           <Link href="/register">
-            <button className="group h-12 px-7 text-[15px] font-medium rounded-[12px] bg-[var(--accent)] text-[var(--bg)] hover:bg-[var(--accent-hover)] transition-all shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] flex items-center gap-2">
+            <button className="group h-12 px-7 text-[15px] font-medium rounded-[12px] bg-[var(--accent)] text-[var(--bg)] hover:bg-[var(--accent-hover)] transition-all shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-lg)] hover:scale-[1.02] active:scale-[0.98] flex items-center gap-2">
               {t.hero.cta}
               <ArrowRight size={15} strokeWidth={2.2} className="group-hover:translate-x-0.5 transition-transform" />
             </button>
@@ -149,7 +150,7 @@ export function LandingPage() {
               <div className="max-w-[80%] px-4 py-2.5 rounded-2xl rounded-br-md bg-[var(--accent)] text-[var(--bg)] text-[14px]">{t.demo.userMsg}</div>
             </motion.div>
             <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.6 }} className="flex items-center gap-2 text-[12px] text-[var(--fg-muted)]">
-              <EarthIcon size={11} className="animate-pulse" />
+              <AutoAnimate icon={EarthIcon} size={11} className="animate-pulse" interval={2000} />
               <span className="animate-pulse">{t.demo.searching}</span>
             </motion.div>
             <motion.div initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.8, duration: 0.6 }} className="flex gap-3">
@@ -199,7 +200,7 @@ export function LandingPage() {
               return (
                 <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-40px' }} transition={{ duration: 0.5, delay: i * 0.07 }} className="group p-5 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border)] hover:border-[var(--border-strong)] hover:shadow-[var(--shadow-md)] transition-all duration-300 cursor-default">
                   <div className="w-9 h-9 rounded-lg bg-[var(--bg-soft)] border border-[var(--border)] flex items-center justify-center mb-3 group-hover:scale-110 group-hover:border-[var(--border-strong)] transition-all duration-300">
-                    <Icon size={16} className="text-[var(--fg)]" />
+                    <AutoAnimate icon={Icon} size={16} className="text-[var(--fg)]" interval={5000 + i * 800} />
                   </div>
                   <h3 className="text-[14px] font-semibold mb-1">{f.title}</h3>
                   <p className="text-[13px] text-[var(--fg-muted)] leading-relaxed">{f.desc}</p>

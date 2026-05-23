@@ -14,6 +14,7 @@ import { TerminalIcon } from '@/components/ui/terminal'
 import { SearchIcon } from '@/components/ui/search'
 import { LockIcon } from '@/components/ui/lock'
 import { EyeIcon } from '@/components/ui/eye'
+import { AutoAnimate } from '@/components/ui/AutoAnimate'
 
 const featureIcons = [EarthIcon, BrainIcon, MessageSquareIcon, ZapIcon, TerminalIcon, SearchIcon, LockIcon, EyeIcon]
 
@@ -60,7 +61,7 @@ export default function FonctionnalitesPage() {
             return (
               <motion.div key={i} variants={item} className="group p-6 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border)] hover:border-[var(--border-strong)] hover:shadow-[var(--shadow-md)] transition-all duration-300">
                 <div className="w-10 h-10 rounded-lg bg-[var(--bg-soft)] border border-[var(--border)] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                  <Icon size={18} className="text-[var(--fg)]" />
+                  <AutoAnimate icon={Icon} size={18} className="text-[var(--fg)]" interval={4000 + i * 600} />
                 </div>
                 <h3 className="text-[16px] font-semibold mb-2">{f.title}</h3>
                 <p className="text-[14px] text-[var(--fg-muted)] leading-relaxed mb-4">{f.desc}</p>
