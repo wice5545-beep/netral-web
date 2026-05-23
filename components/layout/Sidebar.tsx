@@ -5,8 +5,8 @@ import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  Plus, Search, Settings, LogOut, ChevronLeft,
-  MessageSquare, Trash2, MoreHorizontal, X, Menu, FolderOpen, Bot, Layers
+  Plus, Search, Settings, LogOut, MessageSquare, Trash2,
+  MoreHorizontal, X, Menu, FolderOpen, Bot, Layers, Sparkles, Globe, Zap
 } from 'lucide-react'
 import { useChatStore } from '@/lib/store/chat'
 import { NetralLogo } from '@/components/ui/NetralLogo'
@@ -44,8 +44,11 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
   const pathname = usePathname()
   const { conversations, conversationId, sidebarOpen, setSidebarOpen, removeConversation, setConversations, conversationsLoaded } = useChatStore()
   const [search, setSearch] = useState('')
+  const [searchOpen, setSearchOpen] = useState(false)
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const [moreOpen, setMoreOpen] = useState(false)
+  const [agentsOpen, setAgentsOpen] = useState(false)
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768)
@@ -84,10 +87,12 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
   const renderGroup = (label: string, items: typeof conversations) => {
     if (items.length === 0) return null
     return (
-      <div className="mb-4">
-        <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--foreground-subtle)] px-3 mb-1.5">
-          {label}
-        </p>
+      <div className="mb-3">
+        {label && (
+          <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--foreground-subtle)] px-3 mb-1">
+            {label}
+          </p>
+        )}
         <div className="space-y-0.5">
           {items.map((c) => {
             const isActive = pathname === `/chat/${c.id}` || conversationId === c.id
@@ -118,14 +123,6 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
       </div>
     )
   }
-
-  const navItems = [
-    { icon: Plus, label: 'Nouveau chat', onClick: handleNewChat },
-    { icon: Search, label: 'Rechercher dans les chats', onClick: () => {} },
-    { icon: FolderOpen, label: 'Projets', onClick: () => {} },
-    { icon: Bot, label: 'Agents', onClick: () => {}, badge: 'BETA' },
-    { icon: Layers, label: 'Plus', onClick: () => {} },
-  ]
 
   return (
     <>
@@ -161,7 +158,7 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
             <span className="font-bold text-[15px] text-[var(--foreground)]">Netral</span>
           </Link>
           {isMobile && (
-            <button onClick={() => setSidebarOpen(false)} className="p-1.5 rounded-lg hover:bg-[var(--border)] text-[var(--foreground-muted)]">
+            <button onClick={() => setSidebarOpen(false)} className="p-1.5 rounded-lg hover:bg-[var(--background-secondary)] text-[var(--foreground-muted)]">
               <X size={16} />
             </button>
           )}
@@ -169,23 +166,136 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
 
         {/* Nav items */}
         <div className="px-3 space-y-0.5 pb-3 border-b border-[var(--border)]">
-          {navItems.map((item) => {
-            const Icon = item.icon
-            return (
-              <button
-                key={item.label}
-                onClick={item.onClick}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] text-[var(--foreground-secondary)] hover:bg-[var(--background-secondary)] transition-colors"
-              >
-                <Icon size={15} className="opacity-60" />
-                <span>{item.label}</span>
-                {item.badge && (
-                  <span className="ml-auto text-[9px] font-bold uppercase tracking-wide text-[var(--accent)] bg-[var(--accent-soft)] px-1.5 py-0.5 rounded">{item.badge}</span>
-                )}
-              </button>
-            )
-          })}
+          <button
+            onClick={handleNewChat}
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] text-[var(--foreground-secondary)] hover:bg-[var(--background-secondary)] transition-colors"
+          >
+            <Plus size={15} className="opacity-60" />
+            <span>Nouveau chat</span>
+          </button>
+
+          <button
+            onClick={() => setSearchOpen(!searchOpen)}
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] text-[var(--foreground-secondary)] hover:bg-[var(--background-secondary)] transition-colors"
+          >
+            <Search size={15} className="opacity-60" />
+            <span>Rechercher dans les chats</span>
+          </button>
+
+          <button
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] text-[var(--foreground-secondary)] hover:bg-[var(--background-secondary)] transition-colors"
+          >
+            <FolderOpen size={15} className="opacity-60" />
+            <span>Projets</span>
+          </button>
+
+          <button
+            onClick={() => setAgentsOpen(!agentsOpen)}
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] text-[var(--foreground-secondary)] hover:bg-[var(--background-secondary)] transition-colors"
+          >
+            <Bot size={15} className="opacity-60" />
+            <span>Agents</span>
+            <span className="ml-auto text-[9px] font-bold uppercase tracking-wide text-[var(--accent)] bg-[var(--accent-soft)] px-1.5 py-0.5 rounded">BETA</span>
+          </button>
+
+          <button
+            onClick={() => setMoreOpen(!moreOpen)}
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] text-[var(--foreground-secondary)] hover:bg-[var(--background-secondary)] transition-colors"
+          >
+            <Layers size={15} className="opacity-60" />
+            <span>Plus</span>
+          </button>
         </div>
+
+        {/* Search input */}
+        <AnimatePresence>
+          {searchOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden px-3 border-b border-[var(--border)]"
+            >
+              <div className="py-2">
+                <input
+                  type="text"
+                  placeholder="Rechercher..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  autoFocus
+                  className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--background-elevated)] text-[13px] text-[var(--foreground)] placeholder:text-[var(--foreground-subtle)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
+                />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Agents panel */}
+        <AnimatePresence>
+          {agentsOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden px-3 border-b border-[var(--border)]"
+            >
+              <div className="py-3 space-y-2">
+                <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--foreground-subtle)] px-1">Agents disponibles</p>
+                {[
+                  { name: 'Recherche Web', desc: 'Recherche et synthétise des infos', icon: Globe, color: 'text-blue-500' },
+                  { name: 'Rédacteur', desc: 'Rédige et reformule du contenu', icon: Sparkles, color: 'text-purple-500' },
+                  { name: 'Analyste', desc: 'Analyse des données et documents', icon: Zap, color: 'text-amber-500' },
+                ].map((agent) => {
+                  const Icon = agent.icon
+                  return (
+                    <button
+                      key={agent.name}
+                      onClick={() => { setAgentsOpen(false); handleNewChat() }}
+                      className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-[var(--background-secondary)] transition-colors text-left"
+                    >
+                      <div className="w-7 h-7 rounded-lg bg-[var(--background-secondary)] flex items-center justify-center">
+                        <Icon size={13} className={agent.color} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[12px] font-medium text-[var(--foreground)]">{agent.name}</p>
+                        <p className="text-[11px] text-[var(--foreground-muted)] truncate">{agent.desc}</p>
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* More panel */}
+        <AnimatePresence>
+          {moreOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden px-3 border-b border-[var(--border)]"
+            >
+              <div className="py-3 space-y-0.5">
+                {[
+                  { label: 'Bibliothèque de prompts', onClick: () => {} },
+                  { label: 'Historique complet', onClick: () => {} },
+                  { label: 'Statistiques d\'utilisation', onClick: () => {} },
+                  { label: 'Aide & FAQ', onClick: () => {} },
+                ].map((item) => (
+                  <button
+                    key={item.label}
+                    onClick={item.onClick}
+                    className="w-full text-left px-2.5 py-2 rounded-lg text-[12px] text-[var(--foreground-secondary)] hover:bg-[var(--background-secondary)] transition-colors"
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Recent label */}
         <div className="px-4 pt-3 pb-1">
@@ -227,9 +337,9 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
             </div>
             <div className="flex-1 min-w-0 text-left">
               <p className="text-[13px] font-medium text-[var(--foreground)] truncate">{user.name ?? 'User'}</p>
-              <p className="text-[11px] text-[var(--foreground-muted)] truncate">Free</p>
+              <p className="text-[11px] text-[var(--foreground-muted)]">Free</p>
             </div>
-            <span className="text-[11px] text-[var(--accent)] font-medium">Mettre à niveau</span>
+            <span className="text-[10px] text-[var(--accent)] font-medium">Mettre à niveau</span>
           </button>
 
           <AnimatePresence>
