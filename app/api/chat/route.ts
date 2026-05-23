@@ -165,13 +165,12 @@ export async function POST(req: NextRequest) {
         if (assistantMessageId && accumulated) {
           try {
             await db.query(`UPDATE "Message" SET content = $1 WHERE id = $2`, [accumulated, assistantMessageId])
-            // Auto-generate title: check if this is the first message pair
+            // Auto-generate title from AI response
             if (convId) {
-              const { rows: msgCount } = await db.query(
-                `SELECT COUNT(*) as cnt FROM "Message" WHERE "conversationId" = $1 AND role = 'user'`, [convId]
-              )
-              if (parseInt(msgCount[0]?.cnt) <= 1) {
-                // Generate a meaningful title from the AI response
+              const { rows: convCheck } = await db.query(`SELECT title FROM "Conversation" WHERE id = $1`, [convId])
+              const currentTitle = convCheck[0]?.title || ''
+              // Only auto-title if title is still the user's first message or default
+              if (currentTitle.length <= 60 && (currentTitle === textContent.slice(0, 60) || currentTitle === textContent || currentTitle === 'New chat' || currentTitle === 'Nouvelle conversation')) {
                 const clean = accumulated.replace(/[#*_`\n]/g, ' ').replace(/\s+/g, ' ').trim()
                 const firstSentence = clean.split(/[.!?]/)[0]?.trim()
                 let title = ''
@@ -179,8 +178,6 @@ export async function POST(req: NextRequest) {
                   title = firstSentence
                 } else if (clean.length > 5) {
                   title = clean.slice(0, 45).trim()
-                } else {
-                  title = textContent.slice(0, 45).trim()
                 }
                 if (title) {
                   await db.query(`UPDATE "Conversation" SET title = $1 WHERE id = $2`, [title, convId])

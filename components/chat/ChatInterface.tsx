@@ -26,6 +26,7 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
   const [input, setInput] = useState('')
   const [webSearchEnabled, setWebSearchEnabled] = useState(false)
   const [searchStatus, setSearchStatus] = useState<SearchStatus>(null)
+  const [selectionPopup, setSelectionPopup] = useState<{ text: string; x: number; y: number } | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const abortRef = useRef<AbortController | null>(null)
   const [didInit, setDidInit] = useState(false)
@@ -44,6 +45,22 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
     const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 100
     if (isNearBottom) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
   }, [messages])
+
+  // Text selection popup
+  useEffect(() => {
+    const handleSelection = () => {
+      const sel = window.getSelection()
+      if (!sel || sel.isCollapsed || !sel.toString().trim()) { setSelectionPopup(null); return }
+      const text = sel.toString().trim()
+      if (text.length < 3) { setSelectionPopup(null); return }
+      const range = sel.getRangeAt(0)
+      const rect = range.getBoundingClientRect()
+      setSelectionPopup({ text, x: rect.left + rect.width / 2, y: rect.top - 10 })
+    }
+    document.addEventListener('mouseup', handleSelection)
+    document.addEventListener('touchend', handleSelection)
+    return () => { document.removeEventListener('mouseup', handleSelection); document.removeEventListener('touchend', handleSelection) }
+  }, [])
 
   const handleSubmit = async (overrideText?: string, attachments?: { type: 'image' | 'file'; data: string; name: string }[]) => {
     const text = (overrideText ?? input).trim()
@@ -162,6 +179,19 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
     handleSubmit(lastUser.content)
   }
 
+  const handleAskAboutSelection = () => {
+    if (!selectionPopup) return
+    const quoted = `> ${selectionPopup.text.slice(0, 200)}\n\n`
+    setInput(quoted)
+    setSelectionPopup(null)
+    window.getSelection()?.removeAllRanges()
+    textareaFocus()
+  }
+
+  const textareaFocus = () => {
+    setTimeout(() => document.querySelector<HTMLTextAreaElement>('textarea')?.focus(), 50)
+  }
+
   const isEmpty = didInit && messages.length === 0
   const firstName = userName?.split(' ')[0]
 
@@ -277,6 +307,27 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
         {/* Bottom fade */}
         <div className="absolute inset-x-0 bottom-0 h-8 -z-10 bg-[var(--bg)] pointer-events-none" />
       </div>
+
+      {/* Text selection popup */}
+      <AnimatePresence>
+        {selectionPopup && (
+          <motion.div
+            initial={{ opacity: 0, y: 4, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 4, scale: 0.9 }}
+            transition={{ duration: 0.12 }}
+            style={{ position: 'fixed', left: selectionPopup.x, top: selectionPopup.y, transform: 'translate(-50%, -100%)' }}
+            className="z-50"
+          >
+            <button
+              onMouseDown={(e) => { e.preventDefault(); handleAskAboutSelection() }}
+              className="px-3 py-1.5 rounded-lg bg-[var(--accent)] text-[var(--bg)] text-[12px] font-medium shadow-[var(--shadow-md)] hover:bg-[var(--accent-hover)] transition-colors whitespace-nowrap"
+            >
+              Demander à Netral
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
