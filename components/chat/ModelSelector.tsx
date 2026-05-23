@@ -47,14 +47,15 @@ export function ModelSelector() {
                 return (
                   <button
                     key={m.id}
-                    onClick={() => { setModel(m.id); setOpen(false) }}
+                    onClick={() => { if (m.id !== 'ntrl-1.2') { setModel(m.id); setOpen(false) } }}
                     className={`w-full flex items-start gap-2.5 px-2.5 py-2 rounded-md text-left transition-colors ${
                       active ? 'bg-[var(--bg-soft)]' : 'hover:bg-[var(--bg-soft)]'
-                    }`}
+                    } ${m.id === 'ntrl-1.2' ? 'opacity-60' : ''}`}
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <p className="font-medium text-[13px] text-[var(--fg)]">{m.displayName}</p>
+                        {m.id === 'ntrl-1.2' && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-[var(--accent-soft)] text-[var(--fg-muted)]">PRO</span>}
                         {active && <Check size={12} className="text-[var(--fg)]" />}
                       </div>
                       <p className="text-[11.5px] text-[var(--fg-muted)] mt-0.5">{m.description}</p>

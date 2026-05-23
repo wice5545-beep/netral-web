@@ -33,8 +33,6 @@ export function ChatComposer({
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [attachments, setAttachments] = useState<{ type: 'image' | 'file'; data: string; name: string }[]>([])
 
-  const isMultimodal = modelId === 'ntrl-1.2'
-
   useEffect(() => { if (autoFocus) textareaRef.current?.focus() }, [autoFocus])
 
   useEffect(() => {
@@ -165,11 +163,11 @@ export function ChatComposer({
             <button onClick={() => { onToggleWebSearch?.(); setDrawerOpen(false) }} className={cn('flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] transition-all', webSearchEnabled ? 'bg-[var(--accent-soft)] text-[var(--fg)]' : 'text-[var(--fg-muted)] hover:bg-[var(--bg-soft)] hover:text-[var(--fg)]')}>
               <AutoAnimate icon={EarthIcon} size={14} interval={0} /> Web
             </button>
-            <button onClick={() => imageInputRef.current?.click()} disabled={!isMultimodal} className={cn('flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] transition-all', !isMultimodal ? 'text-[var(--fg-subtle)] opacity-40 cursor-not-allowed' : 'text-[var(--fg-muted)] hover:bg-[var(--bg-soft)] hover:text-[var(--fg)]')}>
-              <ImageIcon size={14} /> Image
+            <button disabled className="flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] text-[var(--fg-subtle)] opacity-40 cursor-not-allowed">
+              <ImageIcon size={14} /> Image <span className="text-[9px] ml-1 opacity-70">soon</span>
             </button>
-            <button onClick={() => fileInputRef.current?.click()} disabled={!isMultimodal} className={cn('flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] transition-all', !isMultimodal ? 'text-[var(--fg-subtle)] opacity-40 cursor-not-allowed' : 'text-[var(--fg-muted)] hover:bg-[var(--bg-soft)] hover:text-[var(--fg)]')}>
-              <File size={14} /> Fichier
+            <button disabled className="flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] text-[var(--fg-subtle)] opacity-40 cursor-not-allowed">
+              <File size={14} /> Fichier <span className="text-[9px] ml-1 opacity-70">soon</span>
             </button>
           </motion.div>
         )}
@@ -180,7 +178,7 @@ export function ChatComposer({
       <input ref={fileInputRef} type="file" accept=".pdf,.txt,.md,.csv,.json,.xml,.html" className="hidden" onChange={(e) => handleFileSelect(e, 'file')} />
 
       <p className="text-[11px] text-center text-[var(--fg-subtle)] mt-2 opacity-60">
-        {isMultimodal ? 'NTRL 1.2 — Images & fichiers activés' : 'Netral peut faire des erreurs.'}
+        Netral peut faire des erreurs.
       </p>
     </div>
   )
