@@ -10,113 +10,74 @@ interface NetralLogoProps {
   withText?: boolean
 }
 
+/**
+ * Editorial mark — a refined "N" with an emerald accent dot.
+ * Unique, recognizable, no generic AI gradients.
+ */
 export function NetralLogo({ size = 32, className, animated = false, withText = false }: NetralLogoProps) {
-  const orb = (
-    <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
-      {/* Outer glow ring */}
+  const stroke = Math.max(1.5, size * 0.05)
+
+  const mark = (
+    <div className="relative inline-flex items-center justify-center" style={{ width: size, height: size }}>
+      <svg
+        width={size}
+        height={size}
+        viewBox="0 0 40 40"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        style={{ position: 'relative', zIndex: 1 }}
+      >
+        {/* Square frame — editorial mark style */}
+        <rect
+          x="2"
+          y="2"
+          width="36"
+          height="36"
+          rx="4"
+          stroke="currentColor"
+          strokeWidth={stroke}
+          fill="none"
+        />
+        {/* The N — drawn as 3 strokes, geometrically precise */}
+        <path
+          d="M 12 30 L 12 10 L 28 30 L 28 10"
+          stroke="currentColor"
+          strokeWidth={stroke + 0.3}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          fill="none"
+        />
+        {/* Emerald accent dot — the signature */}
+        <circle cx="32" cy="8" r="2" fill="var(--jewel)" />
+      </svg>
+
+      {/* Animated pulse ring around accent */}
       {animated && (
         <motion.div
           className="absolute rounded-full"
           style={{
-            width: size * 1.3,
-            height: size * 1.3,
-            background: 'radial-gradient(circle, var(--accent-glow) 0%, transparent 70%)',
+            width: size * 0.18,
+            height: size * 0.18,
+            top: size * 0.13,
+            right: size * 0.13,
+            background: 'var(--jewel)',
+            filter: `blur(${size * 0.08}px)`,
           }}
-          animate={{ scale: [0.9, 1.1, 0.9], opacity: [0.4, 0.8, 0.4] }}
-          transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+          animate={{ opacity: [0.4, 1, 0.4], scale: [1, 1.4, 1] }}
+          transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
         />
-      )}
-
-      {/* Main logo container */}
-      <div
-        className="relative rounded-xl flex items-center justify-center overflow-hidden"
-        style={{
-          width: size,
-          height: size,
-          background: 'linear-gradient(135deg, #b08d57 0%, #967744 50%, #7a6138 100%)',
-          boxShadow: `0 ${size * 0.06}px ${size * 0.2}px rgba(176, 141, 87, 0.25)`,
-        }}
-      >
-        {/* Shine effect */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background: 'linear-gradient(135deg, rgba(255,255,255,0.25) 0%, transparent 50%)',
-          }}
-        />
-        
-        {/* Inner glow */}
-        {animated && (
-          <motion.div
-            className="absolute inset-0"
-            style={{
-              background: 'radial-gradient(circle at 30% 30%, rgba(255,255,255,0.15) 0%, transparent 50%)',
-            }}
-            animate={{ opacity: [0.5, 1, 0.5] }}
-            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-          />
-        )}
-
-        {/* Letter N */}
-        <span
-          style={{
-            fontSize: size * 0.5,
-            fontWeight: 600,
-            color: 'white',
-            fontFamily: 'var(--font-display), Georgia, serif',
-            letterSpacing: '-0.03em',
-            textShadow: '0 1px 2px rgba(0,0,0,0.2)',
-            lineHeight: 1,
-          }}
-        >
-          N
-        </span>
-      </div>
-
-      {/* Orbiting particles */}
-      {animated && (
-        <>
-          <motion.div
-            className="absolute rounded-full"
-            style={{
-              width: size * 0.08,
-              height: size * 0.08,
-              background: 'var(--accent)',
-              boxShadow: '0 0 6px var(--accent-glow)',
-            }}
-            animate={{
-              rotate: 360,
-            }}
-            transition={{
-              duration: 4,
-              repeat: Infinity,
-              ease: 'linear',
-            }}
-            initial={{
-              offsetDistance: '50%',
-            }}
-          >
-            <motion.div
-              style={{
-                width: size,
-                height: size,
-              }}
-              className="absolute -translate-x-1/2 -translate-y-1/2"
-            />
-          </motion.div>
-        </>
       )}
     </div>
   )
 
-  if (!withText) return <div className={className}>{orb}</div>
+  if (!withText) return <span className={className} style={{ color: 'var(--fg)' }}>{mark}</span>
 
   return (
-    <div className={cn('flex items-center gap-2.5', className)}>
-      {orb}
-      <span 
-        className="font-display font-normal tracking-tight"
-        style={{ fontSize: size * 0.55 }}
+    <div className={cn('flex items-center gap-2.5', className)} style={{ color: 'var(--fg)' }}>
+      {mark}
+      <span
+        className="font-display tracking-tight"
+        style={{ fontSize: size * 0.7, lineHeight: 1 }}
       >
         Netral
       </span>

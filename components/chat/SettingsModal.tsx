@@ -3,8 +3,6 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Globe2, Palette, Brain, Search, Shield, Bell, Keyboard, CreditCard, Info, Trash2, Sun, Moon, Monitor, Download } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
 import { useTheme } from '@/components/ui/ThemeProvider'
 import { cn } from '@/lib/utils'
 
@@ -16,89 +14,51 @@ interface SettingsModalProps {
 
 type Tab = 'general' | 'appearance' | 'models' | 'search' | 'privacy' | 'notifications' | 'shortcuts' | 'subscription' | 'about'
 
-interface MemoryData {
-  fullName: string
-  profession: string
-  interests: string
-  tone: string
-  customInstructions: string
-}
-
 export function SettingsModal({ open, onClose, user }: SettingsModalProps) {
   const [tab, setTab] = useState<Tab>('general')
   const { theme, setTheme } = useTheme()
-  const [memory, setMemory] = useState<MemoryData>({
-    fullName: '',
-    profession: '',
-    interests: '',
-    tone: 'balanced',
-    customInstructions: '',
-  })
-  const [saving, setSaving] = useState(false)
-  const [savedMessage, setSavedMessage] = useState('')
+  const [responseTone, setResponseTone] = useState('balanced')
+  const [language, setLanguage] = useState('fr')
   const [showSources, setShowSources] = useState(true)
   const [realtimeSearch, setRealtimeSearch] = useState(true)
   const [smartSuggestions, setSmartSuggestions] = useState(true)
-  const [language, setLanguage] = useState('fr')
-  const [responseTone, setResponseTone] = useState('balanced')
+  const [savedMsg, setSavedMsg] = useState('')
 
+  // Close on escape
   useEffect(() => {
     if (!open) return
-    fetch('/api/memory')
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.memory) {
-          setMemory({
-            fullName: d.memory.fullName ?? '',
-            profession: d.memory.profession ?? '',
-            interests: d.memory.interests ?? '',
-            tone: d.memory.tone ?? 'balanced',
-            customInstructions: d.memory.customInstructions ?? '',
-          })
-          setResponseTone(d.memory.tone ?? 'balanced')
-        }
-      })
-      .catch(() => {})
-  }, [open])
-
-  const saveMemory = async () => {
-    setSaving(true)
-    await fetch('/api/memory', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...memory, tone: responseTone }),
-    })
-    setSaving(false)
-    setSavedMessage('Enregistré')
-    setTimeout(() => setSavedMessage(''), 2000)
-  }
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open, onClose])
 
   const clearHistory = async () => {
-    if (!confirm('Effacer tout l\'historique ? Cette action est irréversible.')) return
+    if (!confirm("Effacer tout l'historique ? Action irréversible.")) return
     await fetch('/api/conversations', { method: 'DELETE' })
-    setSavedMessage('Historique effacé')
-    setTimeout(() => setSavedMessage(''), 2000)
+    setSavedMsg('Historique effacé')
+    setTimeout(() => setSavedMsg(''), 2000)
   }
 
   const clearMemory = async () => {
     if (!confirm('Supprimer toute la mémoire ?')) return
     await fetch('/api/memory', { method: 'DELETE' })
-    setMemory({ fullName: '', profession: '', interests: '', tone: 'balanced', customInstructions: '' })
-    setSavedMessage('Mémoire effacée')
-    setTimeout(() => setSavedMessage(''), 2000)
+    setSavedMsg('Mémoire effacée')
+    setTimeout(() => setSavedMsg(''), 2000)
   }
 
-  const tabs: { id: Tab; label: string; icon: typeof Globe2 }[] = [
-    { id: 'general', label: 'Général', icon: Globe2 },
-    { id: 'appearance', label: 'Apparence', icon: Palette },
-    { id: 'models', label: 'Modèles IA', icon: Brain },
-    { id: 'search', label: 'Recherche', icon: Search },
-    { id: 'privacy', label: 'Confidentialité', icon: Shield },
-    { id: 'notifications', label: 'Notifications', icon: Bell },
-    { id: 'shortcuts', label: 'Raccourcis', icon: Keyboard },
-    { id: 'subscription', label: 'Abonnement', icon: CreditCard },
-    { id: 'about', label: 'À propos', icon: Info },
+  const tabs: { id: Tab; label: string; icon: typeof Globe2; num: string }[] = [
+    { id: 'general', label: 'Général', icon: Globe2, num: 'I' },
+    { id: 'appearance', label: 'Apparence', icon: Palette, num: 'II' },
+    { id: 'models', label: 'Modèles', icon: Brain, num: 'III' },
+    { id: 'search', label: 'Recherche', icon: Search, num: 'IV' },
+    { id: 'privacy', label: 'Confidentialité', icon: Shield, num: 'V' },
+    { id: 'notifications', label: 'Notifications', icon: Bell, num: 'VI' },
+    { id: 'shortcuts', label: 'Raccourcis', icon: Keyboard, num: 'VII' },
+    { id: 'subscription', label: 'Abonnement', icon: CreditCard, num: 'VIII' },
+    { id: 'about', label: 'À propos', icon: Info, num: 'IX' },
   ]
+
+  const currentTab = tabs.find(t => t.id === tab)
 
   return (
     <AnimatePresence>
@@ -108,21 +68,23 @@ export function SettingsModal({ open, onClose, user }: SettingsModalProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/40 z-50"
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
           />
           <motion.div
-            initial={{ opacity: 0, scale: 0.97, y: 16 }}
+            initial={{ opacity: 0, scale: 0.96, y: 16 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.97, y: 16 }}
-            transition={{ duration: 0.2 }}
+            exit={{ opacity: 0, scale: 0.96, y: 16 }}
+            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
           >
-            <div className="bg-[var(--background-elevated)] rounded-2xl w-full max-w-3xl max-h-[85vh] overflow-hidden pointer-events-auto shadow-2xl flex flex-col md:flex-row border border-[var(--border)]">
-              {/* Tabs sidebar */}
-              <div className="md:w-52 shrink-0 p-2 md:border-r border-b md:border-b-0 border-[var(--border)] flex md:flex-col gap-0.5 overflow-x-auto md:overflow-x-visible bg-[var(--background-secondary)]">
-                <div className="hidden md:flex items-center mb-2 px-3 pt-2">
-                  <p className="text-sm font-bold text-[var(--foreground)]">Paramètres</p>
+            <div className="bg-[var(--bg-elevated)] rounded-[16px] w-full max-w-4xl max-h-[88vh] overflow-hidden pointer-events-auto shadow-[var(--shadow-press)] flex flex-col md:flex-row border border-[var(--rule)]">
+              {/* ━ Sidebar ━ */}
+              <div className="md:w-60 shrink-0 p-4 md:border-r border-b md:border-b-0 border-[var(--rule)] flex md:flex-col gap-1 overflow-x-auto md:overflow-x-visible bg-[var(--bg-soft)]">
+                <div className="hidden md:block px-2 mb-4">
+                  <p className="label">Paramètres</p>
+                  <p className="font-display text-2xl mt-1 leading-none">Réglages</p>
                 </div>
                 {tabs.map((t) => {
                   const Icon = t.icon
@@ -131,171 +93,146 @@ export function SettingsModal({ open, onClose, user }: SettingsModalProps) {
                       key={t.id}
                       onClick={() => setTab(t.id)}
                       className={cn(
-                        'flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-colors shrink-0',
+                        'flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] transition-all shrink-0 group',
                         tab === t.id
-                          ? 'bg-[var(--accent-soft)] text-[var(--accent)]'
-                          : 'text-[var(--foreground-muted)] hover:bg-[var(--background-elevated)] hover:text-[var(--foreground)]'
+                          ? 'bg-[var(--bg-elevated)] text-[var(--fg)] font-medium border border-[var(--rule)] shadow-sm'
+                          : 'text-[var(--fg-muted)] hover:bg-[var(--bg-elevated)] hover:text-[var(--fg)]'
                       )}
                     >
-                      <Icon size={14} />
+                      <span className="font-mono text-[10px] tracking-wider opacity-50">{t.num}</span>
+                      <Icon size={13} strokeWidth={1.8} className="opacity-70" />
                       {t.label}
                     </button>
                   )
                 })}
               </div>
 
-              {/* Content */}
+              {/* ━ Content ━ */}
               <div className="flex-1 overflow-y-auto relative">
                 <button
                   onClick={onClose}
-                  className="absolute top-4 right-4 p-2 rounded-lg hover:bg-[var(--background-secondary)] text-[var(--foreground-muted)] z-10"
+                  className="absolute top-4 right-4 p-2 rounded-md hover:bg-[var(--bg-soft)] text-[var(--fg-muted)] z-10"
+                  aria-label="Fermer"
                 >
                   <X size={16} />
                 </button>
 
-                <div className="p-6 md:p-8">
+                <div className="p-8 lg:p-12">
+                  {/* Section header */}
+                  <div className="mb-8 flex items-center gap-3">
+                    <span className="label-num">{currentTab?.num}</span>
+                    <span className="rule flex-1 max-w-[40px]" />
+                    <span className="label">{currentTab?.label}</span>
+                  </div>
+
                   {tab === 'general' && (
                     <div className="space-y-6">
-                      <div>
-                        <h2 className="text-lg font-semibold mb-1">Général</h2>
-                      </div>
+                      <h2 className="font-display text-3xl tracking-tight">Préférences générales</h2>
 
-                      <div>
-                        <label className="text-sm font-medium text-[var(--foreground-secondary)] mb-1.5 block">Langue</label>
-                        <select
-                          value={language}
-                          onChange={(e) => setLanguage(e.target.value)}
-                          className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--background-elevated)] text-sm text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
-                        >
-                          <option value="fr">Français</option>
-                          <option value="en">English</option>
-                          <option value="es">Español</option>
-                          <option value="de">Deutsch</option>
-                        </select>
-                      </div>
+                      <div className="space-y-5 pt-4">
+                        <Field label="Langue d'interface">
+                          <select
+                            value={language}
+                            onChange={(e) => setLanguage(e.target.value)}
+                            className="input h-10"
+                          >
+                            <option value="fr">Français</option>
+                            <option value="en">English</option>
+                            <option value="es">Español</option>
+                            <option value="de">Deutsch</option>
+                          </select>
+                        </Field>
 
-                      <div>
-                        <label className="text-sm font-medium text-[var(--foreground-secondary)] mb-2 block">Thème</label>
-                        <div className="grid grid-cols-3 gap-2">
-                          {[
-                            { id: 'light', label: 'Clair', icon: Sun },
-                            { id: 'dark', label: 'Sombre', icon: Moon },
-                            { id: 'system', label: 'Système', icon: Monitor },
-                          ].map((t) => {
-                            const Icon = t.icon
-                            return (
-                              <button
-                                key={t.id}
-                                onClick={() => setTheme(t.id as 'light' | 'dark' | 'system')}
-                                className={cn(
-                                  'px-3 py-2.5 rounded-lg border flex items-center justify-center gap-2 text-sm font-medium transition-all',
-                                  theme === t.id
-                                    ? 'bg-[var(--accent-soft)] border-[var(--accent)] text-[var(--accent)]'
-                                    : 'border-[var(--border)] text-[var(--foreground-muted)] hover:border-[var(--border-strong)]'
-                                )}
-                              >
-                                <Icon size={14} />
-                                {t.label}
-                              </button>
-                            )
-                          })}
-                        </div>
-                      </div>
+                        <Field label="Ton des réponses" hint="Style de communication par défaut">
+                          <select
+                            value={responseTone}
+                            onChange={(e) => setResponseTone(e.target.value)}
+                            className="input h-10"
+                          >
+                            <option value="balanced">Équilibré</option>
+                            <option value="concise">Concis</option>
+                            <option value="friendly">Amical</option>
+                            <option value="technical">Technique</option>
+                            <option value="creative">Créatif</option>
+                          </select>
+                        </Field>
 
-                      <div className="border-t border-[var(--border)] pt-5">
-                        <h3 className="text-sm font-semibold mb-3">Réponses</h3>
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-[var(--foreground-secondary)]">Ton de réponse</span>
-                            <select
-                              value={responseTone}
-                              onChange={(e) => setResponseTone(e.target.value)}
-                              className="px-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--background-elevated)] text-sm focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
-                            >
-                              <option value="balanced">Équilibré</option>
-                              <option value="concise">Concis</option>
-                              <option value="friendly">Amical</option>
-                              <option value="technical">Technique</option>
-                            </select>
-                          </div>
-                          <ToggleRow label="Afficher les sources" value={showSources} onChange={setShowSources} />
-                          <ToggleRow label="Recherche en temps réel" value={realtimeSearch} onChange={setRealtimeSearch} />
-                          <ToggleRow label="Suggestions intelligentes" value={smartSuggestions} onChange={setSmartSuggestions} />
-                        </div>
-                      </div>
+                        <div className="rule" />
 
-                      <div className="border-t border-[var(--border)] pt-5">
-                        <h3 className="text-sm font-semibold mb-3">Données</h3>
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-[var(--foreground-secondary)]">Effacer l&apos;historique</span>
-                            <button onClick={clearHistory} className="text-sm font-medium text-red-500 hover:text-red-600">Effacer</button>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-[var(--foreground-secondary)]">Exporter mes données</span>
-                            <button className="text-sm font-medium text-[var(--accent)] hover:text-[var(--accent-hover)]">Exporter</button>
+                        <Toggle label="Afficher les sources dans les réponses" value={showSources} onChange={setShowSources} />
+                        <Toggle label="Recherche web automatique" value={realtimeSearch} onChange={setRealtimeSearch} />
+                        <Toggle label="Suggestions intelligentes" value={smartSuggestions} onChange={setSmartSuggestions} />
+
+                        <div className="rule" />
+
+                        <div>
+                          <p className="text-[13px] font-medium mb-3">Données</p>
+                          <div className="space-y-2">
+                            <ActionRow label="Effacer l'historique" desc="Toutes vos conversations" onClick={clearHistory} danger />
+                            <ActionRow label="Effacer la mémoire" desc="Préférences enregistrées" onClick={clearMemory} danger />
+                            <ActionRow label="Exporter mes données" desc="Téléchargement complet" onClick={() => {}} icon={<Download size={12} />} />
                           </div>
                         </div>
-                      </div>
 
-                      {savedMessage && <p className="text-xs text-[var(--accent)]">{savedMessage}</p>}
-                      <Button onClick={saveMemory} loading={saving} variant="glow" size="sm">Enregistrer</Button>
+                        {savedMsg && <p className="text-[12px] text-[var(--jewel)]">{savedMsg}</p>}
+                      </div>
                     </div>
                   )}
 
                   {tab === 'appearance' && (
-                    <div className="space-y-5">
-                      <h2 className="text-lg font-semibold">Apparence</h2>
-                      <div>
-                        <label className="text-sm font-medium text-[var(--foreground-secondary)] mb-2.5 block">Thème</label>
-                        <div className="grid grid-cols-3 gap-2">
-                          {[
-                            { id: 'light', label: 'Clair', icon: Sun },
-                            { id: 'dark', label: 'Sombre', icon: Moon },
-                            { id: 'system', label: 'Système', icon: Monitor },
-                          ].map((t) => {
-                            const Icon = t.icon
-                            return (
-                              <button
-                                key={t.id}
-                                onClick={() => setTheme(t.id as 'light' | 'dark' | 'system')}
-                                className={cn(
-                                  'p-4 rounded-xl border flex flex-col items-center gap-2 transition-all',
-                                  theme === t.id
-                                    ? 'bg-[var(--accent-soft)] border-[var(--accent)] text-[var(--accent)]'
-                                    : 'border-[var(--border)] text-[var(--foreground-muted)] hover:border-[var(--border-strong)]'
-                                )}
-                              >
-                                <Icon size={20} />
-                                <span className="text-xs font-medium">{t.label}</span>
-                              </button>
-                            )
-                          })}
-                        </div>
+                    <div className="space-y-6">
+                      <h2 className="font-display text-3xl tracking-tight">Apparence</h2>
+                      <p className="text-[14px] text-[var(--fg-muted)]">Choisissez l'esthétique qui vous convient.</p>
+                      <div className="grid grid-cols-3 gap-3 pt-2">
+                        {[
+                          { id: 'light', label: 'Clair', icon: Sun, desc: 'Cream paper' },
+                          { id: 'dark', label: 'Sombre', icon: Moon, desc: 'Ink night' },
+                          { id: 'system', label: 'Système', icon: Monitor, desc: 'Suit votre OS' },
+                        ].map((t) => {
+                          const Icon = t.icon
+                          return (
+                            <button
+                              key={t.id}
+                              onClick={() => setTheme(t.id as 'light' | 'dark' | 'system')}
+                              className={cn(
+                                'p-5 rounded-[12px] border flex flex-col items-start gap-2 transition-all',
+                                theme === t.id
+                                  ? 'bg-[var(--jewel-soft)] border-[var(--jewel)] text-[var(--jewel)]'
+                                  : 'border-[var(--rule)] text-[var(--fg-muted)] hover:border-[var(--rule-strong)] hover:bg-[var(--bg-soft)]'
+                              )}
+                            >
+                              <Icon size={18} strokeWidth={1.5} />
+                              <div>
+                                <p className="text-[13px] font-medium text-[var(--fg)]">{t.label}</p>
+                                <p className="text-[11px] text-[var(--fg-subtle)]">{t.desc}</p>
+                              </div>
+                            </button>
+                          )
+                        })}
                       </div>
                     </div>
                   )}
 
                   {tab === 'models' && (
-                    <div className="space-y-5">
-                      <h2 className="text-lg font-semibold">Modèles IA</h2>
-                      <p className="text-sm text-[var(--foreground-muted)]">Choisissez le modèle par défaut pour vos conversations.</p>
-                      <div className="space-y-2">
+                    <div className="space-y-6">
+                      <h2 className="font-display text-3xl tracking-tight">Modèles IA</h2>
+                      <p className="text-[14px] text-[var(--fg-muted)]">Le modèle utilisé par défaut.</p>
+                      <div className="space-y-2 pt-2">
                         {[
-                          { id: 'ntrl-1.3', name: 'Netral 1.3', desc: 'Le plus puissant — raisonnement avancé, web search', badge: 'Recommandé' },
+                          { id: 'ntrl-1.3', name: 'Netral 1.3', desc: 'Le plus puissant — raisonnement avancé, recherche web', badge: 'Recommandé' },
                           { id: 'ntrl-1.2', name: 'Netral 1.2', desc: 'Rapide et polyvalent', badge: null },
-                          { id: 'ntrl-1.0', name: 'Netral 1.0', desc: 'Ultra-rapide, réponses courtes', badge: null },
+                          { id: 'ntrl-1.0', name: 'Netral 1.0', desc: 'Ultra-rapide, réponses brèves', badge: null },
                         ].map((m) => (
-                          <div key={m.id} className="flex items-center gap-3 p-3 rounded-lg border border-[var(--border)] hover:border-[var(--accent)]/40 transition-colors cursor-pointer">
-                            <div className="w-9 h-9 rounded-lg bg-[var(--accent-soft)] flex items-center justify-center">
-                              <Brain size={16} className="text-[var(--accent)]" />
+                          <div key={m.id} className="flex items-center gap-4 p-4 rounded-[10px] border border-[var(--rule)] hover:border-[var(--jewel)]/40 transition-colors">
+                            <div className="w-10 h-10 rounded-md bg-[var(--jewel-soft)] flex items-center justify-center">
+                              <Brain size={16} className="text-[var(--jewel)]" strokeWidth={1.5} />
                             </div>
                             <div className="flex-1">
                               <div className="flex items-center gap-2">
-                                <p className="text-sm font-medium">{m.name}</p>
-                                {m.badge && <span className="text-[9px] font-bold uppercase bg-[var(--accent-soft)] text-[var(--accent)] px-1.5 py-0.5 rounded">{m.badge}</span>}
+                                <p className="text-[14px] font-medium">{m.name}</p>
+                                {m.badge && <span className="text-[9px] font-medium uppercase tracking-wider text-[var(--jewel)]">{m.badge}</span>}
                               </div>
-                              <p className="text-xs text-[var(--foreground-muted)]">{m.desc}</p>
+                              <p className="text-[12px] text-[var(--fg-muted)]">{m.desc}</p>
                             </div>
                           </div>
                         ))}
@@ -304,80 +241,70 @@ export function SettingsModal({ open, onClose, user }: SettingsModalProps) {
                   )}
 
                   {tab === 'search' && (
-                    <div className="space-y-5">
-                      <h2 className="text-lg font-semibold">Recherche</h2>
-                      <p className="text-sm text-[var(--foreground-muted)]">Configurez le comportement de la recherche web.</p>
-                      <div className="space-y-3">
-                        <ToggleRow label="Recherche automatique quand pertinent" value={realtimeSearch} onChange={setRealtimeSearch} />
-                        <ToggleRow label="Afficher les sources dans les réponses" value={showSources} onChange={setShowSources} />
-                        <ToggleRow label="Suggestions de recherche" value={smartSuggestions} onChange={setSmartSuggestions} />
+                    <div className="space-y-6">
+                      <h2 className="font-display text-3xl tracking-tight">Recherche</h2>
+                      <p className="text-[14px] text-[var(--fg-muted)]">Comment Netral consulte le web.</p>
+                      <div className="space-y-3 pt-2">
+                        <Toggle label="Recherche automatique quand pertinent" value={realtimeSearch} onChange={setRealtimeSearch} />
+                        <Toggle label="Afficher les sources dans les réponses" value={showSources} onChange={setShowSources} />
+                        <Toggle label="Suggestions de recherche" value={smartSuggestions} onChange={setSmartSuggestions} />
                       </div>
                     </div>
                   )}
 
                   {tab === 'privacy' && (
-                    <div className="space-y-5">
-                      <h2 className="text-lg font-semibold">Confidentialité</h2>
-                      <p className="text-sm text-[var(--foreground-muted)]">Gérez vos données et votre vie privée.</p>
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between py-2">
+                    <div className="space-y-6">
+                      <h2 className="font-display text-3xl tracking-tight">Confidentialité</h2>
+                      <p className="text-[14px] text-[var(--fg-muted)]">Vos données vous appartiennent.</p>
+                      <div className="space-y-3 pt-2">
+                        <ActionRow label="Mémoire" desc="Préférences mémorisées" onClick={clearMemory} danger icon={<Trash2 size={12} />} />
+                        <ActionRow label="Historique des conversations" desc="Toutes les conversations passées" onClick={clearHistory} danger icon={<Trash2 size={12} />} />
+                        <ActionRow label="Exporter mes données" desc="Archive téléchargeable" onClick={() => {}} icon={<Download size={12} />} />
+                      </div>
+                      <div className="rule" />
+                      <div className="bg-[var(--bg-soft)] rounded-[10px] p-4 border border-[var(--rule)]">
+                        <div className="flex items-start gap-3">
+                          <Shield size={14} className="text-[var(--jewel)] mt-0.5 shrink-0" />
                           <div>
-                            <p className="text-sm font-medium">Mémoire</p>
-                            <p className="text-xs text-[var(--foreground-muted)]">Netral se souvient de vos préférences</p>
+                            <p className="text-[13px] font-medium mb-1">Sécurité</p>
+                            <p className="text-[12px] text-[var(--fg-muted)] leading-relaxed">
+                              Chiffrement TLS en transit. Sessions sécurisées via cookies HttpOnly. Aucune utilisation de vos conversations pour entraînement.
+                            </p>
                           </div>
-                          <button onClick={clearMemory} className="text-sm font-medium text-red-500 hover:text-red-600 flex items-center gap-1">
-                            <Trash2 size={12} /> Effacer
-                          </button>
-                        </div>
-                        <div className="flex items-center justify-between py-2">
-                          <div>
-                            <p className="text-sm font-medium">Historique des conversations</p>
-                            <p className="text-xs text-[var(--foreground-muted)]">Toutes vos conversations passées</p>
-                          </div>
-                          <button onClick={clearHistory} className="text-sm font-medium text-red-500 hover:text-red-600 flex items-center gap-1">
-                            <Trash2 size={12} /> Effacer
-                          </button>
-                        </div>
-                        <div className="flex items-center justify-between py-2">
-                          <div>
-                            <p className="text-sm font-medium">Exporter mes données</p>
-                            <p className="text-xs text-[var(--foreground-muted)]">Télécharger toutes vos données</p>
-                          </div>
-                          <button className="text-sm font-medium text-[var(--accent)] flex items-center gap-1">
-                            <Download size={12} /> Exporter
-                          </button>
                         </div>
                       </div>
                     </div>
                   )}
 
                   {tab === 'notifications' && (
-                    <div className="space-y-5">
-                      <h2 className="text-lg font-semibold">Notifications</h2>
-                      <p className="text-sm text-[var(--foreground-muted)]">Gérez vos préférences de notification.</p>
-                      <div className="space-y-3">
-                        <ToggleRow label="Notifications par email" value={false} onChange={() => {}} />
-                        <ToggleRow label="Mises à jour produit" value={true} onChange={() => {}} />
-                        <ToggleRow label="Conseils et astuces" value={true} onChange={() => {}} />
+                    <div className="space-y-6">
+                      <h2 className="font-display text-3xl tracking-tight">Notifications</h2>
+                      <p className="text-[14px] text-[var(--fg-muted)]">Quand vous contacter.</p>
+                      <div className="space-y-3 pt-2">
+                        <Toggle label="Notifications par email" value={false} onChange={() => {}} />
+                        <Toggle label="Mises à jour produit" value={true} onChange={() => {}} />
+                        <Toggle label="Conseils & astuces" value={false} onChange={() => {}} />
                       </div>
                     </div>
                   )}
 
                   {tab === 'shortcuts' && (
-                    <div className="space-y-5">
-                      <h2 className="text-lg font-semibold">Raccourcis clavier</h2>
-                      <div className="space-y-2">
+                    <div className="space-y-6">
+                      <h2 className="font-display text-3xl tracking-tight">Raccourcis clavier</h2>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3 pt-2">
                         {[
-                          { action: 'Nouveau chat', keys: 'Ctrl + N' },
-                          { action: 'Rechercher', keys: 'Ctrl + K' },
-                          { action: 'Envoyer message', keys: 'Enter' },
-                          { action: 'Nouvelle ligne', keys: 'Shift + Enter' },
-                          { action: 'Fermer sidebar', keys: 'Ctrl + B' },
-                          { action: 'Paramètres', keys: 'Ctrl + ,' },
+                          { action: 'Nouvelle conversation', keys: '⌘ N' },
+                          { action: 'Rechercher', keys: '⌘ K' },
+                          { action: 'Envoyer le message', keys: '↵' },
+                          { action: 'Nouvelle ligne', keys: '⇧ ↵' },
+                          { action: 'Basculer la sidebar', keys: '⌘ B' },
+                          { action: 'Paramètres', keys: '⌘ ,' },
+                          { action: 'Fermer modal', keys: 'Esc' },
+                          { action: 'Régénérer', keys: '⌘ R' },
                         ].map((s) => (
-                          <div key={s.action} className="flex items-center justify-between py-2">
-                            <span className="text-sm text-[var(--foreground-secondary)]">{s.action}</span>
-                            <kbd className="px-2 py-1 rounded bg-[var(--background-secondary)] border border-[var(--border)] text-xs font-mono text-[var(--foreground-muted)]">{s.keys}</kbd>
+                          <div key={s.action} className="flex items-center justify-between py-2 border-b border-[var(--rule-faint)]">
+                            <span className="text-[13px] text-[var(--fg-soft)]">{s.action}</span>
+                            <span className="kbd">{s.keys}</span>
                           </div>
                         ))}
                       </div>
@@ -385,48 +312,48 @@ export function SettingsModal({ open, onClose, user }: SettingsModalProps) {
                   )}
 
                   {tab === 'subscription' && (
-                    <div className="space-y-5">
-                      <h2 className="text-lg font-semibold">Abonnement</h2>
-                      <div className="p-4 rounded-xl border border-[var(--border)] bg-[var(--background-secondary)]">
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className="w-10 h-10 rounded-lg bg-[var(--accent-soft)] flex items-center justify-center">
-                            <CreditCard size={18} className="text-[var(--accent)]" />
-                          </div>
+                    <div className="space-y-6">
+                      <h2 className="font-display text-3xl tracking-tight">Abonnement</h2>
+                      <div className="bg-[var(--fg)] text-[var(--bg)] rounded-[14px] p-6 lg:p-8">
+                        <div className="flex items-start justify-between mb-4">
                           <div>
-                            <p className="font-semibold">Plan Free</p>
-                            <p className="text-xs text-[var(--foreground-muted)]">Accès limité aux fonctionnalités</p>
+                            <p className="label opacity-50 mb-1" style={{ color: 'inherit' }}>Plan actuel</p>
+                            <p className="font-display text-3xl tracking-tight">Free</p>
                           </div>
+                          <CreditCard size={20} className="opacity-40" strokeWidth={1.5} />
                         </div>
-                        <button className="w-full py-2.5 rounded-lg bg-[var(--accent)] text-white text-sm font-semibold hover:bg-[var(--accent-hover)] transition-colors">
-                          Mettre à niveau — Pro
+                        <p className="text-[13px] opacity-60 mb-6">Accès limité aux fonctionnalités essentielles.</p>
+                        <button className="btn-jewel w-full h-11">
+                          Passer à Pro
                         </button>
                       </div>
-                      <p className="text-xs text-[var(--foreground-muted)]">Le plan Pro inclut : messages illimités, modèles avancés, recherche web prioritaire, et support dédié.</p>
+                      <div className="space-y-2">
+                        <p className="text-[13px] font-medium">Le plan Pro inclut :</p>
+                        <ul className="space-y-1.5 text-[13px] text-[var(--fg-muted)]">
+                          {['Messages illimités', 'Modèles avancés (Netral 1.3+)', 'Recherche web prioritaire', 'Support dédié', 'Accès anticipé aux nouvelles features'].map(f => (
+                            <li key={f} className="flex items-center gap-2">
+                              <span className="w-1 h-1 rounded-full bg-[var(--jewel)]" />
+                              {f}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
                     </div>
                   )}
 
                   {tab === 'about' && (
-                    <div className="space-y-5">
-                      <h2 className="text-lg font-semibold">À propos</h2>
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between py-1">
-                          <span className="text-sm text-[var(--foreground-muted)]">Version</span>
-                          <span className="text-sm font-medium">1.3.0</span>
-                        </div>
-                        <div className="flex items-center justify-between py-1">
-                          <span className="text-sm text-[var(--foreground-muted)]">Modèle actuel</span>
-                          <span className="text-sm font-medium">Netral 1.3</span>
-                        </div>
-                        <div className="flex items-center justify-between py-1">
-                          <span className="text-sm text-[var(--foreground-muted)]">Compte</span>
-                          <span className="text-sm font-medium">{user.email}</span>
-                        </div>
+                    <div className="space-y-6">
+                      <h2 className="font-display text-3xl tracking-tight">À propos</h2>
+                      <div className="space-y-3 pt-2">
+                        <InfoRow label="Version" value="1.3.0" />
+                        <InfoRow label="Modèle actuel" value="Netral 1.3" />
+                        <InfoRow label="Compte" value={user.email} />
+                        <InfoRow label="Build" value="2026.05" />
                       </div>
-                      <div className="pt-3 border-t border-[var(--border)]">
-                        <p className="text-xs text-[var(--foreground-muted)]">
-                          Netral est un assistant IA qui recherche, analyse et comprend internet en temps réel.
-                        </p>
-                      </div>
+                      <div className="rule" />
+                      <p className="text-[13px] text-[var(--fg-muted)] leading-relaxed">
+                        Netral est un assistant IA éditorial. Il consulte, lit, et synthétise le web en temps réel. Conçu pour les esprits curieux qui exigent des réponses sourcées.
+                      </p>
                     </div>
                   )}
                 </div>
@@ -439,22 +366,69 @@ export function SettingsModal({ open, onClose, user }: SettingsModalProps) {
   )
 }
 
-function ToggleRow({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) {
+function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="text-[13px] font-medium text-[var(--fg-soft)] mb-1.5 block flex items-center gap-2">
+        {label}
+        {hint && <span className="text-[11px] text-[var(--fg-subtle)] font-normal">— {hint}</span>}
+      </label>
+      {children}
+    </div>
+  )
+}
+
+function Toggle({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) {
   return (
     <div className="flex items-center justify-between py-1">
-      <span className="text-sm text-[var(--foreground-secondary)]">{label}</span>
+      <span className="text-[13px] text-[var(--fg-soft)]">{label}</span>
       <button
         onClick={() => onChange(!value)}
+        role="switch"
+        aria-checked={value}
         className={cn(
-          'w-10 h-5.5 rounded-full relative transition-colors',
-          value ? 'bg-[var(--accent)]' : 'bg-[var(--border-strong)]'
+          'w-10 h-6 rounded-full relative transition-colors',
+          value ? 'bg-[var(--jewel)]' : 'bg-[var(--rule-strong)]'
         )}
       >
-        <div className={cn(
-          'absolute top-0.5 w-4.5 h-4.5 rounded-full bg-white shadow-sm transition-transform',
-          value ? 'translate-x-5' : 'translate-x-0.5'
-        )} />
+        <motion.div
+          className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm"
+          animate={{ left: value ? 20 : 2 }}
+          transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+        />
       </button>
+    </div>
+  )
+}
+
+function ActionRow({ label, desc, onClick, danger, icon }: { label: string; desc: string; onClick: () => void; danger?: boolean; icon?: React.ReactNode }) {
+  return (
+    <div className="flex items-center justify-between py-2.5">
+      <div>
+        <p className="text-[13px] font-medium">{label}</p>
+        <p className="text-[11px] text-[var(--fg-muted)]">{desc}</p>
+      </div>
+      <button
+        onClick={onClick}
+        className={cn(
+          'flex items-center gap-1.5 text-[12px] font-medium px-2.5 py-1 rounded-md transition-colors',
+          danger
+            ? 'text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10'
+            : 'text-[var(--jewel)] hover:bg-[var(--jewel-soft)]'
+        )}
+      >
+        {icon}
+        {danger ? 'Effacer' : 'Exporter'}
+      </button>
+    </div>
+  )
+}
+
+function InfoRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between py-1.5 border-b border-[var(--rule-faint)]">
+      <span className="text-[12px] text-[var(--fg-muted)]">{label}</span>
+      <span className="text-[12px] font-medium font-mono">{value}</span>
     </div>
   )
 }

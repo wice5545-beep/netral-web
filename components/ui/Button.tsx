@@ -2,35 +2,28 @@ import { cn } from '@/lib/utils'
 import { ButtonHTMLAttributes, forwardRef } from 'react'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'outline' | 'glow'
+  variant?: 'ink' | 'jewel' | 'ghost' | 'danger' | 'glow'
   size?: 'sm' | 'md' | 'lg'
   loading?: boolean
 }
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = 'primary', size = 'md', loading, children, disabled, ...props }, ref) => {
+  ({ className, variant = 'ink', size = 'md', loading, children, disabled, ...props }, ref) => {
     const base =
-      'relative inline-flex items-center justify-center gap-2 font-medium rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] active:scale-[0.98] select-none'
+      'relative inline-flex items-center justify-center gap-2 font-medium rounded-[10px] transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--jewel)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)] active:scale-[0.98] select-none'
 
-    const variants = {
-      primary:
-        'bg-[var(--foreground)] text-[var(--background)] hover:opacity-90 shadow-sm',
-      glow:
-        'bg-gradient-to-r from-[var(--gradient-1)] via-[var(--gradient-2)] to-[var(--gradient-3)] text-white shadow-[0_0_30px_var(--accent-glow)] hover:shadow-[0_0_50px_var(--accent-glow)] hover:brightness-110',
-      secondary:
-        'bg-[var(--background-elevated)] hover:bg-[var(--border)] text-[var(--foreground)] border border-[var(--border)]',
-      ghost:
-        'hover:bg-[var(--border)] text-[var(--foreground-secondary)] hover:text-[var(--foreground)]',
-      danger:
-        'bg-red-500 hover:bg-red-600 text-white',
-      outline:
-        'border border-[var(--border-strong)] hover:bg-[var(--border)] text-[var(--foreground)] backdrop-blur-sm',
+    const variants: Record<string, string> = {
+      ink: 'bg-[var(--fg)] text-[var(--bg)] hover:-translate-y-px shadow-[var(--shadow-page)] hover:shadow-[var(--shadow-card)]',
+      jewel: 'bg-[var(--jewel)] text-white hover:bg-[var(--jewel-hover)] hover:-translate-y-px shadow-[var(--shadow-page)] hover:shadow-[var(--shadow-card)]',
+      glow: 'bg-[var(--jewel)] text-white shadow-[0_0_24px_var(--jewel-glow)] hover:shadow-[0_0_40px_var(--jewel-glow)] hover:bg-[var(--jewel-hover)]',
+      ghost: 'bg-transparent border border-[var(--rule)] text-[var(--fg-soft)] hover:bg-[var(--bg-soft)] hover:border-[var(--rule-strong)] hover:text-[var(--fg)]',
+      danger: 'bg-red-600 hover:bg-red-700 text-white',
     }
 
     const sizes = {
-      sm: 'h-8 px-3 text-sm',
+      sm: 'h-8 px-3 text-[13px]',
       md: 'h-10 px-4 text-sm',
-      lg: 'h-12 px-6 text-base',
+      lg: 'h-12 px-6 text-[15px]',
     }
 
     return (

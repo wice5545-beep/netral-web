@@ -1,26 +1,38 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter } from 'next/font/google'
+import { Instrument_Serif, Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
 import { ThemeProvider } from '@/components/ui/ThemeProvider'
 
-const inter = Inter({
+const instrumentSerif = Instrument_Serif({
   subsets: ['latin'],
-  variable: '--font-inter',
+  weight: ['400'],
+  variable: '--font-display',
+  display: 'swap',
+})
+
+const geist = Geist({
+  subsets: ['latin'],
+  variable: '--font-sans',
+  display: 'swap',
+})
+
+const geistMono = Geist_Mono({
+  subsets: ['latin'],
+  variable: '--font-mono',
   display: 'swap',
 })
 
 export const metadata: Metadata = {
-  title: 'Netral — Next-gen AI',
-  description: 'Netral is a premium AI assistant. Chat with powerful models in a beautiful, futuristic interface.',
-  icons: {
-    icon: '/favicon.ico',
-  },
+  title: 'Netral — The intelligent assistant for the modern web',
+  description: 'Netral searches, reads, and synthesizes the web in real-time. Get sourced, accurate answers powered by advanced AI.',
+  icons: { icon: '/favicon.ico' },
+  robots: { index: true, follow: true },
 }
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#fafafa' },
-    { media: '(prefers-color-scheme: dark)', color: '#050507' },
+    { media: '(prefers-color-scheme: light)', color: '#faf8f3' },
+    { media: '(prefers-color-scheme: dark)', color: '#0a0a0b' },
   ],
   width: 'device-width',
   initialScale: 1,
@@ -29,7 +41,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${inter.variable} h-full`}>
+    <html lang="fr" suppressHydrationWarning className={`${instrumentSerif.variable} ${geist.variable} ${geistMono.variable} h-full`}>
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -37,7 +49,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
       </head>
-      <body className="h-full bg-[var(--background)] text-[var(--foreground)] antialiased">
+      <body className="h-full bg-[var(--ink)] text-[var(--paper)] antialiased font-sans">
         <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>

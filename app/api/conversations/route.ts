@@ -23,13 +23,24 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}))
   const { title, model } = body as { title?: string; model?: string }
 
+  const safeTitle = (title ?? 'Nouvelle conversation').slice(0, 200)
+  const safeModel = (model ?? 'ntrl-1.3').slice(0, 50)
+
   const conv = await prisma.conversation.create({
     data: {
       userId: session.userId,
-      title: title ?? 'New chat',
-      model: model ?? 'ntrl-1.3',
+      title: safeTitle,
+      model: safeModel,
     },
   })
 
   return Response.json({ conversation: conv })
+}
+
+export async function DELETE() {
+  const session = await getSession()
+  if (!session?.userId) return Response.json({ error: 'Unauthorized' }, { status: 401 })
+
+  await prisma.conversation.deleteMany({ where: { userId: session.userId } })
+  return Response.json({ ok: true })
 }

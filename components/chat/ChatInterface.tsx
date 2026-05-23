@@ -6,8 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useChatStore, type ChatMessage } from '@/lib/store/chat'
 import { Message } from './Message'
 import { ChatComposer } from './ChatComposer'
-import { NetralLogo } from '@/components/ui/NetralLogo'
-import { Globe, FileSearch, Brain, Sparkles } from 'lucide-react'
+import { Globe, FileSearch, Brain } from 'lucide-react'
 
 interface ChatInterfaceProps {
   initialMessages?: ChatMessage[]
@@ -19,14 +18,14 @@ interface ChatInterfaceProps {
 export type SearchStatus = null | 'searching' | 'reading' | 'thinking'
 
 const suggestions = [
-  { text: 'Expliquer un concept complexe', icon: Brain, gradient: 'from-amber-500 to-orange-500' },
-  { text: 'Résumer un document', icon: FileSearch, gradient: 'from-emerald-500 to-teal-500' },
-  { text: 'Rechercher sur le web', icon: Globe, gradient: 'from-blue-500 to-indigo-500' },
-  { text: 'Générer du contenu créatif', icon: Sparkles, gradient: 'from-purple-500 to-pink-500' },
+  { num: '01', text: 'Quelles sont les nouvelles découvertes en physique quantique cette semaine ?', label: 'Recherche' },
+  { num: '02', text: 'Explique-moi les principes du stoïcisme avec des exemples modernes', label: 'Apprendre' },
+  { num: '03', text: 'Rédige un email professionnel pour décliner une offre poliment', label: 'Écrire' },
+  { num: '04', text: 'Compare React, Vue et Svelte en 2026 — points forts, faiblesses', label: 'Analyser' },
 ]
 
 const statusConfig = {
-  searching: { icon: Globe, label: 'Recherche sur le web…' },
+  searching: { icon: Globe, label: 'Recherche en cours…' },
   reading: { icon: FileSearch, label: 'Lecture des sources…' },
   thinking: { icon: Brain, label: 'Réflexion…' },
 }
@@ -81,7 +80,7 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
 
       if (!response.ok || !response.body) {
         const errText = await response.text().catch(() => 'unknown')
-        updateLastMessage(`\n\n⚠️ Error: ${errText.slice(0, 200)}`)
+        updateLastMessage(`\n\n⚠️ Erreur : ${errText.slice(0, 200)}`)
         return
       }
 
@@ -129,7 +128,7 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
         upsertConversation({ id: conversationId, title: text.slice(0, 60), model: currentModel, pinned: false, updatedAt: new Date().toISOString() })
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unknown error'
+      const message = err instanceof Error ? err.message : 'Erreur inconnue'
       if (message !== 'AbortError' && !(err instanceof DOMException)) updateLastMessage(`\n\n⚠️ ${message}`)
     } finally {
       setStreaming(false)
@@ -155,92 +154,113 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
 
   const isEmpty = didInit && messages.length === 0
   const firstName = userName?.split(' ')[0]
+  const greeting = (() => {
+    const h = new Date().getHours()
+    if (h < 6) return 'Bonne nuit'
+    if (h < 12) return 'Bonjour'
+    if (h < 18) return 'Bon après-midi'
+    return 'Bonsoir'
+  })()
 
   return (
     <div className="flex flex-col h-full relative">
       <div ref={scrollRef} className="flex-1 overflow-y-auto scroll-smooth">
         {isEmpty ? (
-          <div className="min-h-full flex flex-col items-center justify-center px-6 pb-48">
-            
-            {/* Logo avec anneaux décoratifs */}
+          <div className="min-h-full flex flex-col px-6 lg:px-12 pt-16 lg:pt-24 pb-56 max-w-[920px] mx-auto w-full">
+
+            {/* Issue header */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-              className="relative mb-10 flex items-center justify-center"
+              className="flex items-center gap-3 mb-12"
             >
-              {/* Anneaux animés */}
-              {[80, 120, 160].map((size, i) => (
-                <motion.div
-                  key={size}
-                  className="absolute rounded-full border border-[var(--border-accent)]"
-                  style={{ width: size, height: size }}
-                  animate={{ scale: [1, 1.04, 1], opacity: [0.3, 0.5, 0.3] }}
-                  transition={{ duration: 3.5 + i * 0.5, repeat: Infinity, ease: 'easeInOut', delay: i * 0.3 }}
-                />
-              ))}
-              
-              <motion.div
-                animate={{ y: [0, -6, 0] }}
-                transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-              >
-                <NetralLogo size={52} animated />
-              </motion.div>
+              <span className="label-num">№ {new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}</span>
+              <span className="rule flex-1 max-w-[60px]" />
+              <span className="label">Édition du jour</span>
             </motion.div>
 
-            {/* Greeting élégant */}
+            {/* Greeting — editorial style */}
             <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-              className="text-center mb-10"
+              initial={{ opacity: 0, y: 16, filter: 'blur(4px)' }}
+              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+              className="mb-16"
             >
-              <h2 className="font-display text-3xl md:text-4xl tracking-tight text-[var(--foreground)] mb-3">
-                {firstName ? `Bonjour, ${firstName}` : 'Bonjour'}
+              <h2 className="font-display text-[clamp(40px,7vw,80px)] leading-[1] tracking-tight">
+                {greeting}{firstName ? `,` : '.'}
+                {firstName && (
+                  <>
+                    <br />
+                    <span className="serif-italic" style={{ color: 'var(--jewel)' }}>{firstName}.</span>
+                  </>
+                )}
               </h2>
-              <p className="text-[var(--foreground-muted)] text-base font-light">
-                Comment puis-je vous aider aujourd&apos;hui ?
-              </p>
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.4, duration: 0.6 }}
+                className="text-[15px] text-[var(--fg-muted)] mt-6 max-w-md"
+              >
+                Une question m'attend-elle ? Je peux consulter le web, lire vos documents, ou simplement converser.
+              </motion.p>
             </motion.div>
 
-            {/* Suggestions raffinées */}
+            {/* Section break */}
             <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.25, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-              className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full max-w-xl"
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ delay: 0.6, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+              style={{ transformOrigin: 'left' }}
+              className="rule mb-8"
+            />
+
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.7, duration: 0.5 }}
+              className="flex items-center gap-3 mb-6"
             >
-              {suggestions.map((s, i) => {
-                const Icon = s.icon
-                return (
-                  <motion.button
-                    key={s.text}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 + i * 0.06, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                    whileHover={{ y: -2, scale: 1.01 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => handleSubmit(s.text)}
-                    className="group flex items-center gap-3 p-4 rounded-xl border border-[var(--border)] hover:border-[var(--accent)]/30 hover:shadow-md text-left transition-all duration-200 bg-[var(--background-elevated)]"
-                  >
-                    <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${s.gradient} flex items-center justify-center shrink-0 shadow-sm`}>
-                      <Icon size={14} className="text-white" />
-                    </div>
-                    <span className="text-[13px] text-[var(--foreground-secondary)] group-hover:text-[var(--foreground)] transition-colors">{s.text}</span>
-                  </motion.button>
-                )
-              })}
+              <span className="label">Suggestions</span>
+              <span className="dot-divider" />
+              <span className="label-num">{suggestions.length} sujets</span>
             </motion.div>
+
+            {/* Editorial suggestion list */}
+            <div className="space-y-px">
+              {suggestions.map((s, i) => (
+                <motion.button
+                  key={s.num}
+                  initial={{ opacity: 0, x: -16 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.8 + i * 0.06, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                  whileHover={{ x: 4 }}
+                  onClick={() => handleSubmit(s.text)}
+                  className="group w-full text-left flex items-center gap-6 py-5 border-b border-[var(--rule)] hover:border-[var(--jewel)] transition-all"
+                >
+                  <span className="label-num shrink-0">{s.num}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] uppercase tracking-[0.14em] font-medium text-[var(--jewel)] mb-1">{s.label}</p>
+                    <p className="text-[16px] lg:text-[18px] font-display leading-[1.3] text-[var(--fg)] group-hover:text-[var(--jewel)] transition-colors">
+                      {s.text}
+                    </p>
+                  </div>
+                  <svg className="shrink-0 transition-transform group-hover:translate-x-1 text-[var(--fg-muted)] group-hover:text-[var(--jewel)]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M7 17L17 7M17 7H7M17 7V17" />
+                  </svg>
+                </motion.button>
+              ))}
+            </div>
           </div>
         ) : (
-          <div className="max-w-2xl mx-auto w-full px-4 md:px-6 pt-10 pb-48">
+          <div className="max-w-[760px] mx-auto w-full px-4 md:px-8 pt-10 pb-56">
             <AnimatePresence initial={false}>
               {messages.map((m, i) => (
                 <motion.div
                   key={m.id}
-                  initial={{ opacity: 0, y: 14, scale: 0.99 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                  initial={{ opacity: 0, y: 14, filter: 'blur(2px)' }}
+                  animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                  transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
                 >
                   <Message
                     role={m.role}
@@ -257,26 +277,26 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
         )}
       </div>
 
-      {/* Bottom input */}
+      {/* Bottom composer area */}
       <div className="absolute bottom-0 left-0 right-0 pointer-events-none">
-        <div className="max-w-2xl mx-auto px-4 md:px-6 pb-6 md:pb-8 pb-safe">
+        <div className="max-w-[760px] mx-auto px-4 md:px-8 pb-6 md:pb-8 pb-safe">
           {/* Status pill */}
           <AnimatePresence>
             {searchStatus && (
               <motion.div
-                initial={{ opacity: 0, y: 10, scale: 0.96 }}
+                initial={{ opacity: 0, y: 12, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 4, scale: 0.98 }}
-                transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                exit={{ opacity: 0, y: 6, scale: 0.97 }}
+                transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
                 className="flex justify-center mb-3"
               >
                 {(() => {
                   const s = statusConfig[searchStatus]
                   const Icon = s.icon
                   return (
-                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-[var(--border)] shadow-sm text-sm font-medium text-[var(--accent)]">
-                      <Icon size={13} className="search-pulse" />
-                      <span className="search-pulse">{s.label}</span>
+                    <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full glass border border-[var(--rule)] shadow-sm">
+                      <Icon size={12} className="text-[var(--jewel)]" />
+                      <span className="text-[12px] font-medium text-[var(--fg-soft)] shimmer-text">{s.label}</span>
                     </div>
                   )
                 })()}
@@ -298,7 +318,8 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
           </div>
         </div>
 
-        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-[var(--background)] via-[var(--background)]/95 to-transparent pointer-events-none" />
+        {/* Bottom fade */}
+        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-[var(--bg)] via-[var(--bg)]/95 to-transparent pointer-events-none" />
       </div>
     </div>
   )

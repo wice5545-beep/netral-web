@@ -1,10 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { SettingsModal } from '@/components/chat/SettingsModal'
 import { useChatStore } from '@/lib/store/chat'
-import { useEffect } from 'react'
 
 interface AppShellProps {
   user: { id: string; name?: string | null; email: string }
@@ -15,18 +14,32 @@ export function AppShell({ user, children }: AppShellProps) {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const { setSidebarOpen } = useChatStore()
 
+  // Keyboard shortcuts
   useEffect(() => {
     const onResize = () => {
       if (window.innerWidth < 768) setSidebarOpen(false)
     }
     onResize()
     window.addEventListener('resize', onResize)
-    return () => window.removeEventListener('resize', onResize)
+
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === ',') {
+        e.preventDefault()
+        setSettingsOpen(true)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+
+    return () => {
+      window.removeEventListener('resize', onResize)
+      window.removeEventListener('keydown', onKey)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (
-    <div className="flex h-screen bg-[var(--background)] overflow-hidden">
+    <div className="flex h-screen bg-[var(--bg)] overflow-hidden">
+      <div className="grain-paper" />
       <Sidebar
         user={{ name: user.name, email: user.email }}
         onOpenSettings={() => setSettingsOpen(true)}

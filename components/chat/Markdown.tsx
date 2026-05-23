@@ -26,14 +26,14 @@ function CodeBlock({ children, className, ...props }: { children?: React.ReactNo
 
   return (
     <div className="relative group not-prose my-4">
-      <div className="flex items-center justify-between px-4 py-2 text-xs text-[var(--foreground-muted)] border border-[var(--border)] rounded-t-xl bg-[var(--background-elevated)]">
-        <span className="font-mono">{language}</span>
+      <div className="flex items-center justify-between px-4 py-2 text-[11px] text-[var(--fg-muted)] border border-[var(--rule)] rounded-t-[10px] bg-[var(--bg-elevated)]">
+        <span className="font-mono uppercase tracking-wider">{language}</span>
         <button
           onClick={copy}
-          className="flex items-center gap-1 px-2 py-0.5 rounded hover:bg-[var(--border)] transition-colors"
+          className="flex items-center gap-1.5 px-2 py-0.5 rounded hover:bg-[var(--bg-soft)] transition-colors"
         >
           {copied ? <Check size={11} /> : <Copy size={11} />}
-          {copied ? 'Copied' : 'Copy'}
+          {copied ? 'Copié' : 'Copier'}
         </button>
       </div>
       <pre className="!mt-0 !rounded-t-none !border-t-0">
@@ -47,25 +47,22 @@ function CodeBlock({ children, className, ...props }: { children?: React.ReactNo
 
 export function Markdown({ content }: MarkdownProps) {
   return (
-    <div className="prose-chat">
-      <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
-        rehypePlugins={[rehypeHighlight]}
-        components={{
-          pre: ({ children }) => {
-            // Get language from the code child
-            const codeChild = Array.isArray(children) ? children[0] : children
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const child = codeChild as any
-            if (child?.props) {
-              return <CodeBlock className={child.props.className}>{child.props.children}</CodeBlock>
-            }
-            return <pre>{children}</pre>
-          },
-        }}
-      >
-        {content}
-      </ReactMarkdown>
-    </div>
+    <ReactMarkdown
+      remarkPlugins={[remarkGfm]}
+      rehypePlugins={[rehypeHighlight]}
+      components={{
+        pre: ({ children }) => {
+          const codeChild = Array.isArray(children) ? children[0] : children
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const child = codeChild as any
+          if (child?.props) {
+            return <CodeBlock className={child.props.className}>{child.props.children}</CodeBlock>
+          }
+          return <pre>{children}</pre>
+        },
+      }}
+    >
+      {content}
+    </ReactMarkdown>
   )
 }

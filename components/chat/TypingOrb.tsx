@@ -4,39 +4,20 @@ import { motion } from 'framer-motion'
 
 export function TypingOrb() {
   return (
-    <div className="flex items-center gap-2 py-2">
-      <div className="relative w-4 h-4">
+    <div className="flex items-center gap-1.5 py-2">
+      {[0, 0.18, 0.36].map((delay, i) => (
         <motion.div
-          className="absolute inset-0 rounded-full"
-          style={{
-            background:
-              'radial-gradient(circle, var(--gradient-1), var(--gradient-2))',
-            boxShadow: '0 0 20px var(--accent-glow)',
-          }}
-          animate={{
-            scale: [0.3, 0.9, 1.4, 0.9, 0.3],
-            opacity: [0.6, 0.85, 1, 0.85, 0.6],
-          }}
+          key={i}
+          className="w-1.5 h-1.5 rounded-full bg-[var(--jewel)]"
+          animate={{ scale: [0.6, 1.1, 0.6], opacity: [0.4, 1, 0.4] }}
           transition={{
-            duration: 1.8,
+            duration: 1.2,
             repeat: Infinity,
-            ease: [0.4, 0, 0.6, 1],
-            times: [0, 0.2, 0.5, 0.8, 1],
+            ease: 'easeInOut',
+            delay,
           }}
         />
-        <motion.div
-          className="absolute inset-[-4px] rounded-full blur-md"
-          style={{
-            background:
-              'radial-gradient(circle, var(--accent-glow), transparent)',
-          }}
-          animate={{
-            scale: [0.5, 1.5, 0.5],
-            opacity: [0.3, 0.6, 0.3],
-          }}
-          transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
-        />
-      </div>
+      ))}
     </div>
   )
 }

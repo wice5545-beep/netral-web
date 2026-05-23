@@ -6,15 +6,14 @@ import { completeOnboarding } from '@/actions/auth'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { NetralLogo } from '@/components/ui/NetralLogo'
-import { AmbientBackground } from '@/components/layout/AmbientBackground'
-import { ArrowRight, ArrowLeft, Check } from 'lucide-react'
+import { ArrowUpRight, ArrowLeft, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const tones = [
-  { id: 'balanced', label: 'Balanced', desc: 'Clear and natural.' },
-  { id: 'concise', label: 'Concise', desc: 'Short and direct.' },
-  { id: 'friendly', label: 'Friendly', desc: 'Warm and casual.' },
-  { id: 'technical', label: 'Technical', desc: 'Precise and expert.' },
+  { id: 'balanced', label: 'Équilibré', desc: 'Clair et naturel' },
+  { id: 'concise', label: 'Concis', desc: 'Court et direct' },
+  { id: 'friendly', label: 'Amical', desc: 'Chaleureux et décontracté' },
+  { id: 'technical', label: 'Technique', desc: 'Précis et expert' },
 ]
 
 interface OnboardingWizardProps {
@@ -32,20 +31,24 @@ export function OnboardingWizard({ userId, defaultName }: OnboardingWizardProps)
 
   const steps = [
     {
-      title: 'Welcome to Netral',
-      subtitle: 'Let me get to know you. This stays between us.',
+      num: 'I',
+      title: 'Bienvenue',
+      subtitle: 'Apprenons à nous connaître. Ces informations restent privées.',
     },
     {
-      title: 'What do you do?',
-      subtitle: 'A line about your work helps me give better answers.',
+      num: 'II',
+      title: 'Votre métier',
+      subtitle: 'Une ligne sur ce que vous faites m\'aide à mieux répondre.',
     },
     {
-      title: 'What interests you?',
-      subtitle: 'A few topics, tools, or curiosities.',
+      num: 'III',
+      title: 'Vos centres d\'intérêt',
+      subtitle: 'Quelques sujets, outils ou curiosités.',
     },
     {
-      title: 'How should I sound?',
-      subtitle: 'Pick a tone. You can change this anytime.',
+      num: 'IV',
+      title: 'Mon ton',
+      subtitle: 'Choisissez un style. Modifiable à tout moment.',
     },
   ]
 
@@ -65,47 +68,45 @@ export function OnboardingWizard({ userId, defaultName }: OnboardingWizardProps)
     return true
   }
 
+  const current = steps[step]
+
   return (
-    <div className="min-h-screen flex items-center justify-center px-6 relative">
-      <AmbientBackground />
+    <div className="min-h-screen flex items-center justify-center px-6 relative bg-[var(--bg)]">
+      <div className="grain-paper" />
 
       <div className="relative z-10 w-full max-w-md">
-        <div className="flex items-center justify-center gap-2.5 mb-8">
-          <NetralLogo size={32} animated />
-          <span className="font-semibold tracking-tight text-xl">Netral</span>
+        <div className="flex items-center justify-center gap-2.5 mb-12">
+          <NetralLogo size={28} />
+          <span className="font-display text-[20px] tracking-tight">Netral</span>
         </div>
 
-        {/* Progress bar */}
-        <div className="flex items-center gap-1.5 mb-8 px-1">
-          {steps.map((_, i) => (
-            <div
-              key={i}
-              className={cn(
-                'h-1 rounded-full transition-all duration-500 flex-1',
-                i <= step
-                  ? 'bg-gradient-to-r from-[var(--gradient-1)] to-[var(--gradient-2)]'
-                  : 'bg-[var(--border)]'
-              )}
-            />
-          ))}
+        {/* Progress */}
+        <div className="flex items-center gap-3 mb-10">
+          <span className="label-num">№ {String(step + 1).padStart(2, '0')}</span>
+          <div className="rule flex-1" />
+          <span className="label-num">{String(steps.length).padStart(2, '0')}</span>
         </div>
 
-        <div className="glass-strong rounded-3xl p-7">
+        {/* Card */}
+        <div className="card-float p-8">
           <AnimatePresence mode="wait">
             <motion.div
               key={step}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.25 }}
+              initial={{ opacity: 0, x: 16, filter: 'blur(2px)' }}
+              animate={{ opacity: 1, x: 0, filter: 'blur(0)' }}
+              exit={{ opacity: 0, x: -16, filter: 'blur(2px)' }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
             >
-              <h2 className="text-xl font-semibold mb-1">{steps[step].title}</h2>
-              <p className="text-sm text-[var(--foreground-muted)] mb-6">{steps[step].subtitle}</p>
+              <div className="flex items-center gap-3 mb-4">
+                <span className="font-mono text-[10px] text-[var(--jewel)] tracking-wider">{current.num}</span>
+                <span className="rule flex-1 max-w-[24px]" />
+              </div>
+              <h2 className="font-display text-3xl tracking-tight mb-2">{current.title}</h2>
+              <p className="text-[14px] text-[var(--fg-muted)] mb-6">{current.subtitle}</p>
 
               {step === 0 && (
                 <Input
-                  label="Your name"
-                  placeholder="e.g. Alex Rivera"
+                  placeholder="Prénom (ex. Alex)"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   autoFocus
@@ -114,8 +115,7 @@ export function OnboardingWizard({ userId, defaultName }: OnboardingWizardProps)
 
               {step === 1 && (
                 <Input
-                  label="What you do"
-                  placeholder="e.g. Software engineer, student, founder…"
+                  placeholder="ex. Designer, étudiant, fondateur…"
                   value={profession}
                   onChange={(e) => setProfession(e.target.value)}
                   autoFocus
@@ -124,8 +124,7 @@ export function OnboardingWizard({ userId, defaultName }: OnboardingWizardProps)
 
               {step === 2 && (
                 <Input
-                  label="Topics you love"
-                  placeholder="e.g. AI, design, philosophy, music…"
+                  placeholder="ex. IA, design, philosophie, musique…"
                   value={interests}
                   onChange={(e) => setInterests(e.target.value)}
                   autoFocus
@@ -141,17 +140,17 @@ export function OnboardingWizard({ userId, defaultName }: OnboardingWizardProps)
                         key={t.id}
                         onClick={() => setTone(t.id)}
                         className={cn(
-                          'p-4 rounded-xl border text-left transition-all duration-200',
+                          'p-4 rounded-md border text-left transition-all duration-200',
                           active
-                            ? 'border-[var(--accent)] bg-[var(--accent-soft)] shadow-[0_0_30px_var(--accent-glow)]'
-                            : 'border-[var(--border-strong)] hover:border-[var(--foreground-muted)]'
+                            ? 'border-[var(--jewel)] bg-[var(--jewel-soft)]'
+                            : 'border-[var(--rule)] hover:border-[var(--rule-strong)] hover:bg-[var(--bg-soft)]'
                         )}
                       >
                         <div className="flex items-center justify-between mb-1">
-                          <p className="font-medium text-sm">{t.label}</p>
-                          {active && <Check size={14} className="text-[var(--accent)]" />}
+                          <p className="font-medium text-[13px]">{t.label}</p>
+                          {active && <Check size={12} className="text-[var(--jewel)]" />}
                         </div>
-                        <p className="text-xs text-[var(--foreground-muted)]">{t.desc}</p>
+                        <p className="text-[11px] text-[var(--fg-muted)]">{t.desc}</p>
                       </button>
                     )
                   })}
@@ -160,28 +159,29 @@ export function OnboardingWizard({ userId, defaultName }: OnboardingWizardProps)
             </motion.div>
           </AnimatePresence>
 
-          <div className="flex items-center gap-2 mt-7">
+          <div className="rule my-6" />
+
+          <div className="flex items-center gap-2">
             {step > 0 && (
-              <Button variant="ghost" onClick={() => setStep(step - 1)} className="gap-1.5">
-                <ArrowLeft size={14} />
-                Back
+              <Button variant="ghost" size="sm" onClick={() => setStep(step - 1)}>
+                <ArrowLeft size={13} />
+                Retour
               </Button>
             )}
             <div className="flex-1" />
             {step < steps.length - 1 ? (
               <Button
-                variant="glow"
+                variant="ink"
                 onClick={() => setStep(step + 1)}
                 disabled={!canNext()}
-                className="gap-1.5"
               >
-                Continue
-                <ArrowRight size={14} />
+                Continuer
+                <ArrowUpRight size={13} />
               </Button>
             ) : (
-              <Button variant="glow" onClick={handleFinish} loading={loading} className="gap-1.5">
-                Start chatting
-                <ArrowRight size={14} />
+              <Button variant="jewel" onClick={handleFinish} loading={loading}>
+                Commencer
+                <ArrowUpRight size={13} />
               </Button>
             )}
           </div>
@@ -190,9 +190,9 @@ export function OnboardingWizard({ userId, defaultName }: OnboardingWizardProps)
         {step !== steps.length - 1 && (
           <button
             onClick={handleFinish}
-            className="block mx-auto mt-4 text-xs text-[var(--foreground-subtle)] hover:text-[var(--foreground-muted)] transition-colors"
+            className="block mx-auto mt-6 text-[12px] text-[var(--fg-subtle)] hover:text-[var(--fg-muted)] transition-colors"
           >
-            Skip for now
+            Passer cette étape
           </button>
         )}
       </div>
