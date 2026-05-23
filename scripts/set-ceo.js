@@ -1,0 +1,6 @@
+require('dotenv').config({ path: '.env.local' })
+const { Pool } = require('pg')
+const p = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } })
+p.query('UPDATE "User" SET plan = $1, role = $2 WHERE email = $3 RETURNING id, email, plan, role', ['pro_plus', 'ceo', 'industrial.spoonbill.fcse@hidingmail.net'])
+  .then(r => { console.log('Done:', r.rows[0]); p.end() })
+  .catch(e => { console.error(e.message); p.end() })

@@ -30,6 +30,7 @@ export function SettingsModal({ open, onClose, user }: SettingsModalProps) {
   const [memory, setMemory] = useState({ fullName: '', profession: '', interests: '', customInstructions: '' })
   const [savedMsg, setSavedMsg] = useState('')
   const [saving, setSaving] = useState(false)
+  const [userPlan, setUserPlan] = useState('free')
 
   useEffect(() => {
     if (!open) return
@@ -47,6 +48,7 @@ export function SettingsModal({ open, onClose, user }: SettingsModalProps) {
         }
       })
       .catch(() => {})
+    fetch('/api/user').then(r => r.json()).then(d => { if (d.user?.plan) setUserPlan(d.user.plan) }).catch(() => {})
   }, [open])
 
   useEffect(() => {
@@ -416,7 +418,7 @@ export function SettingsModal({ open, onClose, user }: SettingsModalProps) {
                           { id: 'pro', name: 'Pro', price: '20€', msgs: '750 msgs/mois' },
                           { id: 'pro_plus', name: 'Pro+', price: '60€', msgs: '2000 msgs/mois' },
                         ].map((p) => (
-                          <div key={p.id} className={cn('rounded-lg border p-3 transition-all', 'free' === p.id ? 'border-[var(--accent)] bg-[var(--accent-soft)]' : 'border-[var(--border)] hover:border-[var(--border-strong)]')}>
+                          <div key={p.id} className={cn('rounded-lg border p-3 transition-all', userPlan === p.id ? 'border-[var(--accent)] bg-[var(--accent-soft)]' : 'border-[var(--border)] hover:border-[var(--border-strong)]')}>
                             <p className="text-[14px] font-semibold">{p.name}</p>
                             <p className="text-[18px] font-bold mt-1">{p.price}<span className="text-[11px] text-[var(--fg-muted)] font-normal">/mois</span></p>
                             <p className="text-[11px] text-[var(--fg-muted)] mt-1">{p.msgs}</p>
