@@ -40,6 +40,7 @@ export function LandingPage() {
           <div className="hidden md:flex items-center gap-6">
             <Link href="/fonctionnalites" className="text-[13px] text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors">{t.nav.features}</Link>
             <Link href="/tarifs" className="text-[13px] text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors">{t.nav.pricing}</Link>
+            <Link href="/extensions" className="text-[13px] text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors">VS Code</Link>
             <Link href="/login" className="text-[13px] text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors">{t.nav.login}</Link>
             <LanguageSwitcher />
           </div>
@@ -263,6 +264,7 @@ export function LandingPage() {
           <div className="flex items-center gap-5 text-[12px] text-[var(--fg-muted)]">
             <Link href="/fonctionnalites" className="hover:text-[var(--fg)] transition-colors">{t.nav.features}</Link>
             <Link href="/tarifs" className="hover:text-[var(--fg)] transition-colors">{t.nav.pricing}</Link>
+            <Link href="/extensions" className="hover:text-[var(--fg)] transition-colors">VS Code</Link>
             <Link href="#" className="hover:text-[var(--fg)] transition-colors">{t.footer.privacy}</Link>
             <Link href="#" className="hover:text-[var(--fg)] transition-colors">{t.footer.contact}</Link>
           </div>
