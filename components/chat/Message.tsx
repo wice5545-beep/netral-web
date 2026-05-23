@@ -41,6 +41,23 @@ export function Message({ role, content, isStreaming, isLast, onRegenerate, user
   const [copied, setCopied] = useState(false)
   const [feedback, setFeedback] = useState<'up' | 'down' | null>(null)
 
+  const handleFeedback = (type: 'up' | 'down') => {
+    const newFeedback = feedback === type ? null : type
+    setFeedback(newFeedback)
+    // Save to progressive memory
+    fetch('/api/memory', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        customInstructions: newFeedback === 'up'
+          ? `L'utilisateur a aimé ce type de réponse: "${content.slice(0, 100)}"`
+          : newFeedback === 'down'
+          ? `L'utilisateur n'a PAS aimé ce type de réponse: "${content.slice(0, 100)}". Adapte-toi.`
+          : undefined
+      }),
+    }).catch(() => {})
+  }
+
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(content)
@@ -146,7 +163,7 @@ export function Message({ role, content, isStreaming, isLast, onRegenerate, user
                 )}
 
                 <button
-                  onClick={() => setFeedback(feedback === 'up' ? null : 'up')}
+                  onClick={() => handleFeedback('up')}
                   aria-label="Réponse utile"
                   className={cn(
                     'p-1.5 rounded-md transition-colors',
@@ -158,7 +175,7 @@ export function Message({ role, content, isStreaming, isLast, onRegenerate, user
                   <ThumbsUp size={11} />
                 </button>
                 <button
-                  onClick={() => setFeedback(feedback === 'down' ? null : 'down')}
+                  onClick={() => handleFeedback('down')}
                   aria-label="Réponse incorrecte"
                   className={cn(
                     'p-1.5 rounded-md transition-colors',

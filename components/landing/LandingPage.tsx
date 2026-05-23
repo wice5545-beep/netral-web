@@ -2,8 +2,8 @@
 
 import Link from 'next/link'
 import { motion, useScroll, useTransform } from 'framer-motion'
-import { useRef } from 'react'
-import { ArrowRight } from 'lucide-react'
+import { useRef, useState } from 'react'
+import { ArrowRight, ArrowUp } from 'lucide-react'
 import { NetralLogo } from '@/components/ui/NetralLogo'
 import { useI18n } from '@/lib/i18n'
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher'
@@ -22,6 +22,8 @@ const stats = [{ value: '< 200ms' }, { value: '99.9%' }, { value: '50k+' }]
 export function LandingPage() {
   const { t } = useI18n()
   const heroRef = useRef<HTMLDivElement>(null)
+  const [landingInput, setLandingInput] = useState('')
+  const [showLoginPopup, setShowLoginPopup] = useState(false)
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] })
   const heroY = useTransform(scrollYProgress, [0, 1], [0, -80])
   const statsLabels = [t.stats.latency, t.stats.uptime, t.stats.users]
@@ -88,23 +90,51 @@ export function LandingPage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.4 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-3"
+            className="w-full max-w-xl mx-auto"
           >
-            <Link href="/register">
-              <button className="group h-12 px-7 text-[15px] font-medium rounded-xl bg-[var(--accent)] text-[var(--bg)] hover:bg-[var(--accent-hover)] transition-all hover:shadow-[var(--shadow-lg)] hover:scale-[1.02] active:scale-[0.98] flex items-center gap-2">
-                {t.hero.cta}
-                <ArrowRight size={15} className="group-hover:translate-x-0.5 transition-transform" />
+            <p className="text-[13px] text-[var(--fg-muted)] mb-2 text-center">{t.chat?.howCanIHelp ?? 'Que puis-je faire pour vous ?'}</p>
+            <div className="relative rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] shadow-[var(--shadow-sm)] hover:border-[var(--border-strong)] transition-colors">
+              <input
+                value={landingInput}
+                onChange={(e) => setLandingInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter' && landingInput.trim()) setShowLoginPopup(true) }}
+                placeholder={t.hero.cta}
+                className="w-full h-12 px-5 pr-12 bg-transparent text-[15px] text-[var(--fg)] placeholder:text-[var(--fg-subtle)] focus:outline-none rounded-2xl"
+              />
+              <button
+                onClick={() => { if (landingInput.trim()) setShowLoginPopup(true) }}
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-[var(--accent)] text-[var(--bg)] flex items-center justify-center hover:bg-[var(--accent-hover)] transition-colors"
+              >
+                <ArrowUp size={14} strokeWidth={2.2} />
               </button>
-            </Link>
-            <Link href="/login">
-              <button className="h-12 px-7 text-[15px] font-medium rounded-xl border border-[var(--border)] hover:bg-[var(--bg-soft)] hover:border-[var(--border-strong)] transition-all active:scale-[0.98]">{t.hero.login}</button>
-            </Link>
+            </div>
           </motion.div>
 
           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="mt-5 text-[12px] text-[var(--fg-subtle)]">
             {t.hero.note}
           </motion.p>
         </motion.div>
+
+        {/* Login popup */}
+        {showLoginPopup && (
+          <>
+            <div onClick={() => setShowLoginPopup(false)} className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50" />
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-[var(--bg-elevated)] rounded-2xl p-6 w-full max-w-sm border border-[var(--border)] shadow-[var(--shadow-xl)]">
+                <h3 className="text-[18px] font-bold mb-2 text-center">{t.chat?.loginTitle ?? 'Connectez-vous'}</h3>
+                <p className="text-[13px] text-[var(--fg-muted)] text-center mb-5">{t.chat?.loginSubtitle ?? 'Pour envoyer votre message'}</p>
+                <div className="space-y-2">
+                  <Link href={`/login?q=${encodeURIComponent(landingInput)}`} className="block">
+                    <button className="w-full h-10 rounded-xl bg-[var(--accent)] text-[var(--bg)] text-[14px] font-medium hover:bg-[var(--accent-hover)] transition-all">{t.chat?.signIn ?? 'Se connecter'}</button>
+                  </Link>
+                  <Link href={`/register?q=${encodeURIComponent(landingInput)}`} className="block">
+                    <button className="w-full h-10 rounded-xl border border-[var(--border)] text-[14px] font-medium hover:bg-[var(--bg-soft)] transition-all">{t.chat?.createAccount ?? 'Créer un compte'}</button>
+                  </Link>
+                </div>
+              </motion.div>
+            </div>
+          </>
+        )}
       </section>
 
       {/* Demo */}
