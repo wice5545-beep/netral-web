@@ -27,6 +27,7 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
   const [webSearchEnabled, setWebSearchEnabled] = useState(false)
   const [searchStatus, setSearchStatus] = useState<SearchStatus>(null)
   const [selectionPopup, setSelectionPopup] = useState<{ text: string; x: number; y: number } | null>(null)
+  const [userScrolledUp, setUserScrolledUp] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const abortRef = useRef<AbortController | null>(null)
   const [didInit, setDidInit] = useState(false)
@@ -42,9 +43,20 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
   useEffect(() => {
     if (!scrollRef.current) return
     const el = scrollRef.current
-    const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 100
-    if (isNearBottom) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
-  }, [messages])
+    if (!userScrolledUp) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
+  }, [messages, userScrolledUp])
+
+  // Detect user scrolling up
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+    const onScroll = () => {
+      const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 150
+      setUserScrolledUp(!atBottom)
+    }
+    el.addEventListener('scroll', onScroll)
+    return () => el.removeEventListener('scroll', onScroll)
+  }, [])
 
   // Text selection popup
   useEffect(() => {
@@ -73,6 +85,7 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
     appendMessage(assistantMessage)
     setInput('')
     setStreaming(true)
+    setUserScrolledUp(false)
 
     const abort = new AbortController()
     abortRef.current = abort
