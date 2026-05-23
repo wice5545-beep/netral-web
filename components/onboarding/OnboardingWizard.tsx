@@ -6,13 +6,13 @@ import { completeOnboarding } from '@/actions/auth'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { NetralLogo } from '@/components/ui/NetralLogo'
-import { ArrowUpRight, ArrowLeft, Check } from 'lucide-react'
+import { ArrowRight, ArrowLeft, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const tones = [
   { id: 'balanced', label: 'Équilibré', desc: 'Clair et naturel' },
   { id: 'concise', label: 'Concis', desc: 'Court et direct' },
-  { id: 'friendly', label: 'Amical', desc: 'Chaleureux et décontracté' },
+  { id: 'friendly', label: 'Amical', desc: 'Chaleureux' },
   { id: 'technical', label: 'Technique', desc: 'Précis et expert' },
 ]
 
@@ -30,26 +30,10 @@ export function OnboardingWizard({ userId, defaultName }: OnboardingWizardProps)
   const [loading, setLoading] = useState(false)
 
   const steps = [
-    {
-      num: 'I',
-      title: 'Bienvenue',
-      subtitle: 'Apprenons à nous connaître. Ces informations restent privées.',
-    },
-    {
-      num: 'II',
-      title: 'Votre métier',
-      subtitle: 'Une ligne sur ce que vous faites m\'aide à mieux répondre.',
-    },
-    {
-      num: 'III',
-      title: 'Vos centres d\'intérêt',
-      subtitle: 'Quelques sujets, outils ou curiosités.',
-    },
-    {
-      num: 'IV',
-      title: 'Mon ton',
-      subtitle: 'Choisissez un style. Modifiable à tout moment.',
-    },
+    { title: 'Bienvenue', subtitle: 'Apprenons à nous connaître. Ces informations restent privées.' },
+    { title: 'Votre métier', subtitle: 'Une ligne sur ce que vous faites m\'aide à mieux répondre.' },
+    { title: 'Vos centres d\'intérêt', subtitle: 'Quelques sujets, outils ou curiosités.' },
+    { title: 'Mon ton', subtitle: 'Choisissez un style. Modifiable à tout moment.' },
   ]
 
   const handleFinish = async () => {
@@ -63,71 +47,68 @@ export function OnboardingWizard({ userId, defaultName }: OnboardingWizardProps)
     })
   }
 
-  const canNext = () => {
-    if (step === 0) return fullName.trim().length >= 2
-    return true
-  }
-
-  const current = steps[step]
+  const canNext = step === 0 ? fullName.trim().length >= 2 : true
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-6 relative bg-[var(--bg)]">
-      <div className="grain-paper" />
-
-      <div className="relative z-10 w-full max-w-md">
-        <div className="flex items-center justify-center gap-2.5 mb-12">
+    <div className="min-h-screen flex items-center justify-center bg-[var(--bg)] px-6">
+      <div className="w-full max-w-md">
+        <div className="flex items-center justify-center gap-2 mb-10">
           <NetralLogo size={28} />
-          <span className="font-display text-[20px] tracking-tight">Netral</span>
+          <span className="font-semibold text-[16px]">Netral</span>
         </div>
 
         {/* Progress */}
-        <div className="flex items-center gap-3 mb-10">
-          <span className="label-num">№ {String(step + 1).padStart(2, '0')}</span>
-          <div className="rule flex-1" />
-          <span className="label-num">{String(steps.length).padStart(2, '0')}</span>
+        <div className="flex items-center gap-1.5 mb-8">
+          {steps.map((_, i) => (
+            <div
+              key={i}
+              className={cn(
+                'h-1 flex-1 rounded-full transition-colors duration-300',
+                i <= step ? 'bg-[var(--accent)]' : 'bg-[var(--border)]'
+              )}
+            />
+          ))}
         </div>
 
-        {/* Card */}
-        <div className="card-float p-8">
+        <div className="bg-[var(--bg-elevated)] border border-[var(--border)] rounded-xl p-6 shadow-[var(--shadow-sm)]">
           <AnimatePresence mode="wait">
             <motion.div
               key={step}
-              initial={{ opacity: 0, x: 16, filter: 'blur(2px)' }}
-              animate={{ opacity: 1, x: 0, filter: 'blur(0)' }}
-              exit={{ opacity: 0, x: -16, filter: 'blur(2px)' }}
-              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              initial={{ opacity: 0, x: 12 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -12 }}
+              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
             >
-              <div className="flex items-center gap-3 mb-4">
-                <span className="font-mono text-[10px] text-[var(--jewel)] tracking-wider">{current.num}</span>
-                <span className="rule flex-1 max-w-[24px]" />
-              </div>
-              <h2 className="font-display text-3xl tracking-tight mb-2">{current.title}</h2>
-              <p className="text-[14px] text-[var(--fg-muted)] mb-6">{current.subtitle}</p>
+              <h2 className="text-[20px] font-semibold tracking-[-0.01em] mb-1">{steps[step].title}</h2>
+              <p className="text-[13px] text-[var(--fg-muted)] mb-5">{steps[step].subtitle}</p>
 
               {step === 0 && (
                 <Input
-                  placeholder="Prénom (ex. Alex)"
+                  placeholder="Prénom"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   autoFocus
+                  maxLength={100}
                 />
               )}
 
               {step === 1 && (
                 <Input
-                  placeholder="ex. Designer, étudiant, fondateur…"
+                  placeholder="ex. Designer, étudiant…"
                   value={profession}
                   onChange={(e) => setProfession(e.target.value)}
                   autoFocus
+                  maxLength={200}
                 />
               )}
 
               {step === 2 && (
                 <Input
-                  placeholder="ex. IA, design, philosophie, musique…"
+                  placeholder="ex. design, philosophie, code…"
                   value={interests}
                   onChange={(e) => setInterests(e.target.value)}
                   autoFocus
+                  maxLength={300}
                 />
               )}
 
@@ -140,15 +121,15 @@ export function OnboardingWizard({ userId, defaultName }: OnboardingWizardProps)
                         key={t.id}
                         onClick={() => setTone(t.id)}
                         className={cn(
-                          'p-4 rounded-md border text-left transition-all duration-200',
+                          'p-3 rounded-md border text-left transition-all',
                           active
-                            ? 'border-[var(--jewel)] bg-[var(--jewel-soft)]'
-                            : 'border-[var(--rule)] hover:border-[var(--rule-strong)] hover:bg-[var(--bg-soft)]'
+                            ? 'border-[var(--accent)] bg-[var(--accent-soft)]'
+                            : 'border-[var(--border)] hover:border-[var(--border-strong)] hover:bg-[var(--bg-soft)]'
                         )}
                       >
-                        <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center justify-between mb-0.5">
                           <p className="font-medium text-[13px]">{t.label}</p>
-                          {active && <Check size={12} className="text-[var(--jewel)]" />}
+                          {active && <Check size={12} />}
                         </div>
                         <p className="text-[11px] text-[var(--fg-muted)]">{t.desc}</p>
                       </button>
@@ -159,9 +140,7 @@ export function OnboardingWizard({ userId, defaultName }: OnboardingWizardProps)
             </motion.div>
           </AnimatePresence>
 
-          <div className="rule my-6" />
-
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 mt-6">
             {step > 0 && (
               <Button variant="ghost" size="sm" onClick={() => setStep(step - 1)}>
                 <ArrowLeft size={13} />
@@ -170,18 +149,14 @@ export function OnboardingWizard({ userId, defaultName }: OnboardingWizardProps)
             )}
             <div className="flex-1" />
             {step < steps.length - 1 ? (
-              <Button
-                variant="ink"
-                onClick={() => setStep(step + 1)}
-                disabled={!canNext()}
-              >
+              <Button variant="primary" onClick={() => setStep(step + 1)} disabled={!canNext}>
                 Continuer
-                <ArrowUpRight size={13} />
+                <ArrowRight size={13} />
               </Button>
             ) : (
-              <Button variant="jewel" onClick={handleFinish} loading={loading}>
+              <Button variant="primary" onClick={handleFinish} loading={loading}>
                 Commencer
-                <ArrowUpRight size={13} />
+                <ArrowRight size={13} />
               </Button>
             )}
           </div>
@@ -190,7 +165,7 @@ export function OnboardingWizard({ userId, defaultName }: OnboardingWizardProps)
         {step !== steps.length - 1 && (
           <button
             onClick={handleFinish}
-            className="block mx-auto mt-6 text-[12px] text-[var(--fg-subtle)] hover:text-[var(--fg-muted)] transition-colors"
+            className="block mx-auto mt-5 text-[12px] text-[var(--fg-subtle)] hover:text-[var(--fg-muted)] transition-colors"
           >
             Passer cette étape
           </button>

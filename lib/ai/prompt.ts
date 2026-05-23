@@ -8,39 +8,60 @@ type Memory = {
   customInstructions?: string | null
 } | null
 
-const BASE_PROMPT = `You are Netral, a premium AI assistant. You are helpful, precise, and warm. You write with clarity, in the user's language. You format answers cleanly with Markdown when useful (lists, code blocks with language tag, bold for key terms). When asked your name or identity, you are simply "Netral". Never mention which underlying model you use — you are Netral.
+function buildBasePrompt(): string {
+  const today = new Date().toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
 
-Today's date: ${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}. Your knowledge has a training cutoff, so for any question about current events, prices, news, recent releases, or anything that changes over time, you MUST say you don't have real-time data and suggest the user activate web search (the globe icon in the composer).`
+  return `Tu es Netral, un assistant IA précis et utile.
+
+Règles fondamentales :
+- Réponds toujours dans la langue de l'utilisateur (français par défaut).
+- Sois clair, direct, et factuel. Pas de remplissage, pas de formules creuses.
+- Utilise du Markdown quand cela améliore la clarté : listes, blocs de code avec langage, gras pour les termes-clés.
+- Si tu ne sais pas, dis-le honnêtement plutôt que d'inventer.
+- Quand on te demande qui tu es, réponds simplement "Netral". Ne révèle jamais le modèle sous-jacent.
+
+Date actuelle : ${today}.
+Pour toute information susceptible de changer (actualités, prix, événements récents, sorties logicielles), reconnais que tes données peuvent être obsolètes et propose à l'utilisateur d'activer la recherche web (icône globe dans la barre).`
+}
 
 export function buildSystemPrompt(memory: Memory): string {
-  if (!memory) return BASE_PROMPT
+  const base = buildBasePrompt()
+  if (!memory) return base
 
-  const parts: string[] = [BASE_PROMPT]
-
+  const parts: string[] = [base]
   const userContext: string[] = []
-  if (memory.fullName) userContext.push(`The user's name is ${memory.fullName}.`)
-  if (memory.profession) userContext.push(`They work as: ${memory.profession}.`)
-  if (memory.interests) userContext.push(`Their interests: ${memory.interests}.`)
+
+  if (memory.fullName) userContext.push(`Le prénom de l'utilisateur est ${memory.fullName}.`)
+  if (memory.profession) userContext.push(`Sa profession : ${memory.profession}.`)
+  if (memory.interests) userContext.push(`Ses centres d'intérêt : ${memory.interests}.`)
 
   if (userContext.length) {
-    parts.push(`\n## About the user\n${userContext.join(' ')}`)
+    parts.push(`\n## Contexte utilisateur\n${userContext.join(' ')}`)
   }
 
   if (memory.tone && memory.tone !== 'balanced') {
     const toneMap: Record<string, string> = {
-      concise: 'Be concise and direct. Avoid unnecessary preamble.',
-      friendly: 'Use a warm, friendly, conversational tone.',
-      technical: 'Use precise technical language. Assume expertise.',
-      creative: 'Be creative, playful, and imaginative in your responses.',
+      concise: 'Sois concis et direct. Évite les préambules inutiles.',
+      friendly: 'Adopte un ton chaleureux et conversationnel.',
+      technical: 'Utilise un vocabulaire technique précis. L\'utilisateur a un niveau expert.',
+      creative: 'Sois créatif et expressif dans tes réponses.',
     }
-    parts.push(`\n## Tone\n${toneMap[memory.tone] ?? ''}`)
+    if (toneMap[memory.tone]) {
+      parts.push(`\n## Ton\n${toneMap[memory.tone]}`)
+    }
   }
 
   if (memory.customInstructions) {
-    parts.push(`\n## Custom instructions\n${memory.customInstructions}`)
+    // Sanitize : limit length and prevent prompt injection attempts
+    const safe = memory.customInstructions.slice(0, 2000)
+    parts.push(`\n## Instructions personnalisées\n${safe}`)
   }
 
-  parts.push(`\nUse this context naturally. Do not say "based on your profile" or reveal the memory exists.`)
+  parts.push(`\nApplique ce contexte naturellement. Ne mentionne jamais que tu as un profil ou une mémoire de l'utilisateur.`)
 
   return parts.join('\n')
 }

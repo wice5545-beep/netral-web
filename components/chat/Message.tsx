@@ -49,31 +49,28 @@ export function Message({ role, content, isStreaming, isLast, onRegenerate, user
     } catch {}
   }
 
-  // ━━━ USER MESSAGE ━━━
+  // ━━ USER ━━
   if (role === 'user') {
     return (
-      <div className="flex justify-end mb-8">
-        <div className="flex gap-3 max-w-[85%] items-start">
-          <div className="rounded-[12px] rounded-tr-[4px] px-4 py-3 text-[14.5px] leading-[1.55] whitespace-pre-wrap break-words bg-[var(--fg)] text-[var(--bg)]">
+      <div className="flex justify-end mb-6">
+        <div className="max-w-[85%] md:max-w-[75%]">
+          <div className="rounded-2xl rounded-br-md px-4 py-2.5 bg-[var(--bg-soft)] border border-[var(--border)] text-[14.5px] leading-[1.55] text-[var(--fg)] whitespace-pre-wrap break-words">
             {content}
-          </div>
-          <div className="w-8 h-8 rounded-md bg-[var(--jewel)] text-white flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
-            {userInitial?.toUpperCase() ?? 'U'}
           </div>
         </div>
       </div>
     )
   }
 
-  // ━━━ ASSISTANT MESSAGE ━━━
+  // ━━ ASSISTANT ━━
   const showOrb = isStreaming && content.length === 0
   const sources = !isStreaming ? extractSources(content) : []
   const displayContent = sources.length > 0 ? contentWithoutSources(content) : content
 
   return (
-    <div className="flex gap-4 mb-10 group">
-      <div className="shrink-0 mt-1">
-        <NetralLogo size={26} animated={isStreaming} />
+    <div className="flex gap-3 mb-8 group">
+      <div className="shrink-0 mt-0.5">
+        <NetralLogo size={26} />
       </div>
 
       <div className="flex-1 min-w-0">
@@ -81,35 +78,25 @@ export function Message({ role, content, isStreaming, isLast, onRegenerate, user
           <TypingOrb />
         ) : (
           <>
-            <div className="prose-edit">
+            <div className="prose-chat">
               <Markdown content={displayContent} />
               {isStreaming && <span className="stream-cursor" />}
             </div>
 
             {/* Sources */}
             {!isStreaming && sources.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-                className="mt-6 pt-5 border-t border-[var(--rule)]"
-              >
-                <div className="flex items-center gap-3 mb-3">
-                  <span className="label-num">Sources</span>
-                  <span className="rule flex-1 max-w-[40px]" />
-                  <span className="label-num">{sources.length}</span>
-                </div>
-                <div className="flex flex-wrap gap-2">
+              <div className="mt-4 pt-4 border-t border-[var(--border)]">
+                <p className="text-[11px] font-medium text-[var(--fg-muted)] mb-2">
+                  Sources ({sources.length})
+                </p>
+                <div className="flex flex-wrap gap-1.5">
                   {sources.map((s, i) => (
-                    <motion.a
+                    <a
                       key={i}
-                      initial={{ opacity: 0, y: 4 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.04 }}
                       href={s.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="group/src flex items-center gap-2 px-3 py-1.5 rounded-md border border-[var(--rule)] text-xs text-[var(--fg-muted)] hover:border-[var(--jewel)] hover:text-[var(--jewel)] hover:bg-[var(--jewel-tint)] transition-all"
+                      className="group/src flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-[var(--border)] text-[12px] text-[var(--fg-muted)] hover:border-[var(--border-strong)] hover:bg-[var(--bg-soft)] hover:text-[var(--fg)] transition-all"
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
@@ -119,28 +106,28 @@ export function Message({ role, content, isStreaming, isLast, onRegenerate, user
                         onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
                       />
                       <span className="font-medium truncate max-w-[140px]">{s.domain}</span>
-                      <span className="font-mono text-[9px] text-[var(--fg-subtle)] group-hover/src:text-[var(--jewel)]">[{i + 1}]</span>
-                      <ExternalLink size={9} className="opacity-40 group-hover/src:opacity-100" />
-                    </motion.a>
+                      <span className="font-mono text-[10px] text-[var(--fg-subtle)]">[{i + 1}]</span>
+                      <ExternalLink size={9} className="opacity-50" />
+                    </a>
                   ))}
                 </div>
-              </motion.div>
+              </div>
             )}
 
             {/* Action bar */}
             {!isStreaming && (
-              <div className="flex items-center gap-0.5 mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              <div className="flex items-center gap-0.5 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
                 <button
                   onClick={copy}
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] text-[var(--fg-muted)] hover:bg-[var(--bg-soft)] hover:text-[var(--fg)] transition-colors"
+                  className="flex items-center gap-1.5 px-2 py-1.5 rounded-md text-[11px] text-[var(--fg-muted)] hover:bg-[var(--bg-soft)] hover:text-[var(--fg)] transition-colors"
                 >
                   <AnimatePresence mode="wait">
                     {copied ? (
-                      <motion.span key="c" initial={{ scale: 0.5 }} animate={{ scale: 1 }} exit={{ scale: 0.5 }}>
-                        <Check size={11} className="text-emerald-500" />
+                      <motion.span key="c" initial={{ scale: 0.5 }} animate={{ scale: 1 }} exit={{ scale: 0.5 }} transition={{ duration: 0.15 }}>
+                        <Check size={11} />
                       </motion.span>
                     ) : (
-                      <motion.span key="cp" initial={{ scale: 0.5 }} animate={{ scale: 1 }} exit={{ scale: 0.5 }}>
+                      <motion.span key="cp" initial={{ scale: 0.5 }} animate={{ scale: 1 }} exit={{ scale: 0.5 }} transition={{ duration: 0.15 }}>
                         <Copy size={11} />
                       </motion.span>
                     )}
@@ -151,35 +138,33 @@ export function Message({ role, content, isStreaming, isLast, onRegenerate, user
                 {isLast && onRegenerate && (
                   <button
                     onClick={onRegenerate}
-                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] text-[var(--fg-muted)] hover:bg-[var(--bg-soft)] hover:text-[var(--fg)] transition-colors"
+                    className="flex items-center gap-1.5 px-2 py-1.5 rounded-md text-[11px] text-[var(--fg-muted)] hover:bg-[var(--bg-soft)] hover:text-[var(--fg)] transition-colors"
                   >
                     <RotateCw size={11} />
                     Régénérer
                   </button>
                 )}
 
-                <div className="w-px h-3 bg-[var(--rule)] mx-1" />
-
                 <button
                   onClick={() => setFeedback(feedback === 'up' ? null : 'up')}
-                  aria-label="Bonne réponse"
+                  aria-label="Réponse utile"
                   className={cn(
                     'p-1.5 rounded-md transition-colors',
                     feedback === 'up'
-                      ? 'text-emerald-500 bg-emerald-500/10'
-                      : 'text-[var(--fg-muted)] hover:bg-[var(--bg-soft)] hover:text-emerald-500'
+                      ? 'text-[var(--fg)] bg-[var(--bg-soft)]'
+                      : 'text-[var(--fg-muted)] hover:bg-[var(--bg-soft)] hover:text-[var(--fg)]'
                   )}
                 >
                   <ThumbsUp size={11} />
                 </button>
                 <button
                   onClick={() => setFeedback(feedback === 'down' ? null : 'down')}
-                  aria-label="Mauvaise réponse"
+                  aria-label="Réponse incorrecte"
                   className={cn(
                     'p-1.5 rounded-md transition-colors',
                     feedback === 'down'
-                      ? 'text-red-500 bg-red-500/10'
-                      : 'text-[var(--fg-muted)] hover:bg-[var(--bg-soft)] hover:text-red-500'
+                      ? 'text-[var(--fg)] bg-[var(--bg-soft)]'
+                      : 'text-[var(--fg-muted)] hover:bg-[var(--bg-soft)] hover:text-[var(--fg)]'
                   )}
                 >
                   <ThumbsDown size={11} />

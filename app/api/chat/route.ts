@@ -1,14 +1,26 @@
 import { NextRequest } from 'next/server'
+import { z } from 'zod'
 import { getSession } from '@/lib/session'
 import { prisma } from '@/lib/prisma'
 import { getModel } from '@/lib/ai/models'
 import { buildSystemPrompt } from '@/lib/ai/prompt'
 import { webSearch, readPage, needsWebSearch, type SearchResult } from '@/lib/ai/websearch'
+import { rateLimit } from '@/lib/rate-limit'
 
 export const runtime = 'nodejs'
 export const maxDuration = 90
 
 type ChatMessage = { role: 'user' | 'assistant' | 'system'; content: string }
+
+const ChatRequestSchema = z.object({
+  messages: z.array(z.object({
+    role: z.enum(['user', 'assistant', 'system']),
+    content: z.string().min(1).max(8000),
+  })).min(1).max(100),
+  modelId: z.string().max(50).optional(),
+  conversationId: z.string().min(1).max(100).optional().nullable(),
+  webSearch: z.boolean().optional(),
+})
 
 const encoder = new TextEncoder()
 
@@ -36,17 +48,23 @@ export async function POST(req: NextRequest) {
     return new Response('Unauthorized', { status: 401 })
   }
 
-  const body = await req.json().catch(() => null)
-  if (!body || !Array.isArray(body.messages)) {
-    return new Response('Invalid body', { status: 400 })
+  // Rate limit: 30 messages / minute per user
+  const rl = rateLimit(`chat:${session.userId}`, 30, 60_000)
+  if (!rl.allowed) {
+    return new Response('Too many requests. Please wait a moment.', {
+      status: 429,
+      headers: { 'Retry-After': String(Math.ceil((rl.resetAt - Date.now()) / 1000)) },
+    })
   }
 
-  const { messages, modelId, conversationId, webSearch: useWebSearch } = body as {
-    messages: ChatMessage[]
-    modelId?: string
-    conversationId?: string
-    webSearch?: boolean
+  const rawBody = await req.json().catch(() => null)
+  const parsed = ChatRequestSchema.safeParse(rawBody)
+  if (!parsed.success) {
+    return new Response('Invalid request body', { status: 400 })
   }
+
+  const { messages, modelId, conversationId: rawConvId, webSearch: useWebSearch } = parsed.data
+  const conversationId: string | undefined = rawConvId ?? undefined
 
   const model = getModel(modelId)
   const apiKey = process.env[model.envKey]

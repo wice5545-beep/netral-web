@@ -2,15 +2,9 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronDown, Check, Zap, Sparkles, Cpu } from 'lucide-react'
+import { ChevronDown, Check } from 'lucide-react'
 import { MODELS, type ModelId } from '@/lib/ai/models'
 import { useChatStore } from '@/lib/store/chat'
-
-const modelIcons: Record<ModelId, typeof Zap> = {
-  'ntrl-1.3': Sparkles,
-  'ntrl-1.2': Cpu,
-  'ntrl-1.0': Zap,
-}
 
 export function ModelSelector() {
   const { currentModel, setModel, isStreaming } = useChatStore()
@@ -26,48 +20,44 @@ export function ModelSelector() {
   }, [])
 
   const model = MODELS[currentModel]
-  const Icon = modelIcons[currentModel]
 
   return (
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
         disabled={isStreaming}
-        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md hover:bg-[var(--bg-soft)] transition-colors text-[12px] disabled:opacity-40 disabled:cursor-not-allowed"
+        className="h-8 px-2.5 rounded-md hover:bg-[var(--bg-soft)] transition-colors text-[12.5px] disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
       >
-        <Icon size={12} className="text-[var(--jewel)]" strokeWidth={1.8} />
-        <span className="font-medium text-[var(--fg-soft)]">{model.displayName}</span>
+        <span className="font-medium text-[var(--fg)]">{model.displayName}</span>
         <ChevronDown size={11} className="text-[var(--fg-muted)]" />
       </button>
 
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, y: -6, scale: 0.97 }}
+            initial={{ opacity: 0, y: -4, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -6, scale: 0.97 }}
-            transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-            className="absolute bottom-full left-0 mb-2 w-72 card-float overflow-hidden z-50"
+            exit={{ opacity: 0, y: -4, scale: 0.97 }}
+            transition={{ duration: 0.15 }}
+            className="absolute bottom-full left-0 mb-1.5 w-64 bg-[var(--bg-elevated)] border border-[var(--border)] rounded-lg shadow-[var(--shadow-md)] overflow-hidden z-50"
           >
-            <div className="p-1.5">
+            <div className="p-1">
               {(Object.values(MODELS) as typeof MODELS[ModelId][]).map((m) => {
                 const active = m.id === currentModel
-                const MIcon = modelIcons[m.id as ModelId]
                 return (
                   <button
                     key={m.id}
                     onClick={() => { setModel(m.id); setOpen(false) }}
-                    className={`w-full flex items-start gap-3 px-3 py-2.5 rounded-md text-left transition-colors ${
-                      active ? 'bg-[var(--jewel-soft)]' : 'hover:bg-[var(--bg-soft)]'
+                    className={`w-full flex items-start gap-2.5 px-2.5 py-2 rounded-md text-left transition-colors ${
+                      active ? 'bg-[var(--bg-soft)]' : 'hover:bg-[var(--bg-soft)]'
                     }`}
                   >
-                    <MIcon size={14} className={active ? 'text-[var(--jewel)] mt-0.5 shrink-0' : 'text-[var(--fg-muted)] mt-0.5 shrink-0'} strokeWidth={1.8} />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <p className="font-medium text-[13px] text-[var(--fg)]">{m.displayName}</p>
-                        {active && <Check size={11} className="text-[var(--jewel)]" />}
+                        {active && <Check size={12} className="text-[var(--fg)]" />}
                       </div>
-                      <p className="text-[11px] text-[var(--fg-muted)] mt-0.5">{m.description}</p>
+                      <p className="text-[11.5px] text-[var(--fg-muted)] mt-0.5">{m.description}</p>
                     </div>
                   </button>
                 )

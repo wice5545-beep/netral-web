@@ -6,7 +6,7 @@ import { useRouter, usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Plus, Search, Settings, LogOut, MessageSquare, Trash2,
-  X, Menu, FolderOpen, Bot, Layers, Globe, Sparkles, Zap, ChevronRight
+  X, Menu, PanelLeftClose, PanelLeft
 } from 'lucide-react'
 import { useChatStore } from '@/lib/store/chat'
 import { NetralLogo } from '@/components/ui/NetralLogo'
@@ -25,10 +25,8 @@ function groupConversations(convs: ReturnType<typeof useChatStore.getState>['con
   const week: typeof convs = []
   const month: typeof convs = []
   const older: typeof convs = []
-  const pinned: typeof convs = []
 
   for (const c of convs) {
-    if (c.pinned) { pinned.push(c); continue }
     const diff = (now.getTime() - new Date(c.updatedAt).getTime()) / (1000 * 60 * 60 * 24)
     if (diff < 1) today.push(c)
     else if (diff < 2) yesterday.push(c)
@@ -36,7 +34,7 @@ function groupConversations(convs: ReturnType<typeof useChatStore.getState>['con
     else if (diff < 30) month.push(c)
     else older.push(c)
   }
-  return { pinned, today, yesterday, week, month, older }
+  return { today, yesterday, week, month, older }
 }
 
 export function Sidebar({ user, onOpenSettings }: SidebarProps) {
@@ -44,10 +42,8 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
   const pathname = usePathname()
   const { conversations, conversationId, sidebarOpen, setSidebarOpen, removeConversation, setConversations, conversationsLoaded } = useChatStore()
   const [search, setSearch] = useState('')
-  const [searchOpen, setSearchOpen] = useState(false)
-  const [profileMenuOpen, setProfileMenuOpen] = useState(false)
+  const [profileOpen, setProfileOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
-  const [agentsOpen, setAgentsOpen] = useState(false)
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768)
@@ -63,6 +59,18 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
       .then((d) => setConversations(d.conversations ?? []))
       .catch(() => {})
   }, [conversationsLoaded, setConversations])
+
+  // Keyboard shortcut: ⌘B to toggle
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'b') {
+        e.preventDefault()
+        setSidebarOpen(!sidebarOpen)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [sidebarOpen, setSidebarOpen])
 
   const filtered = conversations.filter((c) =>
     c.title.toLowerCase().includes(search.toLowerCase())
@@ -86,44 +94,32 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
   const renderGroup = (label: string, items: typeof conversations) => {
     if (items.length === 0) return null
     return (
-      <div className="mb-5">
-        {label && (
-          <p className="label-num px-4 mb-2">{label}</p>
-        )}
-        <div className="space-y-px px-2">
-          {items.map((c, idx) => {
+      <div className="mb-3">
+        <p className="px-3 mb-1 text-[11px] font-medium text-[var(--fg-subtle)]">{label}</p>
+        <div className="space-y-px">
+          {items.map((c) => {
             const isActive = pathname === `/chat/${c.id}` || conversationId === c.id
             return (
-              <motion.div
+              <Link
                 key={c.id}
-                initial={{ opacity: 0, x: -8 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: idx * 0.025, duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                href={`/chat/${c.id}`}
+                onClick={() => isMobile && setSidebarOpen(false)}
+                className={cn(
+                  'group flex items-center gap-2 px-3 py-1.5 mx-1.5 rounded-md text-[13px] transition-colors',
+                  isActive
+                    ? 'bg-[var(--bg)] text-[var(--fg)] shadow-[var(--shadow-xs)] border border-[var(--border)]'
+                    : 'text-[var(--fg-soft)] hover:bg-[var(--bg)]'
+                )}
               >
-                <Link
-                  href={`/chat/${c.id}`}
-                  onClick={() => isMobile && setSidebarOpen(false)}
-                  className={cn(
-                    'group flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] transition-all duration-150',
-                    isActive
-                      ? 'bg-[var(--bg)] text-[var(--fg)] shadow-[var(--shadow-page)] border border-[var(--rule)]'
-                      : 'text-[var(--fg-muted)] hover:bg-[var(--bg)] hover:text-[var(--fg)]'
-                  )}
+                <span className="flex-1 truncate">{c.title}</span>
+                <button
+                  onClick={(e) => handleDelete(c.id, e)}
+                  aria-label="Supprimer"
+                  className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10 transition-all"
                 >
-                  <span className={cn(
-                    'w-1 h-4 rounded-full transition-colors',
-                    isActive ? 'bg-[var(--jewel)]' : 'bg-transparent group-hover:bg-[var(--rule-strong)]'
-                  )} />
-                  <span className="flex-1 truncate">{c.title}</span>
-                  <button
-                    onClick={(e) => handleDelete(c.id, e)}
-                    className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10 transition-all"
-                    aria-label="Supprimer"
-                  >
-                    <Trash2 size={11} />
-                  </button>
-                </Link>
-              </motion.div>
+                  <Trash2 size={11} />
+                </button>
+              </Link>
             )
           })}
         </div>
@@ -133,6 +129,7 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
 
   return (
     <>
+      {/* Mobile overlay */}
       <AnimatePresence>
         {sidebarOpen && isMobile && (
           <motion.div
@@ -148,165 +145,93 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
       <motion.aside
         animate={{
           x: sidebarOpen ? 0 : isMobile ? '-100%' : 0,
-          width: sidebarOpen ? 280 : isMobile ? 280 : 0,
+          width: sidebarOpen ? 260 : isMobile ? 260 : 0,
         }}
-        transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
         className={cn(
           'fixed md:relative top-0 left-0 z-50 h-screen flex flex-col shrink-0 overflow-hidden',
-          'border-r border-[var(--rule)] bg-[var(--bg-soft)]'
+          'border-r border-[var(--border)] bg-[var(--sidebar-bg)]'
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between h-[60px] px-5 shrink-0 border-b border-[var(--rule)]">
-          <Link href="/chat" className="flex items-center gap-2.5">
+        <div className="flex items-center justify-between h-12 px-3 shrink-0">
+          <Link href="/chat" className="flex items-center gap-2 px-1.5">
             <NetralLogo size={22} />
-            <span className="font-display text-[17px] tracking-tight">Netral</span>
+            <span className="font-semibold text-[14px]">Netral</span>
           </Link>
-          {isMobile && (
-            <button onClick={() => setSidebarOpen(false)} className="p-1.5 rounded-md hover:bg-[var(--bg)] text-[var(--fg-muted)]">
-              <X size={16} />
-            </button>
-          )}
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="p-1.5 rounded-md hover:bg-[var(--bg)] text-[var(--fg-muted)] transition-colors"
+            aria-label="Fermer"
+          >
+            {isMobile ? <X size={15} /> : <PanelLeftClose size={15} />}
+          </button>
         </div>
 
-        {/* Primary actions */}
-        <div className="px-3 py-3 space-y-px">
+        {/* New chat */}
+        <div className="px-3 pb-2">
           <button
             onClick={handleNewChat}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-[13px] font-medium text-[var(--fg)] hover:bg-[var(--bg)] transition-all group"
+            className="w-full flex items-center justify-between px-3 py-2 rounded-md bg-[var(--bg)] border border-[var(--border)] text-[13px] font-medium text-[var(--fg)] hover:bg-[var(--bg-elevated)] hover:border-[var(--border-strong)] transition-all shadow-[var(--shadow-xs)] group"
           >
-            <span className="w-7 h-7 rounded-md bg-[var(--fg)] text-[var(--bg)] flex items-center justify-center group-hover:bg-[var(--jewel)] transition-colors">
-              <Plus size={14} strokeWidth={2.5} />
+            <span className="flex items-center gap-2">
+              <Plus size={14} strokeWidth={2.2} />
+              Nouvelle conversation
             </span>
-            <span>Nouvelle conversation</span>
-          </button>
-
-          <button
-            onClick={() => setSearchOpen(!searchOpen)}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-[13px] text-[var(--fg-muted)] hover:bg-[var(--bg)] hover:text-[var(--fg)] transition-all"
-          >
-            <Search size={14} strokeWidth={2} className="opacity-60" />
-            <span>Rechercher</span>
-            <span className="ml-auto kbd">⌘K</span>
-          </button>
-
-          <button className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-[13px] text-[var(--fg-muted)] hover:bg-[var(--bg)] hover:text-[var(--fg)] transition-all">
-            <FolderOpen size={14} strokeWidth={2} className="opacity-60" />
-            <span>Projets</span>
-          </button>
-
-          <button
-            onClick={() => setAgentsOpen(!agentsOpen)}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-[13px] text-[var(--fg-muted)] hover:bg-[var(--bg)] hover:text-[var(--fg)] transition-all"
-          >
-            <Bot size={14} strokeWidth={2} className="opacity-60" />
-            <span>Agents</span>
-            <span className="ml-auto text-[9px] font-medium uppercase tracking-wider text-[var(--jewel)]">Beta</span>
+            <span className="kbd opacity-60 group-hover:opacity-100 transition-opacity">⌘N</span>
           </button>
         </div>
 
-        {/* Search input */}
-        <AnimatePresence>
-          {searchOpen && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden px-3 pb-3"
-            >
-              <input
-                type="text"
-                placeholder="Rechercher dans les conversations…"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                autoFocus
-                className="input h-9 text-[13px]"
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Agents panel */}
-        <AnimatePresence>
-          {agentsOpen && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden border-t border-[var(--rule)]"
-            >
-              <div className="px-3 py-3 space-y-px">
-                <p className="label-num px-3 mb-2">Agents</p>
-                {[
-                  { name: 'Web', desc: 'Recherche & synthèse', icon: Globe },
-                  { name: 'Rédacteur', desc: 'Écriture & reformulation', icon: Sparkles },
-                  { name: 'Analyste', desc: 'Données & insights', icon: Zap },
-                ].map((agent) => {
-                  const Icon = agent.icon
-                  return (
-                    <button
-                      key={agent.name}
-                      onClick={() => { setAgentsOpen(false); handleNewChat() }}
-                      className="w-full flex items-center gap-3 px-3 py-2 rounded-md hover:bg-[var(--bg)] transition-all text-left group"
-                    >
-                      <Icon size={14} className="text-[var(--fg-muted)] group-hover:text-[var(--jewel)] transition-colors" strokeWidth={1.8} />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[12px] font-medium text-[var(--fg)]">{agent.name}</p>
-                        <p className="text-[10px] text-[var(--fg-subtle)] truncate">{agent.desc}</p>
-                      </div>
-                      <ChevronRight size={12} className="text-[var(--fg-subtle)] opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </button>
-                  )
-                })}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        <div className="rule mx-4 my-1" />
-
-        {/* Recent label */}
-        <div className="px-4 pt-3 pb-1 flex items-center justify-between">
-          <p className="label-num">Récents</p>
-          <Layers size={11} className="text-[var(--fg-subtle)]" />
+        {/* Search */}
+        <div className="px-3 pb-3">
+          <div className="relative">
+            <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--fg-muted)] pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Rechercher"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full h-8 pl-8 pr-3 rounded-md bg-transparent border border-transparent text-[13px] text-[var(--fg)] placeholder:text-[var(--fg-subtle)] hover:bg-[var(--bg)] focus:outline-none focus:border-[var(--border)] focus:bg-[var(--bg)] transition-all"
+            />
+          </div>
         </div>
 
         {/* Conversations */}
         <div className="flex-1 overflow-y-auto pb-2">
           {!conversationsLoaded ? (
-            <div className="space-y-1.5 px-3 pt-1">
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className="skeleton h-8" />
+            <div className="space-y-1 px-3 pt-1">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="skeleton h-7" />
               ))}
             </div>
           ) : conversations.length === 0 ? (
-            <div className="px-4 py-12 text-center">
+            <div className="px-3 py-12 text-center">
               <MessageSquare size={16} className="text-[var(--fg-subtle)] mx-auto mb-2" strokeWidth={1.5} />
               <p className="text-[12px] text-[var(--fg-muted)]">Aucune conversation</p>
             </div>
+          ) : filtered.length === 0 ? (
+            <div className="px-3 py-12 text-center">
+              <p className="text-[12px] text-[var(--fg-muted)]">Aucun résultat</p>
+            </div>
           ) : (
             <>
-              {renderGroup('Épinglés', groups.pinned)}
               {renderGroup("Aujourd'hui", groups.today)}
               {renderGroup('Hier', groups.yesterday)}
-              {renderGroup('Semaine', groups.week)}
-              {renderGroup('Mois', groups.month)}
+              {renderGroup('7 derniers jours', groups.week)}
+              {renderGroup('30 derniers jours', groups.month)}
               {renderGroup('Plus ancien', groups.older)}
             </>
           )}
         </div>
 
         {/* Profile */}
-        <div className="border-t border-[var(--rule)] shrink-0 relative">
+        <div className="border-t border-[var(--border)] shrink-0 relative p-2">
           <button
-            onClick={() => setProfileMenuOpen(!profileMenuOpen)}
-            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[var(--bg)] transition-all"
+            onClick={() => setProfileOpen(!profileOpen)}
+            className="w-full flex items-center gap-2.5 px-2 py-2 rounded-md hover:bg-[var(--bg)] transition-colors"
           >
-            <div className="relative">
-              <div className="w-8 h-8 rounded-md bg-[var(--fg)] text-[var(--bg)] flex items-center justify-center text-xs font-bold">
-                {user.name?.[0]?.toUpperCase() ?? user.email[0].toUpperCase()}
-              </div>
-              <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[var(--jewel)] border-2 border-[var(--bg-soft)]" />
+            <div className="w-7 h-7 rounded-full bg-[var(--accent)] text-[var(--bg)] flex items-center justify-center text-[12px] font-semibold shrink-0">
+              {user.name?.[0]?.toUpperCase() ?? user.email[0].toUpperCase()}
             </div>
             <div className="flex-1 min-w-0 text-left">
               <p className="text-[13px] font-medium text-[var(--fg)] truncate">{user.name ?? 'Utilisateur'}</p>
@@ -315,27 +240,28 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
           </button>
 
           <AnimatePresence>
-            {profileMenuOpen && (
+            {profileOpen && (
               <motion.div
-                initial={{ opacity: 0, y: 8, scale: 0.97 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 8, scale: 0.97 }}
-                transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-                className="absolute bottom-full left-3 right-3 mb-2 card-float py-1.5 z-50"
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 4 }}
+                transition={{ duration: 0.15 }}
+                className="absolute bottom-full left-2 right-2 mb-1 bg-[var(--bg-elevated)] border border-[var(--border)] rounded-md py-1 shadow-[var(--shadow-md)] z-50"
               >
                 <button
-                  onClick={() => { setProfileMenuOpen(false); onOpenSettings() }}
-                  className="w-full flex items-center gap-3 px-3 py-2 text-[13px] text-[var(--fg-soft)] hover:bg-[var(--bg-soft)] transition-colors rounded-md"
+                  onClick={() => { setProfileOpen(false); onOpenSettings() }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] text-[var(--fg-soft)] hover:bg-[var(--bg-soft)] transition-colors"
                 >
-                  <Settings size={13} className="opacity-60" strokeWidth={1.8} />
+                  <Settings size={13} strokeWidth={1.8} className="opacity-60" />
                   Paramètres
+                  <span className="ml-auto kbd">⌘,</span>
                 </button>
-                <div className="rule mx-3 my-1" />
+                <div className="h-px bg-[var(--border)] my-1 mx-2" />
                 <button
                   onClick={() => logout()}
-                  className="w-full flex items-center gap-3 px-3 py-2 text-[13px] text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors rounded-md"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
                 >
-                  <LogOut size={13} className="opacity-60" strokeWidth={1.8} />
+                  <LogOut size={13} strokeWidth={1.8} className="opacity-60" />
                   Déconnexion
                 </button>
               </motion.div>
@@ -344,17 +270,18 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
         </div>
       </motion.aside>
 
-      {/* Mobile toggle */}
+      {/* Toggle button when sidebar closed */}
       <AnimatePresence>
-        {!sidebarOpen && isMobile && (
+        {!sidebarOpen && (
           <motion.button
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             onClick={() => setSidebarOpen(true)}
-            className="fixed top-4 left-4 z-40 p-2.5 rounded-md card-float"
+            className="fixed top-3 left-3 z-40 p-2 rounded-md bg-[var(--bg-elevated)] border border-[var(--border)] shadow-[var(--shadow-sm)] text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors"
+            aria-label="Ouvrir"
           >
-            <Menu size={16} className="text-[var(--fg-muted)]" />
+            {isMobile ? <Menu size={15} /> : <PanelLeft size={15} />}
           </motion.button>
         )}
       </AnimatePresence>

@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useChatStore, type ChatMessage } from '@/lib/store/chat'
 import { Message } from './Message'
 import { ChatComposer } from './ChatComposer'
-import { Globe, FileSearch, Brain } from 'lucide-react'
+import { Globe, FileText, Sparkles } from 'lucide-react'
 
 interface ChatInterfaceProps {
   initialMessages?: ChatMessage[]
@@ -17,17 +17,17 @@ interface ChatInterfaceProps {
 
 export type SearchStatus = null | 'searching' | 'reading' | 'thinking'
 
-const suggestions = [
-  { num: '01', text: 'Quelles sont les nouvelles découvertes en physique quantique cette semaine ?', label: 'Recherche' },
-  { num: '02', text: 'Explique-moi les principes du stoïcisme avec des exemples modernes', label: 'Apprendre' },
-  { num: '03', text: 'Rédige un email professionnel pour décliner une offre poliment', label: 'Écrire' },
-  { num: '04', text: 'Compare React, Vue et Svelte en 2026 — points forts, faiblesses', label: 'Analyser' },
+const examples = [
+  { text: 'Explique le théorème de Bayes avec un exemple concret' },
+  { text: 'Écris une fonction TypeScript pour trier un tableau d\'objets' },
+  { text: 'Quelles sont les actualités tech cette semaine ?' },
+  { text: 'Résume les principes du design minimaliste' },
 ]
 
-const statusConfig = {
-  searching: { icon: Globe, label: 'Recherche en cours…' },
-  reading: { icon: FileSearch, label: 'Lecture des sources…' },
-  thinking: { icon: Brain, label: 'Réflexion…' },
+const statusLabels = {
+  searching: 'Recherche en cours…',
+  reading: 'Lecture des sources…',
+  thinking: 'Réflexion…',
 }
 
 export function ChatInterface({ initialMessages = [], conversationId: initialConversationId, userInitial, userName }: ChatInterfaceProps) {
@@ -79,8 +79,11 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
       })
 
       if (!response.ok || !response.body) {
-        const errText = await response.text().catch(() => 'unknown')
-        updateLastMessage(`\n\n⚠️ Erreur : ${errText.slice(0, 200)}`)
+        const errText = await response.text().catch(() => 'Erreur inconnue')
+        const errMsg = response.status === 429
+          ? 'Trop de messages. Patientez un instant avant de réessayer.'
+          : `Erreur : ${errText.slice(0, 200)}`
+        updateLastMessage(`\n\n⚠️ ${errMsg}`)
         return
       }
 
@@ -154,113 +157,60 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
 
   const isEmpty = didInit && messages.length === 0
   const firstName = userName?.split(' ')[0]
-  const greeting = (() => {
-    const h = new Date().getHours()
-    if (h < 6) return 'Bonne nuit'
-    if (h < 12) return 'Bonjour'
-    if (h < 18) return 'Bon après-midi'
-    return 'Bonsoir'
-  })()
 
   return (
     <div className="flex flex-col h-full relative">
-      <div ref={scrollRef} className="flex-1 overflow-y-auto scroll-smooth">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto">
         {isEmpty ? (
-          <div className="min-h-full flex flex-col px-6 lg:px-12 pt-16 lg:pt-24 pb-56 max-w-[920px] mx-auto w-full">
-
-            {/* Issue header */}
-            <motion.div
+          <div className="min-h-full flex flex-col items-center justify-center px-6 pb-44 max-w-2xl mx-auto w-full">
+            <motion.h1
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-              className="flex items-center gap-3 mb-12"
+              transition={{ duration: 0.4 }}
+              className="text-[28px] md:text-[32px] font-semibold tracking-[-0.02em] text-center mb-2"
             >
-              <span className="label-num">№ {new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}</span>
-              <span className="rule flex-1 max-w-[60px]" />
-              <span className="label">Édition du jour</span>
-            </motion.div>
-
-            {/* Greeting — editorial style */}
-            <motion.div
-              initial={{ opacity: 0, y: 16, filter: 'blur(4px)' }}
-              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-              className="mb-16"
+              {firstName ? `Bonjour, ${firstName}` : 'Bonjour'}
+            </motion.h1>
+            <motion.p
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.05, duration: 0.4 }}
+              className="text-[15px] text-[var(--fg-muted)] text-center mb-10"
             >
-              <h2 className="font-display text-[clamp(40px,7vw,80px)] leading-[1] tracking-tight">
-                {greeting}{firstName ? `,` : '.'}
-                {firstName && (
-                  <>
-                    <br />
-                    <span className="serif-italic" style={{ color: 'var(--jewel)' }}>{firstName}.</span>
-                  </>
-                )}
-              </h2>
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.4, duration: 0.6 }}
-                className="text-[15px] text-[var(--fg-muted)] mt-6 max-w-md"
-              >
-                Une question m'attend-elle ? Je peux consulter le web, lire vos documents, ou simplement converser.
-              </motion.p>
-            </motion.div>
-
-            {/* Section break */}
-            <motion.div
-              initial={{ scaleX: 0 }}
-              animate={{ scaleX: 1 }}
-              transition={{ delay: 0.6, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-              style={{ transformOrigin: 'left' }}
-              className="rule mb-8"
-            />
+              Comment puis-je vous aider aujourd'hui ?
+            </motion.p>
 
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.7, duration: 0.5 }}
-              className="flex items-center gap-3 mb-6"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15, duration: 0.4 }}
+              className="grid grid-cols-1 md:grid-cols-2 gap-2 w-full max-w-xl"
             >
-              <span className="label">Suggestions</span>
-              <span className="dot-divider" />
-              <span className="label-num">{suggestions.length} sujets</span>
-            </motion.div>
-
-            {/* Editorial suggestion list */}
-            <div className="space-y-px">
-              {suggestions.map((s, i) => (
+              {examples.map((ex, i) => (
                 <motion.button
-                  key={s.num}
-                  initial={{ opacity: 0, x: -16 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.8 + i * 0.06, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                  whileHover={{ x: 4 }}
-                  onClick={() => handleSubmit(s.text)}
-                  className="group w-full text-left flex items-center gap-6 py-5 border-b border-[var(--rule)] hover:border-[var(--jewel)] transition-all"
+                  key={ex.text}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 + i * 0.04, duration: 0.3 }}
+                  onClick={() => handleSubmit(ex.text)}
+                  className="group p-3.5 text-left rounded-xl border border-[var(--border)] hover:border-[var(--border-strong)] hover:bg-[var(--bg-soft)] transition-all"
                 >
-                  <span className="label-num shrink-0">{s.num}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[10px] uppercase tracking-[0.14em] font-medium text-[var(--jewel)] mb-1">{s.label}</p>
-                    <p className="text-[16px] lg:text-[18px] font-display leading-[1.3] text-[var(--fg)] group-hover:text-[var(--jewel)] transition-colors">
-                      {s.text}
-                    </p>
-                  </div>
-                  <svg className="shrink-0 transition-transform group-hover:translate-x-1 text-[var(--fg-muted)] group-hover:text-[var(--jewel)]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M7 17L17 7M17 7H7M17 7V17" />
-                  </svg>
+                  <p className="text-[13.5px] text-[var(--fg-soft)] group-hover:text-[var(--fg)] leading-snug">
+                    {ex.text}
+                  </p>
                 </motion.button>
               ))}
-            </div>
+            </motion.div>
           </div>
         ) : (
-          <div className="max-w-[760px] mx-auto w-full px-4 md:px-8 pt-10 pb-56">
+          <div className="max-w-3xl mx-auto w-full px-4 md:px-6 pt-8 pb-44">
             <AnimatePresence initial={false}>
               {messages.map((m, i) => (
                 <motion.div
                   key={m.id}
-                  initial={{ opacity: 0, y: 14, filter: 'blur(2px)' }}
-                  animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                  transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.25 }}
                 >
                   <Message
                     role={m.role}
@@ -277,29 +227,27 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
         )}
       </div>
 
-      {/* Bottom composer area */}
+      {/* Composer area */}
       <div className="absolute bottom-0 left-0 right-0 pointer-events-none">
-        <div className="max-w-[760px] mx-auto px-4 md:px-8 pb-6 md:pb-8 pb-safe">
+        <div className="max-w-3xl mx-auto px-4 md:px-6 pb-4 pb-safe">
           {/* Status pill */}
           <AnimatePresence>
             {searchStatus && (
               <motion.div
-                initial={{ opacity: 0, y: 12, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 6, scale: 0.97 }}
-                transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                className="flex justify-center mb-3"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 4 }}
+                transition={{ duration: 0.2 }}
+                className="flex justify-center mb-2"
               >
-                {(() => {
-                  const s = statusConfig[searchStatus]
-                  const Icon = s.icon
-                  return (
-                    <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full glass border border-[var(--rule)] shadow-sm">
-                      <Icon size={12} className="text-[var(--jewel)]" />
-                      <span className="text-[12px] font-medium text-[var(--fg-soft)] shimmer-text">{s.label}</span>
-                    </div>
-                  )
-                })()}
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--bg-elevated)] border border-[var(--border)] shadow-[var(--shadow-xs)] text-[12px] text-[var(--fg-muted)]">
+                  <span className="flex gap-0.5">
+                    <span className="w-1 h-1 rounded-full bg-[var(--fg)] typing-dot" style={{ animationDelay: '0ms' }} />
+                    <span className="w-1 h-1 rounded-full bg-[var(--fg)] typing-dot" style={{ animationDelay: '150ms' }} />
+                    <span className="w-1 h-1 rounded-full bg-[var(--fg)] typing-dot" style={{ animationDelay: '300ms' }} />
+                  </span>
+                  {statusLabels[searchStatus]}
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -319,7 +267,7 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
         </div>
 
         {/* Bottom fade */}
-        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-[var(--bg)] via-[var(--bg)]/95 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-[var(--bg)] via-[var(--bg)] to-transparent pointer-events-none" />
       </div>
     </div>
   )
