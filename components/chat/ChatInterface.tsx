@@ -290,11 +290,10 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
                 transition={{ duration: 0.2 }}
                 className="flex justify-center mb-2"
               >
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--bg-elevated)] border border-[var(--border)] shadow-[var(--shadow-xs)] text-[12px] text-[var(--fg-muted)]">
-                  <span className="flex gap-0.5">
-                    <span className="w-1 h-1 rounded-full bg-[var(--fg)] typing-dot" style={{ animationDelay: '0ms' }} />
-                    <span className="w-1 h-1 rounded-full bg-[var(--fg)] typing-dot" style={{ animationDelay: '150ms' }} />
-                    <span className="w-1 h-1 rounded-full bg-[var(--fg)] typing-dot" style={{ animationDelay: '300ms' }} />
+                <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-[var(--bg-elevated)] border border-[var(--border)] shadow-[var(--shadow-sm)] text-[12px] text-[var(--fg-muted)]">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--accent)] opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--accent)]" />
                   </span>
                   {t.chat[searchStatus as 'searching' | 'reading' | 'thinking']}
                 </div>

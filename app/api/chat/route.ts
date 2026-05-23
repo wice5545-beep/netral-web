@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { z } from 'zod'
 import { getSession } from '@/lib/session'
 import { db } from '@/lib/db'
-import { getModel } from '@/lib/ai/models'
+import { getModel, getApiKey, getFallbackKeys } from '@/lib/ai/models'
 import { buildSystemPrompt } from '@/lib/ai/prompt'
 import { webSearch, readPage, needsWebSearch, type SearchResult } from '@/lib/ai/websearch'
 import { rateLimit } from '@/lib/rate-limit'
@@ -76,8 +76,10 @@ export async function POST(req: NextRequest) {
 
   const { messages, modelId, conversationId: rawConvId, webSearch: useWebSearch } = parsed.data
   const model = getModel(modelId)
-  const apiKey = process.env[model.envKey]
-  if (!apiKey) return new Response(`Missing ${model.envKey}`, { status: 500 })
+  const primaryKey = getApiKey(model.envKey)
+  const fallbackKeys = getFallbackKeys(model.envKey)
+  const allKeys = [primaryKey, ...fallbackKeys].filter(Boolean)
+  if (!allKeys.length) return new Response(`Missing ${model.envKey}`, { status: 500 })
 
   let systemPrompt = buildSystemPrompt()
 
@@ -143,14 +145,21 @@ export async function POST(req: NextRequest) {
 
       let accumulated = ''
       try {
-        const upstream = await fetch(model.apiUrl, {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        })
+        let upstream: Response | null = null
+        for (const key of allKeys) {
+          upstream = await fetch(model.apiUrl, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          })
+          if (upstream.ok) break
+          // If 429 (rate limit) or 401, try next key
+          if (upstream.status === 429 || upstream.status === 401) continue
+          break
+        }
 
-        if (!upstream.ok || !upstream.body) {
-          send({ type: 'error', message: `Erreur upstream: ${(await upstream.text().catch(() => '')).slice(0, 200)}` })
+        if (!upstream || !upstream.ok || !upstream.body) {
+          send({ type: 'error', message: `Erreur upstream: ${(await upstream?.text().catch(() => '') ?? '').slice(0, 200)}` })
           controller.close()
           return
         }
@@ -188,24 +197,35 @@ export async function POST(req: NextRequest) {
         if (assistantMessageId && accumulated) {
           try {
             await db.query(`UPDATE "Message" SET content = $1 WHERE id = $2`, [accumulated, assistantMessageId])
-            // Auto-generate title from AI response
+            // AI-generated title
             if (convId) {
               const { rows: convCheck } = await db.query(`SELECT title FROM "Conversation" WHERE id = $1`, [convId])
               const currentTitle = convCheck[0]?.title || ''
-              // Only auto-title if title is still the user's first message or default
-              if (currentTitle.length <= 60 && (currentTitle === textContent.slice(0, 60) || currentTitle === textContent || currentTitle === 'New chat' || currentTitle === 'Nouvelle conversation')) {
-                const clean = accumulated.replace(/[#*_`\n]/g, ' ').replace(/\s+/g, ' ').trim()
-                const firstSentence = clean.split(/[.!?]/)[0]?.trim()
-                let title = ''
-                if (firstSentence && firstSentence.length >= 5 && firstSentence.length <= 55) {
-                  title = firstSentence
-                } else if (clean.length > 5) {
-                  title = clean.slice(0, 45).trim()
-                }
-                if (title) {
-                  await db.query(`UPDATE "Conversation" SET title = $1 WHERE id = $2`, [title, convId])
-                  send({ type: 'title', title })
-                }
+              if (currentTitle === textContent.slice(0, 60) || currentTitle === textContent || currentTitle === 'New chat' || currentTitle === 'Nouvelle conversation') {
+                try {
+                  const titleRes = await fetch(model.apiUrl, {
+                    method: 'POST',
+                    headers: { Authorization: `Bearer ${allKeys[0]}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      model: model.upstreamModel,
+                      messages: [
+                        { role: 'system', content: 'Génère un titre court (max 40 caractères) pour cette conversation. Réponds UNIQUEMENT avec le titre, rien d\'autre. Pas de guillemets.' },
+                        { role: 'user', content: textContent.slice(0, 200) },
+                        { role: 'assistant', content: accumulated.slice(0, 300) },
+                      ],
+                      max_tokens: 30,
+                      temperature: 0.5,
+                    }),
+                  })
+                  if (titleRes.ok) {
+                    const titleData = await titleRes.json()
+                    const aiTitle = titleData.choices?.[0]?.message?.content?.trim().slice(0, 50)
+                    if (aiTitle && aiTitle.length > 2) {
+                      await db.query(`UPDATE "Conversation" SET title = $1 WHERE id = $2`, [aiTitle, convId])
+                      send({ type: 'title', title: aiTitle })
+                    }
+                  }
+                } catch {}
               }
             }
           } catch {}
