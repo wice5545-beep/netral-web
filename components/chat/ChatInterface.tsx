@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useChatStore, type ChatMessage } from '@/lib/store/chat'
+import { getRandomSuggestions } from '@/lib/suggestions'
 import { Message } from './Message'
 import { ChatComposer } from './ChatComposer'
 import { Globe, FileText, Sparkles } from 'lucide-react'
@@ -16,13 +17,6 @@ interface ChatInterfaceProps {
 }
 
 export type SearchStatus = null | 'searching' | 'reading' | 'thinking'
-
-const examples = [
-  { text: 'Explique le théorème de Bayes avec un exemple concret' },
-  { text: 'Écris une fonction TypeScript pour trier un tableau d\'objets' },
-  { text: 'Quelles sont les actualités tech cette semaine ?' },
-  { text: 'Résume les principes du design minimaliste' },
-]
 
 const statusLabels = {
   searching: 'Recherche en cours…',
@@ -39,6 +33,7 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
   const scrollRef = useRef<HTMLDivElement>(null)
   const abortRef = useRef<AbortController | null>(null)
   const [didInit, setDidInit] = useState(false)
+  const [examples] = useState(() => getRandomSuggestions(4))
 
   useEffect(() => {
     setMessages(initialMessages)
@@ -186,17 +181,17 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
               transition={{ delay: 0.15, duration: 0.4 }}
               className="grid grid-cols-1 md:grid-cols-2 gap-2 w-full max-w-xl"
             >
-              {examples.map((ex, i) => (
+              {examples.map((text, i) => (
                 <motion.button
-                  key={ex.text}
+                  key={text}
                   initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 + i * 0.04, duration: 0.3 }}
-                  onClick={() => handleSubmit(ex.text)}
+                  onClick={() => handleSubmit(text)}
                   className="group p-3.5 text-left rounded-xl border border-[var(--border)] hover:border-[var(--border-strong)] hover:bg-[var(--bg-soft)] transition-all"
                 >
                   <p className="text-[13.5px] text-[var(--fg-soft)] group-hover:text-[var(--fg)] leading-snug">
-                    {ex.text}
+                    {text}
                   </p>
                 </motion.button>
               ))}

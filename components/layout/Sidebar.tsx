@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  Plus, Trash2, X, Menu, PanelLeftClose, PanelLeft
+  Plus, Trash2, X, Menu, PanelLeftClose, PanelLeft, MoreHorizontal, Pencil, Copy
 } from 'lucide-react'
 import { SearchIcon } from '@/components/ui/search'
 import { SettingsIcon } from '@/components/ui/settings'
@@ -71,8 +71,10 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
         setSidebarOpen(!sidebarOpen)
       }
     }
+    const onClick = () => setMenuOpen(null)
     window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    window.addEventListener('click', onClick)
+    return () => { window.removeEventListener('keydown', onKey); window.removeEventListener('click', onClick) }
   }, [sidebarOpen, setSidebarOpen])
 
   const filtered = conversations.filter((c) =>
@@ -85,13 +87,43 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
     if (isMobile) setSidebarOpen(false)
   }
 
-  const handleDelete = async (id: string, e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
+  const [menuOpen, setMenuOpen] = useState<string | null>(null)
+  const [renaming, setRenaming] = useState<string | null>(null)
+  const [renameValue, setRenameValue] = useState('')
+
+  const handleDelete = async (id: string) => {
     if (!confirm('Supprimer cette conversation ?')) return
     await fetch(`/api/conversations/${id}`, { method: 'DELETE' })
     removeConversation(id)
     if (conversationId === id) router.push('/chat')
+    setMenuOpen(null)
+  }
+
+  const handleRename = async (id: string) => {
+    if (!renameValue.trim()) return
+    await fetch(`/api/conversations/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: renameValue.trim() }),
+    })
+    const convs = useChatStore.getState().conversations
+    setConversations(convs.map(c => c.id === id ? { ...c, title: renameValue.trim() } : c))
+    setRenaming(null)
+    setMenuOpen(null)
+  }
+
+  const handleRemix = (id: string) => {
+    const conv = conversations.find(c => c.id === id)
+    if (conv) {
+      router.push('/chat')
+      // Will start a new chat with the same topic
+      setTimeout(() => {
+        const input = document.querySelector<HTMLTextAreaElement>('textarea')
+        if (input) { input.value = conv.title; input.focus() }
+      }, 300)
+    }
+    setMenuOpen(null)
+    if (isMobile) setSidebarOpen(false)
   }
 
   const renderGroup = (label: string, items: typeof conversations) => {
@@ -103,26 +135,73 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
           {items.map((c) => {
             const isActive = pathname === `/chat/${c.id}` || conversationId === c.id
             return (
-              <Link
-                key={c.id}
-                href={`/chat/${c.id}`}
-                onClick={() => isMobile && setSidebarOpen(false)}
-                className={cn(
-                  'group flex items-center gap-2 px-3 py-1.5 mx-1.5 rounded-md text-[13px] transition-colors',
-                  isActive
-                    ? 'bg-[var(--bg)] text-[var(--fg)] shadow-[var(--shadow-xs)] border border-[var(--border)]'
-                    : 'text-[var(--fg-soft)] hover:bg-[var(--bg)]'
+              <div key={c.id} className="relative">
+                {renaming === c.id ? (
+                  <div className="flex items-center gap-1 px-3 py-1.5 mx-1.5">
+                    <input
+                      autoFocus
+                      value={renameValue}
+                      onChange={(e) => setRenameValue(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') handleRename(c.id); if (e.key === 'Escape') setRenaming(null) }}
+                      className="flex-1 h-7 px-2 text-[13px] rounded border border-[var(--border)] bg-[var(--bg)] focus:outline-none focus:border-[var(--accent)]"
+                    />
+                    <button onClick={() => handleRename(c.id)} className="text-[11px] text-[var(--fg-muted)] hover:text-[var(--fg)]">✓</button>
+                  </div>
+                ) : (
+                  <Link
+                    href={`/chat/${c.id}`}
+                    onClick={() => isMobile && setSidebarOpen(false)}
+                    className={cn(
+                      'group flex items-center gap-2 px-3 py-1.5 mx-1.5 rounded-md text-[13px] transition-colors',
+                      isActive
+                        ? 'bg-[var(--bg)] text-[var(--fg)] shadow-[var(--shadow-xs)] border border-[var(--border)]'
+                        : 'text-[var(--fg-soft)] hover:bg-[var(--bg)]'
+                    )}
+                  >
+                    <span className="flex-1 truncate">{c.title}</span>
+                    <button
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMenuOpen(menuOpen === c.id ? null : c.id) }}
+                      aria-label="Options"
+                      className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-[var(--bg-soft)] transition-all"
+                    >
+                      <MoreHorizontal size={13} />
+                    </button>
+                  </Link>
                 )}
-              >
-                <span className="flex-1 truncate">{c.title}</span>
-                <button
-                  onClick={(e) => handleDelete(c.id, e)}
-                  aria-label="Supprimer"
-                  className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10 transition-all"
-                >
-                  <Trash2 size={11} />
-                </button>
-              </Link>
+
+                {/* 3-dot menu dropdown */}
+                <AnimatePresence>
+                  {menuOpen === c.id && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -4, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -4, scale: 0.95 }}
+                      transition={{ duration: 0.12 }}
+                      className="absolute right-2 top-full mt-1 z-50 bg-[var(--bg-elevated)] border border-[var(--border)] rounded-lg py-1 shadow-[var(--shadow-md)] min-w-[140px]"
+                    >
+                      <button
+                        onClick={() => { setRenameValue(c.title); setRenaming(c.id); setMenuOpen(null) }}
+                        className="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-[var(--fg-soft)] hover:bg-[var(--bg-soft)] transition-colors"
+                      >
+                        <Pencil size={11} /> Renommer
+                      </button>
+                      <button
+                        onClick={() => handleRemix(c.id)}
+                        className="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-[var(--fg-soft)] hover:bg-[var(--bg-soft)] transition-colors"
+                      >
+                        <Copy size={11} /> Remixer
+                      </button>
+                      <div className="h-px bg-[var(--border)] my-1 mx-2" />
+                      <button
+                        onClick={() => handleDelete(c.id)}
+                        className="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+                      >
+                        <Trash2 size={11} /> Supprimer
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             )
           })}
         </div>

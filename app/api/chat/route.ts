@@ -162,6 +162,22 @@ export async function POST(req: NextRequest) {
         if (assistantMessageId && accumulated) {
           try {
             await db.query(`UPDATE "Message" SET content = $1 WHERE id = $2`, [accumulated, assistantMessageId])
+            // Auto-generate title from first response
+            if (convId) {
+              const { rows: convRows } = await db.query(`SELECT title FROM "Conversation" WHERE id = $1`, [convId])
+              const currentTitle = convRows[0]?.title
+              if (currentTitle && (currentTitle === userMessage?.content?.slice(0, 60) || currentTitle === 'New chat')) {
+                // Generate a short title from the AI response (first sentence or 50 chars)
+                const cleanResponse = accumulated.replace(/[#*_\n]/g, ' ').trim()
+                const firstSentence = cleanResponse.split(/[.!?]/)[0]?.trim()
+                const autoTitle = (firstSentence && firstSentence.length > 5 && firstSentence.length < 60)
+                  ? firstSentence
+                  : cleanResponse.slice(0, 50).trim()
+                if (autoTitle) {
+                  await db.query(`UPDATE "Conversation" SET title = $1 WHERE id = $2`, [autoTitle, convId])
+                }
+              }
+            }
           } catch {}
         }
         controller.close()
