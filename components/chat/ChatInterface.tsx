@@ -7,7 +7,7 @@ import { useChatStore, type ChatMessage } from '@/lib/store/chat'
 import { Message } from './Message'
 import { ChatComposer } from './ChatComposer'
 import { NetralLogo } from '@/components/ui/NetralLogo'
-import { Globe, FileSearch, Brain } from 'lucide-react'
+import { Globe, FileSearch, Brain, Sparkles } from 'lucide-react'
 
 interface ChatInterfaceProps {
   initialMessages?: ChatMessage[]
@@ -19,10 +19,10 @@ interface ChatInterfaceProps {
 export type SearchStatus = null | 'searching' | 'reading' | 'thinking'
 
 const suggestions = [
-  'Résumer un article',
-  'Expliquer un concept',
-  'Rechercher sur le web',
-  'Analyser un document',
+  { text: 'Expliquer un concept complexe', icon: Brain, gradient: 'from-amber-500 to-orange-500' },
+  { text: 'Résumer un document', icon: FileSearch, gradient: 'from-emerald-500 to-teal-500' },
+  { text: 'Rechercher sur le web', icon: Globe, gradient: 'from-blue-500 to-indigo-500' },
+  { text: 'Générer du contenu créatif', icon: Sparkles, gradient: 'from-purple-500 to-pink-500' },
 ]
 
 const statusConfig = {
@@ -154,59 +154,93 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
   }
 
   const isEmpty = didInit && messages.length === 0
+  const firstName = userName?.split(' ')[0]
 
   return (
     <div className="flex flex-col h-full relative">
       <div ref={scrollRef} className="flex-1 overflow-y-auto scroll-smooth">
         {isEmpty ? (
-          <div className="min-h-full flex flex-col items-center justify-center px-6 pb-40">
-            {/* Logo */}
+          <div className="min-h-full flex flex-col items-center justify-center px-6 pb-48">
+            
+            {/* Logo avec anneaux décoratifs */}
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3 }}
-              className="mb-6"
+              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              className="relative mb-10 flex items-center justify-center"
             >
-              <NetralLogo size={48} />
+              {/* Anneaux animés */}
+              {[80, 120, 160].map((size, i) => (
+                <motion.div
+                  key={size}
+                  className="absolute rounded-full border border-[var(--border-accent)]"
+                  style={{ width: size, height: size }}
+                  animate={{ scale: [1, 1.04, 1], opacity: [0.3, 0.5, 0.3] }}
+                  transition={{ duration: 3.5 + i * 0.5, repeat: Infinity, ease: 'easeInOut', delay: i * 0.3 }}
+                />
+              ))}
+              
+              <motion.div
+                animate={{ y: [0, -6, 0] }}
+                transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+              >
+                <NetralLogo size={52} animated />
+              </motion.div>
             </motion.div>
 
-            {/* Greeting */}
-            <motion.h2
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="text-xl font-semibold text-[var(--foreground)] mb-2"
-            >
-              Bonjour ! Comment puis-je vous aider aujourd&apos;hui ?
-            </motion.h2>
-
-            {/* Suggestion pills */}
+            {/* Greeting élégant */}
             <motion.div
-              initial={{ opacity: 0, y: 8 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="flex flex-wrap justify-center gap-2 mt-4"
+              transition={{ delay: 0.15, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              className="text-center mb-10"
             >
-              {suggestions.map((s) => (
-                <button
-                  key={s}
-                  onClick={() => handleSubmit(s)}
-                  className="px-4 py-2 rounded-full border border-[var(--border)] text-[13px] text-[var(--foreground-secondary)] hover:bg-[var(--background-secondary)] hover:border-[var(--border-strong)] transition-colors"
-                >
-                  {s}
-                </button>
-              ))}
+              <h2 className="font-display text-3xl md:text-4xl tracking-tight text-[var(--foreground)] mb-3">
+                {firstName ? `Bonjour, ${firstName}` : 'Bonjour'}
+              </h2>
+              <p className="text-[var(--foreground-muted)] text-base font-light">
+                Comment puis-je vous aider aujourd&apos;hui ?
+              </p>
+            </motion.div>
+
+            {/* Suggestions raffinées */}
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.25, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full max-w-xl"
+            >
+              {suggestions.map((s, i) => {
+                const Icon = s.icon
+                return (
+                  <motion.button
+                    key={s.text}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 + i * 0.06, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                    whileHover={{ y: -2, scale: 1.01 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => handleSubmit(s.text)}
+                    className="group flex items-center gap-3 p-4 rounded-xl border border-[var(--border)] hover:border-[var(--accent)]/30 hover:shadow-md text-left transition-all duration-200 bg-[var(--background-elevated)]"
+                  >
+                    <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${s.gradient} flex items-center justify-center shrink-0 shadow-sm`}>
+                      <Icon size={14} className="text-white" />
+                    </div>
+                    <span className="text-[13px] text-[var(--foreground-secondary)] group-hover:text-[var(--foreground)] transition-colors">{s.text}</span>
+                  </motion.button>
+                )
+              })}
             </motion.div>
           </div>
         ) : (
-          <div className="max-w-2xl mx-auto w-full px-4 md:px-6 pt-8 pb-44">
+          <div className="max-w-2xl mx-auto w-full px-4 md:px-6 pt-10 pb-48">
             <AnimatePresence initial={false}>
               {messages.map((m, i) => (
                 <motion.div
                   key={m.id}
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.25 }}
+                  initial={{ opacity: 0, y: 14, scale: 0.99 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
                 >
                   <Message
                     role={m.role}
@@ -225,21 +259,22 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
 
       {/* Bottom input */}
       <div className="absolute bottom-0 left-0 right-0 pointer-events-none">
-        <div className="max-w-2xl mx-auto px-4 md:px-6 pb-5 md:pb-7 pb-safe">
+        <div className="max-w-2xl mx-auto px-4 md:px-6 pb-6 md:pb-8 pb-safe">
           {/* Status pill */}
           <AnimatePresence>
             {searchStatus && (
               <motion.div
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 4 }}
+                initial={{ opacity: 0, y: 10, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 4, scale: 0.98 }}
+                transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
                 className="flex justify-center mb-3"
               >
                 {(() => {
                   const s = statusConfig[searchStatus]
                   const Icon = s.icon
                   return (
-                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--background-elevated)] border border-[var(--border)] shadow-sm text-sm font-medium text-[var(--accent)]">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-[var(--border)] shadow-sm text-sm font-medium text-[var(--accent)]">
                       <Icon size={13} className="search-pulse" />
                       <span className="search-pulse">{s.label}</span>
                     </div>
@@ -263,7 +298,7 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
           </div>
         </div>
 
-        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-[var(--background)] via-[var(--background)]/90 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-[var(--background)] via-[var(--background)]/95 to-transparent pointer-events-none" />
       </div>
     </div>
   )

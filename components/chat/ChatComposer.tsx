@@ -93,12 +93,16 @@ export function ChatComposer({
 
   return (
     <div className="relative w-full max-w-3xl mx-auto">
-      <div
-        className={cn(
-          'relative rounded-2xl border bg-[var(--background-elevated)] overflow-hidden transition-shadow duration-200',
-          focused ? 'border-[var(--accent)] shadow-[0_0_0_3px_var(--accent-soft)]' : 'border-[var(--border)]',
-          webSearchEnabled && !focused && 'border-[var(--accent)]'
-        )}
+      <motion.div
+        animate={{
+          boxShadow: focused
+            ? '0 0 0 2px var(--accent-soft), var(--shadow-medium)'
+            : webSearchEnabled
+            ? '0 0 0 2px var(--accent-soft), var(--shadow-soft)'
+            : 'var(--shadow-soft)',
+        }}
+        transition={{ duration: 0.2 }}
+        className="relative rounded-2xl bg-[var(--background-elevated)] overflow-hidden border border-[var(--border)]"
       >
         {/* Web search indicator */}
         <AnimatePresence>
@@ -112,8 +116,8 @@ export function ChatComposer({
               <div className="flex items-center gap-1.5 px-4 pt-3 pb-0">
                 <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[var(--accent-soft)] border border-[var(--accent)]/20">
                   <Globe size={11} className="text-[var(--accent)]" />
-                  <span className="text-xs font-medium text-[var(--accent)]">Recherche web activée</span>
-                  <button onClick={onToggleWebSearch} className="ml-0.5 text-[var(--accent)]/60 hover:text-[var(--accent)]">
+                  <span className="text-[11px] font-medium text-[var(--accent)]">Recherche web activée</span>
+                  <button onClick={onToggleWebSearch} className="ml-0.5 text-[var(--accent)]/50 hover:text-[var(--accent)] transition-colors">
                     <X size={10} />
                   </button>
                 </div>
@@ -135,56 +139,63 @@ export function ChatComposer({
         />
 
         <div className="flex items-center justify-between px-3 pb-3 pt-1">
-          <div className="flex items-center gap-1" ref={drawerRef}>
+          <div className="flex items-center gap-0.5" ref={drawerRef}>
             <div className="relative">
               <button
                 type="button"
                 onClick={() => setDrawerOpen(!drawerOpen)}
                 className={cn(
-                  'w-8 h-8 rounded-lg flex items-center justify-center transition-colors',
+                  'w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-200',
                   drawerOpen
-                    ? 'bg-[var(--accent)] text-white'
+                    ? 'bg-[var(--accent)] text-white shadow-sm'
                     : 'text-[var(--foreground-muted)] hover:bg-[var(--background-secondary)]'
                 )}
               >
-                <Plus size={16} className={cn(drawerOpen && 'rotate-45', 'transition-transform')} />
+                <motion.div animate={{ rotate: drawerOpen ? 45 : 0 }} transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}>
+                  <Plus size={15} />
+                </motion.div>
               </button>
 
               <AnimatePresence>
                 {drawerOpen && (
                   <motion.div
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 6 }}
-                    transition={{ duration: 0.15 }}
-                    className="absolute bottom-full left-0 mb-2 w-56 bg-[var(--background-elevated)] border border-[var(--border)] rounded-xl shadow-lg overflow-hidden z-50"
+                    initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                    transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                    className="absolute bottom-full left-0 mb-2 w-60 bg-[var(--background-elevated)] border border-[var(--border)] rounded-xl shadow-lg overflow-hidden z-50"
                   >
-                    <div className="p-1">
-                      {drawerItems.map((item) => {
+                    <div className="p-1.5">
+                      {drawerItems.map((item, i) => {
                         const Icon = item.icon
                         return (
-                          <button
+                          <motion.button
                             key={item.label}
+                            initial={{ opacity: 0, x: -8 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: i * 0.04 }}
                             type="button"
                             onClick={item.onClick}
                             disabled={item.disabled}
                             className={cn(
-                              'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-left',
+                              'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left',
                               item.disabled ? 'opacity-40 cursor-not-allowed' : 'hover:bg-[var(--background-secondary)]',
                               item.active && 'bg-[var(--accent-soft)]'
                             )}
                           >
-                            <Icon size={15} className="text-[var(--foreground-muted)]" />
+                            <div className="w-8 h-8 rounded-lg bg-[var(--background-secondary)] flex items-center justify-center shrink-0">
+                              <Icon size={14} className="text-[var(--foreground-muted)]" />
+                            </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-1.5">
-                                <p className="text-[13px] font-medium text-[var(--foreground)]">{item.label}</p>
+                                <p className="text-[12px] font-medium text-[var(--foreground)]">{item.label}</p>
                                 {item.disabled && (
-                                  <span className="text-[9px] font-bold uppercase text-[var(--foreground-subtle)] bg-[var(--background-secondary)] px-1.5 py-0.5 rounded">Bientôt</span>
+                                  <span className="text-[8px] font-bold uppercase text-[var(--foreground-subtle)] bg-[var(--background-secondary)] px-1.5 py-0.5 rounded">Bientôt</span>
                                 )}
                               </div>
                               <p className="text-[11px] text-[var(--foreground-muted)] truncate">{item.description}</p>
                             </div>
-                          </button>
+                          </motion.button>
                         )
                       })}
                     </div>
@@ -196,39 +207,49 @@ export function ChatComposer({
             <ModelSelector />
           </div>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1">
             <button
               type="button"
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--foreground-muted)] hover:bg-[var(--background-secondary)] transition-colors"
+              className="w-8 h-8 rounded-xl flex items-center justify-center text-[var(--foreground-muted)] hover:bg-[var(--background-secondary)] transition-colors"
             >
-              <Mic size={15} />
+              <Mic size={14} />
             </button>
 
             {isStreaming ? (
-              <button
+              <motion.button
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.8, opacity: 0 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={onStop}
-                className="w-8 h-8 rounded-lg flex items-center justify-center bg-[var(--foreground)] text-[var(--background)]"
+                className="w-8 h-8 rounded-xl flex items-center justify-center bg-[var(--foreground)] text-[var(--background)] shadow-sm"
               >
                 <Square size={11} fill="currentColor" />
-              </button>
+              </motion.button>
             ) : (
-              <button
+              <motion.button
                 type="button"
+                whileHover={canSend ? { scale: 1.05 } : {}}
+                whileTap={canSend ? { scale: 0.95 } : {}}
                 onClick={onSubmit}
                 disabled={!canSend}
                 className={cn(
-                  'w-8 h-8 rounded-lg flex items-center justify-center transition-colors',
+                  'w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-200',
                   canSend
-                    ? 'bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)]'
-                    : 'bg-[var(--border)] text-[var(--foreground-subtle)] cursor-not-allowed'
+                    ? 'bg-[var(--accent)] text-white shadow-sm'
+                    : 'bg-[var(--background-secondary)] text-[var(--foreground-subtle)] cursor-not-allowed'
                 )}
               >
-                <ArrowUp size={15} />
-              </button>
+                <ArrowUp size={14} />
+              </motion.button>
             )}
           </div>
         </div>
-      </div>
+      </motion.div>
+
+      <p className="text-[10px] text-center text-[var(--foreground-subtle)] mt-3 font-light">
+        Netral peut faire des erreurs. Vérifiez les informations importantes.
+      </p>
     </div>
   )
 }
