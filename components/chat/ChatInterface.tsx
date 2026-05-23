@@ -19,6 +19,15 @@ interface ChatInterfaceProps {
 
 export type SearchStatus = null | 'searching' | 'reading' | 'thinking'
 
+function friendlyError(msg: string): string {
+  if (msg.includes('429') || msg.includes('quota') || msg.includes('rate') || msg.includes('capacity') || msg.includes('Limit') || msg.includes('TPM') || msg.includes('too large') || msg.includes('upstream') || msg.includes('service_tier')) {
+    return 'Netral rencontre une forte demande en ce moment. Réessayez dans quelques secondes. 🙏'
+  }
+  if (msg.includes('Limite de messages')) return msg
+  if (msg.includes('Trop de messages')) return msg
+  return 'Netral a rencontré un problème temporaire. Veuillez réessayer. 🔄'
+}
+
 export function ChatInterface({ initialMessages = [], conversationId: initialConversationId, userInitial, userName }: ChatInterfaceProps) {
   const { t } = useI18n()
   const router = useRouter()
@@ -115,11 +124,8 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
       })
 
       if (!response.ok || !response.body) {
-        const errText = await response.text().catch(() => 'Erreur inconnue')
-        const errMsg = response.status === 429
-          ? 'Trop de messages. Patientez un instant avant de réessayer.'
-          : `Erreur : ${errText.slice(0, 200)}`
-        updateLastMessage(`\n\n⚠️ ${errMsg}`)
+        const errText = await response.text().catch(() => '')
+        updateLastMessage(`\n\n${friendlyError(errText)}`)
         return
       }
 
@@ -152,7 +158,7 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
               updateLastMessage(parsed.text)
             } else if (parsed.type === 'error') {
               setSearchStatus(null)
-              updateLastMessage(`\n\n⚠️ ${parsed.message}`)
+              updateLastMessage(`\n\n${friendlyError(parsed.message)}`)
             } else if (parsed.type === 'done') {
               setSearchStatus(null)
             } else if (parsed.type === 'title' && parsed.title) {
@@ -169,7 +175,7 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erreur inconnue'
-      if (message !== 'AbortError' && !(err instanceof DOMException)) updateLastMessage(`\n\n⚠️ ${message}`)
+      if (message !== 'AbortError' && !(err instanceof DOMException)) updateLastMessage(`\n\n${friendlyError(message)}`)
     } finally {
       setStreaming(false)
       setSearchStatus(null)
