@@ -110,6 +110,9 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
               updateLastMessage(`\n\n⚠️ ${parsed.message}`)
             } else if (parsed.type === 'done') {
               setSearchStatus(null)
+            } else if (parsed.type === 'title' && parsed.title) {
+              const cid = newConversationId || conversationId
+              if (cid) upsertConversation({ id: cid, title: parsed.title, model: currentModel, pinned: false, updatedAt: new Date().toISOString() })
             }
           } catch {}
         }
