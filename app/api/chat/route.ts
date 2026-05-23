@@ -39,8 +39,20 @@ function buildSearchContext(results: SearchResult[], pagesContent: { url: string
 }
 
 export async function POST(req: NextRequest) {
+  let userId: string | undefined
+
+  // Try session auth first, then Bearer token (for VS Code extension)
   const session = await getSession()
-  if (!session?.userId) return new Response('Unauthorized', { status: 401 })
+  if (session?.userId) {
+    userId = userId
+  } else {
+    const authHeader = req.headers.get('authorization')
+    const token = authHeader?.replace('Bearer ', '')
+    if (token?.startsWith('ntrl_')) {
+      try { userId = Buffer.from(token.replace('ntrl_', ''), 'base64url').toString() } catch {}
+    }
+  }
+  if (!userId) return new Response('Unauthorized', { status: 401 })
 
   // IP-based anti-abuse for free users (even with VPN, limits per IP)
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || 'unknown'
@@ -52,7 +64,7 @@ export async function POST(req: NextRequest) {
   // Plan-based message limit
   try {
     const { rows: userRows } = await db.query(
-      `SELECT plan, "messagesUsed", "messagesResetAt" FROM "User" WHERE id = $1`, [session.userId]
+      `SELECT plan, "messagesUsed", "messagesResetAt" FROM "User" WHERE id = $1`, [userId]
     )
     const userData = userRows[0]
     if (userData) {
@@ -60,7 +72,7 @@ export async function POST(req: NextRequest) {
       const resetAt = new Date(userData.messagesResetAt)
       if (now > resetAt) {
         const nextReset = new Date(now.getFullYear(), now.getMonth() + 1, 1)
-        await db.query(`UPDATE "User" SET "messagesUsed" = 0, "messagesResetAt" = $1 WHERE id = $2`, [nextReset, session.userId])
+        await db.query(`UPDATE "User" SET "messagesUsed" = 0, "messagesResetAt" = $1 WHERE id = $2`, [nextReset, userId])
         userData.messagesUsed = 0
       }
       const { getPlanLimit } = await import('@/lib/plans')
@@ -68,11 +80,11 @@ export async function POST(req: NextRequest) {
       if (userData.messagesUsed >= limit) {
         return new Response('Limite de messages atteinte. Passez à un plan supérieur.', { status: 429 })
       }
-      await db.query(`UPDATE "User" SET "messagesUsed" = "messagesUsed" + 1 WHERE id = $1`, [session.userId])
+      await db.query(`UPDATE "User" SET "messagesUsed" = "messagesUsed" + 1 WHERE id = $1`, [userId])
     }
   } catch {}
 
-  const rl = rateLimit(`chat:${session.userId}`, 30, 60_000)
+  const rl = rateLimit(`chat:${userId}`, 30, 60_000)
   if (!rl.allowed) {
     return new Response('Too many requests.', { status: 429, headers: { 'Retry-After': String(Math.ceil((rl.resetAt - Date.now()) / 1000)) } })
   }
@@ -104,7 +116,7 @@ export async function POST(req: NextRequest) {
         if (!convId) {
           const { rows } = await db.query(
             `INSERT INTO "Conversation" ("id", "userId", "title", "model", "createdAt", "updatedAt") VALUES (gen_random_uuid(), $1, $2, $3, now(), now()) RETURNING id`,
-            [session.userId, textContent.slice(0, 60), model.id]
+            [userId, textContent.slice(0, 60), model.id]
           )
           convId = rows[0].id
         }
