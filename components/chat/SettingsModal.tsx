@@ -8,6 +8,7 @@ import { BrainIcon } from '@/components/ui/brain'
 import { ShieldCheckIcon } from '@/components/ui/shield-check'
 import { SettingsIcon } from '@/components/ui/settings'
 import { LanguagesIcon } from '@/components/ui/languages'
+import { LockIcon } from '@/components/ui/lock'
 import { useTheme } from '@/components/ui/ThemeProvider'
 import { useI18n } from '@/lib/i18n'
 import { locales, localeNames, type Locale } from '@/lib/i18n/translations'
@@ -19,7 +20,7 @@ interface SettingsModalProps {
   user: { id: string; name?: string | null; email: string }
 }
 
-type Tab = 'general' | 'appearance' | 'memory' | 'privacy' | 'shortcuts' | 'subscription'
+type Tab = 'general' | 'appearance' | 'memory' | 'privacy' | 'security' | 'account' | 'shortcuts' | 'subscription'
 
 export function SettingsModal({ open, onClose, user }: SettingsModalProps) {
   const [tab, setTab] = useState<Tab>('general')
@@ -86,7 +87,9 @@ export function SettingsModal({ open, onClose, user }: SettingsModalProps) {
     { id: 'general', label: 'Général', icon: SettingsIcon },
     { id: 'appearance', label: 'Apparence', icon: LanguagesIcon },
     { id: 'memory', label: 'Mémoire', icon: BrainIcon },
-    { id: 'privacy', label: 'Confidentialité', icon: ShieldCheckIcon },
+    { id: 'account', label: 'Compte', icon: UserIcon },
+    { id: 'security', label: 'Sécurité', icon: ShieldCheckIcon },
+    { id: 'privacy', label: 'Confidentialité', icon: LockIcon },
     { id: 'shortcuts', label: 'Raccourcis', icon: SettingsIcon },
     { id: 'subscription', label: 'Abonnement', icon: UserIcon },
   ]
@@ -111,26 +114,26 @@ export function SettingsModal({ open, onClose, user }: SettingsModalProps) {
             className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
           >
             <div className="bg-[var(--bg-elevated)] rounded-xl w-full max-w-3xl max-h-[85vh] overflow-hidden pointer-events-auto shadow-[var(--shadow-xl)] flex flex-col md:flex-row border border-[var(--border)]">
-              {/* Sidebar */}
-              <div className="md:w-52 shrink-0 p-3 md:border-r border-b md:border-b-0 border-[var(--border)] flex md:flex-col gap-0.5 overflow-x-auto md:overflow-x-visible bg-[var(--bg-soft)]">
-                <p className="hidden md:block px-2.5 mb-3 mt-1 text-[15px] font-semibold">Paramètres</p>
+              {/* Sidebar - icon only */}
+              <div className="md:w-14 shrink-0 p-2 md:border-r border-b md:border-b-0 border-[var(--border)] flex md:flex-col items-center gap-1 overflow-x-auto md:overflow-x-visible bg-[var(--bg-soft)]">
                 {tabs.map((t) => {
                   const Icon = t.icon
                   return (
                     <button
                       key={t.id}
                       onClick={() => setTab(t.id)}
+                      title={t.label}
                       className={cn(
-                        'flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-[13px] transition-colors shrink-0',
+                        'w-9 h-9 rounded-lg flex items-center justify-center transition-all shrink-0',
                         tab === t.id
-                          ? 'bg-[var(--bg-elevated)] text-[var(--fg)] font-medium border border-[var(--border)] shadow-[var(--shadow-xs)]'
+                          ? 'bg-[var(--bg-elevated)] text-[var(--fg)] border border-[var(--border)] shadow-[var(--shadow-xs)]'
                           : 'text-[var(--fg-muted)] hover:bg-[var(--bg-elevated)] hover:text-[var(--fg)]'
                       )}
                     >
-                      <Icon size={13} className="opacity-70" />
-                      {t.label}
+                      <Icon size={16} />
                     </button>
                   )
+                })}
                 })}
               </div>
 
@@ -333,6 +336,70 @@ export function SettingsModal({ open, onClose, user }: SettingsModalProps) {
                             <span className="kbd">{s.keys}</span>
                           </div>
                         ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {tab === 'account' && (
+                    <div className="space-y-5">
+                      <div>
+                        <h2 className="text-[18px] font-semibold mb-1">Compte</h2>
+                        <p className="text-[13px] text-[var(--fg-muted)]">Gérez votre profil.</p>
+                      </div>
+                      <div className="rounded-lg border border-[var(--border)] p-4">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="w-10 h-10 rounded-full bg-[var(--accent)] text-[var(--bg)] flex items-center justify-center text-[14px] font-semibold">
+                            {user.name?.[0]?.toUpperCase() ?? user.email[0].toUpperCase()}
+                          </div>
+                          <div>
+                            <p className="text-[14px] font-medium">{user.name ?? 'Utilisateur'}</p>
+                            <p className="text-[12px] text-[var(--fg-muted)]">{user.email}</p>
+                          </div>
+                        </div>
+                        <div className="space-y-2 pt-2 border-t border-[var(--border)]">
+                          <p className="text-[12px] text-[var(--fg-muted)]">ID: {user.id.slice(0, 8)}…</p>
+                        </div>
+                      </div>
+                      <button className="h-9 px-4 rounded-md text-[13px] text-red-500 border border-red-200 dark:border-red-500/30 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors">
+                        Supprimer mon compte
+                      </button>
+                    </div>
+                  )}
+
+                  {tab === 'security' && (
+                    <div className="space-y-5">
+                      <div>
+                        <h2 className="text-[18px] font-semibold mb-1">Sécurité</h2>
+                        <p className="text-[13px] text-[var(--fg-muted)]">Protégez votre compte.</p>
+                      </div>
+                      <div className="space-y-3">
+                        <div className="rounded-lg border border-[var(--border)] p-4">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-[13px] font-medium">Mot de passe</p>
+                              <p className="text-[11px] text-[var(--fg-muted)]">Dernière modification : inconnue</p>
+                            </div>
+                            <button className="h-8 px-3 rounded-md text-[12px] font-medium border border-[var(--border)] hover:bg-[var(--bg-soft)] transition-colors">Modifier</button>
+                          </div>
+                        </div>
+                        <div className="rounded-lg border border-[var(--border)] p-4">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-[13px] font-medium">Authentification 2FA</p>
+                              <p className="text-[11px] text-[var(--fg-muted)]">Non activée</p>
+                            </div>
+                            <button className="h-8 px-3 rounded-md text-[12px] font-medium border border-[var(--border)] hover:bg-[var(--bg-soft)] transition-colors">Activer</button>
+                          </div>
+                        </div>
+                        <div className="rounded-lg border border-[var(--border)] p-4">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-[13px] font-medium">Sessions actives</p>
+                              <p className="text-[11px] text-[var(--fg-muted)]">1 session (cet appareil)</p>
+                            </div>
+                            <button className="h-8 px-3 rounded-md text-[12px] font-medium text-red-500 border border-red-200 dark:border-red-500/30 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors">Tout déconnecter</button>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   )}
