@@ -93,12 +93,14 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
   const [renaming, setRenaming] = useState<string | null>(null)
   const [renameValue, setRenameValue] = useState('')
 
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
+
   const handleDelete = async (id: string) => {
-    if (!confirm(t.chat.deleteConfirm)) return
     await fetch(`/api/conversations/${id}`, { method: 'DELETE' })
     removeConversation(id)
     if (conversationId === id) router.push('/chat')
     setMenuOpen(null)
+    setDeleteTarget(null)
   }
 
   const handleRename = async (id: string) => {
@@ -195,7 +197,7 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
                       </button>
                       <div className="h-px bg-[var(--border)] my-1 mx-2" />
                       <button
-                        onClick={() => handleDelete(c.id)}
+                        onClick={() => { setDeleteTarget(c.id); setMenuOpen(null) }}
                         className="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
                       >
                         <Trash2 size={11} /> {t.chat.delete}
@@ -367,6 +369,31 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
           >
             {isMobile ? <Menu size={15} /> : <PanelLeft size={15} />}
           </motion.button>
+        )}
+      </AnimatePresence>
+
+      {/* Delete confirm dialog */}
+      <AnimatePresence>
+        {deleteTarget && (
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setDeleteTarget(null)} className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60]" />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.15 }}
+              className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+            >
+              <div className="bg-[var(--bg-elevated)] rounded-xl p-5 w-full max-w-xs border border-[var(--border)] shadow-[var(--shadow-xl)]">
+                <p className="text-[15px] font-semibold mb-2">{t.chat.deleteConfirm}</p>
+                <p className="text-[13px] text-[var(--fg-muted)] mb-5">Cette action est irréversible.</p>
+                <div className="flex gap-2">
+                  <button onClick={() => setDeleteTarget(null)} className="flex-1 h-9 rounded-lg border border-[var(--border)] text-[13px] font-medium hover:bg-[var(--bg-soft)] transition-colors">Annuler</button>
+                  <button onClick={() => handleDelete(deleteTarget)} className="flex-1 h-9 rounded-lg bg-red-500 text-white text-[13px] font-medium hover:bg-red-600 transition-colors">{t.chat.delete}</button>
+                </div>
+              </div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
     </>
