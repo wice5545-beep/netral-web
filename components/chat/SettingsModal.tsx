@@ -134,7 +134,6 @@ export function SettingsModal({ open, onClose, user }: SettingsModalProps) {
                     </button>
                   )
                 })}
-                })}
               </div>
 
               {/* Content */}
