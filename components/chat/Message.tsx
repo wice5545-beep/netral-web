@@ -90,7 +90,7 @@ export function Message({ role, content, isStreaming, isLast, onRegenerate, onEd
             </div>
           ) : (
             <div className="relative">
-              <div className="rounded-2xl rounded-br-md px-4 py-2.5 bg-[var(--bg-soft)] border border-[var(--border)] text-[14.5px] leading-[1.55] text-[var(--fg)] whitespace-pre-wrap break-words">
+              <div className="rounded-2xl rounded-br-md px-4 py-2.5 bg-[var(--accent)] text-[var(--bg)] text-[14.5px] leading-[1.55] whitespace-pre-wrap break-words shadow-[var(--shadow-xs)]">
                 {content}
               </div>
               {onEdit && (

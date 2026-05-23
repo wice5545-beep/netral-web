@@ -80,7 +80,7 @@
   --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.55), 0 4px 12px rgba(0, 0, 0, 0.4);
   --shadow-xl: 0 32px 80px rgba(0, 0, 0, 0.65), 0 12px 24px rgba(0, 0, 0, 0.5);
 
-  --sidebar-bg: #131315;
+  --sidebar-bg: #111113;
 }
 
 @theme inline {
