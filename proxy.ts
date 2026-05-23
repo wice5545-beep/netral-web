@@ -7,6 +7,16 @@ const publicRoutes = ['/login', '/register', '/']
 
 export default async function proxy(req: NextRequest) {
   const path = req.nextUrl.pathname
+
+  // CSRF protection: reject non-GET API requests from different origins
+  if (path.startsWith('/api') && req.method !== 'GET') {
+    const origin = req.headers.get('origin')
+    const host = req.headers.get('host')
+    if (origin && host && !origin.includes(host.split(':')[0])) {
+      return new NextResponse('Forbidden', { status: 403 })
+    }
+  }
+
   const isProtected = protectedPrefixes.some((r) => path === r || path.startsWith(`${r}/`))
   const isPublic = publicRoutes.includes(path)
 

@@ -3,7 +3,9 @@
 import Link from 'next/link'
 import { useActionState } from 'react'
 import { motion } from 'framer-motion'
-import { Mail, Lock, ArrowRight } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
+import { LockIcon } from '@/components/ui/lock'
+import { MailCheckIcon } from '@/components/ui/mail-check'
 import { login } from '@/actions/auth'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -42,7 +44,7 @@ export default function LoginPage() {
             name="email"
             type="email"
             placeholder="vous@exemple.com"
-            icon={<Mail size={14} strokeWidth={1.8} />}
+            icon={<MailCheckIcon size={14} />}
             error={state?.errors?.email?.[0]}
             autoComplete="email"
             required
@@ -52,7 +54,7 @@ export default function LoginPage() {
             name="password"
             type="password"
             placeholder="Mot de passe"
-            icon={<Lock size={14} strokeWidth={1.8} />}
+            icon={<LockIcon size={14} />}
             error={state?.errors?.password?.[0]}
             autoComplete="current-password"
             required

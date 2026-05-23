@@ -3,7 +3,10 @@
 import Link from 'next/link'
 import { useActionState } from 'react'
 import { motion } from 'framer-motion'
-import { Mail, Lock, User, ArrowRight } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
+import { LockIcon } from '@/components/ui/lock'
+import { MailCheckIcon } from '@/components/ui/mail-check'
+import { UserIcon } from '@/components/ui/user'
 import { signup } from '@/actions/auth'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -42,7 +45,7 @@ export default function RegisterPage() {
             name="name"
             type="text"
             placeholder="Prénom"
-            icon={<User size={14} strokeWidth={1.8} />}
+            icon={<UserIcon size={14} />}
             error={state?.errors?.name?.[0]}
             autoComplete="name"
             required
@@ -52,7 +55,7 @@ export default function RegisterPage() {
             name="email"
             type="email"
             placeholder="vous@exemple.com"
-            icon={<Mail size={14} strokeWidth={1.8} />}
+            icon={<MailCheckIcon size={14} />}
             error={state?.errors?.email?.[0]}
             autoComplete="email"
             required
@@ -62,7 +65,7 @@ export default function RegisterPage() {
             name="password"
             type="password"
             placeholder="Mot de passe (min. 8 caractères)"
-            icon={<Lock size={14} strokeWidth={1.8} />}
+            icon={<LockIcon size={14} />}
             error={state?.errors?.password?.[0]}
             autoComplete="new-password"
             minLength={8}

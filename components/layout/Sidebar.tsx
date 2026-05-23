@@ -5,9 +5,12 @@ import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  Plus, Search, Settings, LogOut, MessageSquare, Trash2,
-  X, Menu, PanelLeftClose, PanelLeft
+  Plus, Trash2, X, Menu, PanelLeftClose, PanelLeft
 } from 'lucide-react'
+import { SearchIcon } from '@/components/ui/search'
+import { SettingsIcon } from '@/components/ui/settings'
+import { LogoutIcon } from '@/components/ui/logout'
+import { MessageSquareIcon } from '@/components/ui/message-square'
 import { useChatStore } from '@/lib/store/chat'
 import { NetralLogo } from '@/components/ui/NetralLogo'
 import { logout } from '@/actions/auth'
@@ -185,7 +188,7 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
         {/* Search */}
         <div className="px-3 pb-3">
           <div className="relative">
-            <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--fg-muted)] pointer-events-none" />
+            <SearchIcon size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--fg-muted)] pointer-events-none" />
             <input
               type="text"
               placeholder="Rechercher"
@@ -206,7 +209,7 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
             </div>
           ) : conversations.length === 0 ? (
             <div className="px-3 py-12 text-center">
-              <MessageSquare size={16} className="text-[var(--fg-subtle)] mx-auto mb-2" strokeWidth={1.5} />
+              <MessageSquareIcon size={16} className="text-[var(--fg-subtle)] mx-auto mb-2" />
               <p className="text-[12px] text-[var(--fg-muted)]">Aucune conversation</p>
             </div>
           ) : filtered.length === 0 ? (
@@ -252,7 +255,7 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
                   onClick={() => { setProfileOpen(false); onOpenSettings() }}
                   className="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] text-[var(--fg-soft)] hover:bg-[var(--bg-soft)] transition-colors"
                 >
-                  <Settings size={13} strokeWidth={1.8} className="opacity-60" />
+                  <SettingsIcon size={13} className="opacity-60" />
                   Paramètres
                   <span className="ml-auto kbd">⌘,</span>
                 </button>
@@ -261,7 +264,7 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
                   onClick={() => logout()}
                   className="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
                 >
-                  <LogOut size={13} strokeWidth={1.8} className="opacity-60" />
+                  <LogoutIcon size={13} className="opacity-60" />
                   Déconnexion
                 </button>
               </motion.div>

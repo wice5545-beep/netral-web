@@ -2,8 +2,15 @@
 
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, User, Brain, Palette, Shield, Keyboard, CreditCard, Trash2, Sun, Moon, Monitor, Download } from 'lucide-react'
+import { X, Trash2, Sun, Moon, Monitor, Download, Shield } from 'lucide-react'
+import { UserIcon } from '@/components/ui/user'
+import { BrainIcon } from '@/components/ui/brain'
+import { ShieldCheckIcon } from '@/components/ui/shield-check'
+import { SettingsIcon } from '@/components/ui/settings'
+import { LanguagesIcon } from '@/components/ui/languages'
 import { useTheme } from '@/components/ui/ThemeProvider'
+import { useI18n } from '@/lib/i18n'
+import { locales, localeNames, type Locale } from '@/lib/i18n/translations'
 import { cn } from '@/lib/utils'
 
 interface SettingsModalProps {
@@ -17,8 +24,8 @@ type Tab = 'general' | 'appearance' | 'memory' | 'privacy' | 'shortcuts' | 'subs
 export function SettingsModal({ open, onClose, user }: SettingsModalProps) {
   const [tab, setTab] = useState<Tab>('general')
   const { theme, setTheme } = useTheme()
+  const { locale, setLocale } = useI18n()
   const [responseTone, setResponseTone] = useState('balanced')
-  const [language, setLanguage] = useState('fr')
   const [memory, setMemory] = useState({ fullName: '', profession: '', interests: '', customInstructions: '' })
   const [savedMsg, setSavedMsg] = useState('')
   const [saving, setSaving] = useState(false)
@@ -75,13 +82,13 @@ export function SettingsModal({ open, onClose, user }: SettingsModalProps) {
     setTimeout(() => setSavedMsg(''), 2000)
   }
 
-  const tabs: { id: Tab; label: string; icon: typeof User }[] = [
-    { id: 'general', label: 'Général', icon: User },
-    { id: 'appearance', label: 'Apparence', icon: Palette },
-    { id: 'memory', label: 'Mémoire', icon: Brain },
-    { id: 'privacy', label: 'Confidentialité', icon: Shield },
-    { id: 'shortcuts', label: 'Raccourcis', icon: Keyboard },
-    { id: 'subscription', label: 'Abonnement', icon: CreditCard },
+  const tabs: { id: Tab; label: string; icon: typeof UserIcon }[] = [
+    { id: 'general', label: 'Général', icon: SettingsIcon },
+    { id: 'appearance', label: 'Apparence', icon: LanguagesIcon },
+    { id: 'memory', label: 'Mémoire', icon: BrainIcon },
+    { id: 'privacy', label: 'Confidentialité', icon: ShieldCheckIcon },
+    { id: 'shortcuts', label: 'Raccourcis', icon: SettingsIcon },
+    { id: 'subscription', label: 'Abonnement', icon: UserIcon },
   ]
 
   return (
@@ -120,7 +127,7 @@ export function SettingsModal({ open, onClose, user }: SettingsModalProps) {
                           : 'text-[var(--fg-muted)] hover:bg-[var(--bg-elevated)] hover:text-[var(--fg)]'
                       )}
                     >
-                      <Icon size={13} strokeWidth={1.8} className="opacity-70" />
+                      <Icon size={13} className="opacity-70" />
                       {t.label}
                     </button>
                   )
@@ -147,12 +154,13 @@ export function SettingsModal({ open, onClose, user }: SettingsModalProps) {
 
                       <Field label="Langue">
                         <select
-                          value={language}
-                          onChange={(e) => setLanguage(e.target.value)}
+                          value={locale}
+                          onChange={(e) => setLocale(e.target.value as Locale)}
                           className="w-full h-9 px-3 rounded-md border border-[var(--border)] bg-[var(--bg-elevated)] text-[13px] focus:outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)]"
                         >
-                          <option value="fr">Français</option>
-                          <option value="en">English</option>
+                          {locales.map((l) => (
+                            <option key={l} value={l}>{localeNames[l]}</option>
+                          ))}
                         </select>
                       </Field>
 
