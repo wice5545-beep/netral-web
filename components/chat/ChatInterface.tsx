@@ -45,9 +45,9 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
     if (isNearBottom) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
   }, [messages])
 
-  const handleSubmit = async (overrideText?: string) => {
+  const handleSubmit = async (overrideText?: string, attachments?: { type: 'image' | 'file'; data: string; name: string }[]) => {
     const text = (overrideText ?? input).trim()
-    if (!text || isStreaming) return
+    if ((!text && !attachments?.length) || isStreaming) return
 
     const userMessage: ChatMessage = { id: crypto.randomUUID(), role: 'user', content: text, createdAt: new Date() }
     const assistantMessage: ChatMessage = { id: crypto.randomUUID(), role: 'assistant', content: '', createdAt: new Date(), isStreaming: true }
@@ -62,6 +62,21 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
 
     try {
       const history = [...messages, userMessage].map((m) => ({ role: m.role, content: m.content }))
+
+      // If attachments, modify the last user message to include images
+      if (attachments?.length) {
+        const lastMsg = history[history.length - 1]
+        const content: unknown[] = [{ type: 'text', text: lastMsg.content || 'Analyse cette image.' }]
+        for (const a of attachments) {
+          if (a.type === 'image') {
+            content.push({ type: 'image_url', image_url: { url: a.data } })
+          } else {
+            content.push({ type: 'text', text: `[Fichier: ${a.name}]\n${atob(a.data.split(',')[1] || ''').slice(0, 4000)}` })
+          }
+        }
+        history[history.length - 1] = { role: 'user', content: content as unknown as string }
+      }
+
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -250,12 +265,13 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
             <ChatComposer
               value={input}
               onChange={setInput}
-              onSubmit={() => handleSubmit()}
+              onSubmit={(attachments) => handleSubmit(undefined, attachments)}
               onStop={handleStop}
               isStreaming={isStreaming}
               autoFocus={isEmpty}
               webSearchEnabled={webSearchEnabled}
               onToggleWebSearch={() => setWebSearchEnabled(!webSearchEnabled)}
+              modelId={currentModel}
             />
           </div>
         </div>

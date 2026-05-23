@@ -13,7 +13,7 @@ export const maxDuration = 90
 const ChatRequestSchema = z.object({
   messages: z.array(z.object({
     role: z.enum(['user', 'assistant', 'system']),
-    content: z.string().max(32000),
+    content: z.any(),
   })).min(1).max(200),
   modelId: z.string().max(50).optional(),
   conversationId: z.string().max(200).optional().nullable(),
@@ -64,18 +64,21 @@ export async function POST(req: NextRequest) {
       const userMessage = messages[messages.length - 1]
       let convId: string | undefined = rawConvId ?? undefined
       let assistantMessageId: string | null = null
+      const textContent = userMessage?.role === 'user'
+        ? (typeof userMessage.content === 'string' ? userMessage.content : (userMessage.content as any[])?.find((c: any) => c.type === 'text')?.text ?? '')
+        : ''
 
       if (userMessage?.role === 'user') {
         if (!convId) {
           const { rows } = await db.query(
             `INSERT INTO "Conversation" ("id", "userId", "title", "model", "createdAt", "updatedAt") VALUES (gen_random_uuid(), $1, $2, $3, now(), now()) RETURNING id`,
-            [session.userId, userMessage.content.slice(0, 60), model.id]
+            [session.userId, textContent.slice(0, 60), model.id]
           )
           convId = rows[0].id
         }
         await db.query(
           `INSERT INTO "Message" ("id", "conversationId", "role", "content", "model", "createdAt") VALUES (gen_random_uuid(), $1, 'user', $2, $3, now())`,
-          [convId, userMessage.content, model.id]
+          [convId, textContent, model.id]
         )
         const { rows: assRows } = await db.query(
           `INSERT INTO "Message" ("id", "conversationId", "role", "content", "model", "createdAt") VALUES (gen_random_uuid(), $1, 'assistant', '', $2, now()) RETURNING id`,
@@ -88,12 +91,12 @@ export async function POST(req: NextRequest) {
       send({ type: 'meta', conversationId: convId, model: model.id })
 
       // Web search
-      const shouldSearch = useWebSearch || (userMessage?.content ? needsWebSearch(userMessage.content) : false)
+      const shouldSearch = useWebSearch || (textContent ? needsWebSearch(textContent) : false)
       let searchResults: SearchResult[] = []
-      if (shouldSearch && userMessage?.content) {
+      if (shouldSearch && textContent) {
         try {
           send({ type: 'status', status: 'searching' })
-          const searchRes = await webSearch(userMessage.content, 4)
+          const searchRes = await webSearch(textContent, 4)
           searchResults = searchRes.results
           if (searchResults.length > 0) {
             send({ type: 'status', status: 'reading' })
@@ -169,7 +172,7 @@ export async function POST(req: NextRequest) {
               )
               if (parseInt(msgCount[0]?.cnt) <= 1) {
                 // First exchange - generate title from user message (short) or AI response
-                const userText = userMessage?.content ?? ''
+                const userText = textContent ?? ''
                 const title = userText.length > 3 && userText.length <= 50
                   ? userText
                   : userText.slice(0, 45).trim() || accumulated.replace(/[#*_\n`]/g, ' ').trim().slice(0, 45)
