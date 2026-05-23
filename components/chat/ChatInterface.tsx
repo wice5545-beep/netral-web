@@ -92,7 +92,11 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
     const text = (overrideText ?? input).trim()
     if ((!text && !attachments?.length) || isStreaming) return
 
-    const userMessage: ChatMessage = { id: crypto.randomUUID(), role: 'user', content: text, createdAt: new Date() }
+    // Prepend reply context if present
+    const fullText = replyContext ? `> ${replyContext}\n\n${text}` : text
+    setReplyContext(null)
+
+    const userMessage: ChatMessage = { id: crypto.randomUUID(), role: 'user', content: fullText, createdAt: new Date() }
     const assistantMessage: ChatMessage = { id: crypto.randomUUID(), role: 'assistant', content: '', createdAt: new Date(), isStreaming: true }
 
     appendMessage(userMessage)
@@ -206,10 +210,11 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
     handleSubmit(lastUser.content)
   }
 
+  const [replyContext, setReplyContext] = useState<string | null>(null)
+
   const handleAskAboutSelection = () => {
     if (!selectionPopup) return
-    const quoted = `> ${selectionPopup.text.slice(0, 200)}\n\n`
-    setInput(quoted)
+    setReplyContext(selectionPopup.text.slice(0, 300))
     setSelectionPopup(null)
     window.getSelection()?.removeAllRanges()
     textareaFocus()
@@ -334,6 +339,8 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
               webSearchEnabled={webSearchEnabled}
               onToggleWebSearch={() => setWebSearchEnabled(!webSearchEnabled)}
               modelId={currentModel}
+              replyContext={replyContext}
+              onClearReply={() => setReplyContext(null)}
             />
           </div>
         </div>

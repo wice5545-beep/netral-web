@@ -19,11 +19,13 @@ interface ChatComposerProps {
   webSearchEnabled?: boolean
   onToggleWebSearch?: () => void
   modelId?: string
+  replyContext?: string | null
+  onClearReply?: () => void
 }
 
 export function ChatComposer({
   value, onChange, onSubmit, onStop, isStreaming, placeholder = 'Posez une question…',
-  autoFocus, webSearchEnabled = false, onToggleWebSearch, modelId,
+  autoFocus, webSearchEnabled = false, onToggleWebSearch, modelId, replyContext, onClearReply,
 }: ChatComposerProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -94,6 +96,16 @@ export function ChatComposer({
       )}
 
       <div className="relative rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border)] shadow-[var(--shadow-sm)] hover:border-[var(--border-strong)] transition-colors">
+        {replyContext && (
+          <div className="flex items-center gap-2 px-4 pt-3 pb-0">
+            <div className="flex-1 px-3 py-1.5 rounded-lg bg-[var(--bg-soft)] border-l-2 border-[var(--accent)] text-[12px] text-[var(--fg-muted)] line-clamp-2">
+              {replyContext}
+            </div>
+            <button onClick={onClearReply} className="p-1 rounded hover:bg-[var(--bg-soft)] text-[var(--fg-muted)]">
+              <X size={12} />
+            </button>
+          </div>
+        )}
         <textarea
           ref={textareaRef}
           value={value}
