@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { SettingsModal } from '@/components/chat/SettingsModal'
-import { ModelSelector } from '@/components/chat/ModelSelector'
 import { useChatStore } from '@/lib/store/chat'
 import { useEffect } from 'react'
 
@@ -14,7 +13,7 @@ interface AppShellProps {
 
 export function AppShell({ user, children }: AppShellProps) {
   const [settingsOpen, setSettingsOpen] = useState(false)
-  const { sidebarOpen, setSidebarOpen } = useChatStore()
+  const { setSidebarOpen } = useChatStore()
 
   useEffect(() => {
     const onResize = () => {
@@ -33,11 +32,6 @@ export function AppShell({ user, children }: AppShellProps) {
         onOpenSettings={() => setSettingsOpen(true)}
       />
       <div className="flex-1 flex flex-col min-w-0 relative">
-        <header className="h-12 flex items-center justify-between px-3 md:px-4 border-b border-orange-100/60 dark:border-[var(--border)] shrink-0 bg-white/90 dark:bg-[var(--background-elevated)]/90 backdrop-blur-md">
-          <div className="flex items-center gap-2 ml-10 md:ml-0">
-            <ModelSelector />
-          </div>
-        </header>
         <main className="flex-1 overflow-hidden">{children}</main>
       </div>
 
