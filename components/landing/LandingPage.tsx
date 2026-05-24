@@ -59,11 +59,38 @@ export function LandingPage() {
             {t.hero.badge}
           </motion.div>
 
-          {/* Title with gradient */}
-          <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.7, ease: [0.16, 1, 0.3, 1] }} className="text-[clamp(2.8rem,9vw,5.2rem)] font-bold tracking-[-0.045em] leading-[1.0] mb-6">
-            {t.hero.title1}<br />
-            <span className="gradient-text">{t.hero.title2}</span>
-          </motion.h1>
+          {/* Title with gradient — animated letter by letter */}
+          <h1 className="text-[clamp(2.8rem,9vw,5.2rem)] font-bold tracking-[-0.045em] leading-[1.0] mb-6">
+            <span className="inline-block">
+              {t.hero.title1.split('').map((char: string, i: number) => (
+                <motion.span
+                  key={`t1-${i}`}
+                  initial={{ opacity: 0, y: 30, filter: 'blur(8px)' }}
+                  animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                  transition={{ delay: 0.1 + i * 0.025, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                  className="inline-block"
+                  style={{ whiteSpace: char === ' ' ? 'pre' : 'normal' }}
+                >
+                  {char}
+                </motion.span>
+              ))}
+            </span>
+            <br />
+            <span className="gradient-text inline-block">
+              {t.hero.title2.split('').map((char: string, i: number) => (
+                <motion.span
+                  key={`t2-${i}`}
+                  initial={{ opacity: 0, y: 30, filter: 'blur(8px)' }}
+                  animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                  transition={{ delay: 0.1 + (t.hero.title1.length + i) * 0.025, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                  className="inline-block"
+                  style={{ whiteSpace: char === ' ' ? 'pre' : 'normal' }}
+                >
+                  {char}
+                </motion.span>
+              ))}
+            </span>
+          </h1>
 
           {/* Subtitle */}
           <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.6 }} className="text-[18px] md:text-[21px] text-[var(--fg-muted)] max-w-lg mx-auto mb-11 leading-[1.6]">
