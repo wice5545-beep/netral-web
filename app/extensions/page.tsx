@@ -62,9 +62,9 @@ export default function ExtensionsPage() {
                   <Download size={15} />
                   Installer dans VS Code
                 </a>
-                <a href="/netral-0.1.0.vsix" download className="inline-flex items-center gap-2 h-10 px-5 rounded-xl border border-[var(--border)] text-[14px] font-medium hover:bg-[var(--bg-soft)] transition-all">
+                <a href="/netral-0.8.0.vsix" download className="inline-flex items-center gap-2 h-10 px-5 rounded-xl border border-[var(--border)] text-[14px] font-medium hover:bg-[var(--bg-soft)] transition-all">
                   <Download size={15} />
-                  Télécharger .vsix
+                  Télécharger .vsix (v0.8.0)
                 </a>
               </div>
             </div>

@@ -468,8 +468,8 @@ export function SettingsModal({ open, onClose, user }: SettingsModalProps) {
                           </button>
                         )}
                       </div>
-                      <a href="/netral-0.1.0.vsix" download className="flex items-center gap-2 h-9 px-4 rounded-md border border-[var(--border)] text-[13px] font-medium hover:bg-[var(--bg-soft)] transition-colors w-fit">
-                        Télécharger l'extension .vsix
+                      <a href="/netral-0.8.0.vsix" download className="flex items-center gap-2 h-9 px-4 rounded-md border border-[var(--border)] text-[13px] font-medium hover:bg-[var(--bg-soft)] transition-colors w-fit">
+                        Télécharger l'extension .vsix (v0.8.0)
                       </a>
                     </div>
                   )}
