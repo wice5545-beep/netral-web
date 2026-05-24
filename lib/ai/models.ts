@@ -18,7 +18,7 @@ export const MODELS: Record<ModelId, ModelConfig> = {
     displayName: 'NTRL 1.3',
     description: 'Raisonnement approfondi, réponses nuancées.',
     provider: 'mistral',
-    upstreamModel: 'mistral-small-latest',
+    upstreamModel: 'mistral-medium-latest',
     apiUrl: 'https://api.mistral.ai/v1/chat/completions',
     envKey: 'MISTRAL_API_KEY',
     contextLength: 32000,
@@ -53,15 +53,12 @@ export function getModel(id?: string | null): ModelConfig {
   return MODELS[DEFAULT_MODEL]
 }
 
-// Fallback API keys for when primary key hits quota
-const FALLBACK_KEYS: Record<string, string[]> = {
-  MISTRAL_API_KEY: ['yJZbTEuAsMSLswzZXWA4wkf2F2G6W5q3', 'GljEJNV9h2A8WUm8junz2CHr7SUXaMAS'],
-}
-
 export function getApiKey(envKey: string): string {
   return process.env[envKey] ?? ''
 }
 
 export function getFallbackKeys(envKey: string): string[] {
-  return FALLBACK_KEYS[envKey] ?? []
+  const fallbackEnv = process.env[`${envKey}_FALLBACK`]
+  if (!fallbackEnv) return []
+  return fallbackEnv.split(',').map(k => k.trim()).filter(Boolean)
 }

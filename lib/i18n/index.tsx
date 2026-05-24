@@ -3,7 +3,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { translations, locales, type Locale } from './translations'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type I18nContextType = { t: any; locale: Locale; setLocale: (l: Locale) => void }
 
 const I18nContext = createContext<I18nContextType>({ t: translations.fr, locale: 'fr', setLocale: () => {} })
@@ -28,8 +27,11 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     document.documentElement.dir = l === 'ar' ? 'rtl' : 'ltr'
   }
 
+  // Fallback to EN for new languages that don't have full translations yet
+  const t = translations[locale] || translations.en
+
   return (
-    <I18nContext.Provider value={{ t: translations[locale], locale, setLocale }}>
+    <I18nContext.Provider value={{ t, locale, setLocale }}>
       {children}
     </I18nContext.Provider>
   )

@@ -10,17 +10,17 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = 'primary', size = 'md', loading, children, disabled, ...props }, ref) => {
     const base =
-      'relative inline-flex items-center justify-center gap-2 font-medium rounded-[8px] transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)] active:scale-[0.98] select-none whitespace-nowrap'
+      'relative inline-flex items-center justify-center gap-2 font-medium rounded-xl transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)] active:scale-[0.97] select-none whitespace-nowrap'
 
     const variants: Record<string, string> = {
       primary:
-        'bg-[var(--accent)] text-[var(--bg)] hover:bg-[var(--accent-hover)] shadow-[var(--shadow-xs)]',
+        'bg-[var(--accent)] text-[var(--bg)] hover:bg-[var(--accent-hover)] shadow-sm hover:shadow-md',
       secondary:
-        'bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--fg)] hover:bg-[var(--bg-soft)] hover:border-[var(--border-strong)]',
+        'bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--fg)] hover:bg-[var(--bg-soft)] hover:border-[var(--border-strong)] hover:shadow-sm',
       ghost:
         'text-[var(--fg-muted)] hover:bg-[var(--bg-soft)] hover:text-[var(--fg)]',
       danger:
-        'bg-red-600 hover:bg-red-700 text-white',
+        'bg-red-600 hover:bg-red-700 text-white shadow-sm',
     }
 
     const sizes = {
@@ -36,13 +36,13 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={disabled || loading}
         {...props}
       >
-        {loading ? (
-          <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+        {loading && (
+          <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
+            <circle className="opacity-20" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+            <path className="opacity-80" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
           </svg>
-        ) : null}
-        {children}
+        )}
+        <span className={loading ? 'opacity-70' : ''}>{children}</span>
       </button>
     )
   }

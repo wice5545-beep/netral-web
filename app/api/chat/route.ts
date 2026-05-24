@@ -6,6 +6,7 @@ import { getModel, getApiKey, getFallbackKeys } from '@/lib/ai/models'
 import { buildSystemPrompt } from '@/lib/ai/prompt'
 import { webSearch, readPage, needsWebSearch, type SearchResult } from '@/lib/ai/websearch'
 import { rateLimit } from '@/lib/rate-limit'
+import { verifyApiToken } from '@/lib/api-token'
 
 export const runtime = 'nodejs'
 export const maxDuration = 90
@@ -38,52 +39,92 @@ function buildSearchContext(results: SearchResult[], pagesContent: { url: string
   return ctx
 }
 
-export async function POST(req: NextRequest) {
-  let userId: string | undefined
+type AuthResult = { userId: string; source: 'web' | 'api' }
 
-  // Try session auth first, then Bearer token (for VS Code extension)
+async function authenticateRequest(req: NextRequest): Promise<AuthResult | null> {
+  // Try session auth first (web app)
   const session = await getSession()
-  if (session?.userId) {
-    userId = session.userId
-  } else {
-    const authHeader = req.headers.get('authorization')
-    const token = authHeader?.replace('Bearer ', '')
-    if (token?.startsWith('ntrl_')) {
-      try { userId = Buffer.from(token.replace('ntrl_', ''), 'base64url').toString() } catch {}
+  if (session?.userId) return { userId: session.userId, source: 'web' }
+
+  // Try Bearer token (VS Code extension)
+  const authHeader = req.headers.get('authorization')
+  const token = authHeader?.replace('Bearer ', '')
+  if (token) {
+    const payload = await verifyApiToken(token)
+    if (payload) return { userId: payload.userId, source: 'api' }
+  }
+
+  return null
+}
+
+export async function POST(req: NextRequest) {
+  const auth = await authenticateRequest(req)
+  if (!auth) return new Response('Unauthorized', { status: 401 })
+
+  const { userId, source } = auth
+  const isVSCode = source === 'api'
+
+  // Netral Code is paid-only
+  if (isVSCode) {
+    const { rows: planCheck } = await db.query(`SELECT plan, "planExpiresAt" FROM "User" WHERE id = $1`, [userId])
+    const userPlan = planCheck[0]?.plan || 'free'
+    const expired = planCheck[0]?.planExpiresAt && new Date(planCheck[0].planExpiresAt) < new Date()
+    if (userPlan === 'free' || expired) {
+      return new Response('Netral Code nécessite un abonnement payant (Plus, Pro ou Pro+). Rendez-vous sur netral.app/tarifs', { status: 403 })
     }
   }
-  if (!userId) return new Response('Unauthorized', { status: 401 })
 
-  // IP-based anti-abuse for free users (even with VPN, limits per IP)
-  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || 'unknown'
-  const ipRl = rateLimit(`ip:${ip}`, 5, 60_000) // max 5 msgs/min per IP
-  if (!ipRl.allowed) {
-    return new Response('Trop de requêtes depuis cette adresse.', { status: 429 })
-  }
+  // Rate limit per IP (strict)
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
+  const ipRl = rateLimit(`ip:${ip}`, 3, 60_000)
+  if (!ipRl.allowed) return new Response('Trop de requêtes depuis cette adresse.', { status: 429 })
 
   // Plan-based message limit
   try {
     const { rows: userRows } = await db.query(
-      `SELECT plan, "messagesUsed", "messagesResetAt" FROM "User" WHERE id = $1`, [userId]
+      `SELECT plan, "messagesUsed", "messagesResetAt", "planExpiresAt" FROM "User" WHERE id = $1`, [userId]
     )
     const userData = userRows[0]
     if (userData) {
       const now = new Date()
       const resetAt = new Date(userData.messagesResetAt)
       if (now > resetAt) {
-        const nextReset = new Date(now.getFullYear(), now.getMonth() + 1, 1)
+        // Free: reset monthly, Paid: reset every 2 days
+        const isFree = (userData.plan || 'free') === 'free'
+        const nextReset = isFree
+          ? new Date(now.getFullYear(), now.getMonth() + 1, 1)
+          : new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000)
         await db.query(`UPDATE "User" SET "messagesUsed" = 0, "messagesResetAt" = $1 WHERE id = $2`, [nextReset, userId])
         userData.messagesUsed = 0
       }
-      const { getPlanLimit } = await import('@/lib/plans')
-      const limit = getPlanLimit(userData.plan || 'free')
-      if (userData.messagesUsed >= limit) {
-        return new Response('Limite de messages atteinte. Passez à un plan supérieur.', { status: 429 })
+
+      // Check plan expiration
+      let currentPlan = userData.plan || 'free'
+      if (userData.planExpiresAt && new Date(userData.planExpiresAt) < now && currentPlan !== 'free') {
+        currentPlan = 'free'
+        await db.query(`UPDATE "User" SET plan = 'free', "planExpiresAt" = NULL WHERE id = $1`, [userId])
       }
+
+      const { getPlanLimit, getDailyLimit } = await import('@/lib/plans')
+      const limit = getPlanLimit(currentPlan)
+      if (userData.messagesUsed >= limit) {
+        const resetDate = new Date(userData.messagesResetAt)
+        const hours = Math.ceil((resetDate.getTime() - Date.now()) / (1000 * 60 * 60))
+        return new Response(`Limite de messages atteinte. Reset dans ${hours}h. Passez à un plan supérieur.`, { status: 429 })
+      }
+
+      // Daily limit (anti-abuse for free users)
+      const dailyLimit = getDailyLimit(currentPlan)
+      const dailyRl = rateLimit(`daily:${userId}`, dailyLimit, 24 * 60 * 60 * 1000)
+      if (!dailyRl.allowed) {
+        return new Response('Limite journalière atteinte. Revenez demain ou passez à un plan supérieur.', { status: 429 })
+      }
+
       await db.query(`UPDATE "User" SET "messagesUsed" = "messagesUsed" + 1 WHERE id = $1`, [userId])
     }
   } catch {}
 
+  // Per-user rate limit
   const rl = rateLimit(`chat:${userId}`, 30, 60_000)
   if (!rl.allowed) {
     return new Response('Too many requests.', { status: 429, headers: { 'Retry-After': String(Math.ceil((rl.resetAt - Date.now()) / 1000)) } })
@@ -108,7 +149,7 @@ export async function POST(req: NextRequest) {
   const primaryKey = getApiKey(model.envKey)
   const fallbackKeys = getFallbackKeys(model.envKey)
   const allKeys = [primaryKey, ...fallbackKeys].filter(Boolean)
-  if (!allKeys.length) return new Response(`Missing ${model.envKey}`, { status: 500 })
+  if (!allKeys.length) return new Response(`Missing API key configuration`, { status: 500 })
 
   let systemPrompt = buildSystemPrompt(parsed.data.messages as any)
 
@@ -122,7 +163,8 @@ export async function POST(req: NextRequest) {
         ? (typeof userMessage.content === 'string' ? userMessage.content : (userMessage.content as any[])?.find((c: any) => c.type === 'text')?.text ?? '')
         : ''
 
-      if (userMessage?.role === 'user') {
+      // Only save conversations for web users, NOT VS Code
+      if (!isVSCode && userMessage?.role === 'user') {
         if (!convId) {
           const { rows } = await db.query(
             `INSERT INTO "Conversation" ("id", "userId", "title", "model", "createdAt", "updatedAt") VALUES (gen_random_uuid(), $1, $2, $3, now(), now()) RETURNING id`,
@@ -142,7 +184,7 @@ export async function POST(req: NextRequest) {
         await db.query(`UPDATE "Conversation" SET "updatedAt" = now() WHERE id = $1`, [convId])
       }
 
-      send({ type: 'meta', conversationId: convId, model: model.id })
+      send({ type: 'meta', conversationId: isVSCode ? undefined : convId, model: model.id })
 
       // Web search
       const shouldSearch = useWebSearch || (textContent ? needsWebSearch(textContent) : false)
@@ -163,8 +205,7 @@ export async function POST(req: NextRequest) {
         } catch {}
       }
 
-      // Stream LLM
-      // Merge any client system messages into the server system prompt
+      // Build final messages
       const clientSystemMsgs = messages.filter((m: any) => m.role === 'system').map((m: any) => m.content).join('\n')
       const finalSystemPrompt = clientSystemMsgs ? systemPrompt + '\n\n' + clientSystemMsgs : systemPrompt
       const userAndAssistantMsgs = messages.filter((m: any) => m.role !== 'system')
@@ -187,7 +228,6 @@ export async function POST(req: NextRequest) {
             body: JSON.stringify(payload),
           })
           if (upstream.ok) break
-          // If 429 (rate limit) or 401, try next key
           if (upstream.status === 429 || upstream.status === 401) continue
           break
         }
@@ -233,14 +273,14 @@ export async function POST(req: NextRequest) {
       } catch (err) {
         send({ type: 'error', message: String(err) })
       } finally {
-        if (assistantMessageId && accumulated) {
+        // Only save to DB for web users
+        if (!isVSCode && assistantMessageId && accumulated) {
           try {
             await db.query(`UPDATE "Message" SET content = $1 WHERE id = $2`, [accumulated, assistantMessageId])
-            // AI-generated title
             if (convId) {
               const { rows: convCheck } = await db.query(`SELECT title FROM "Conversation" WHERE id = $1`, [convId])
               const currentTitle = convCheck[0]?.title || ''
-              if (currentTitle === textContent.slice(0, 60) || currentTitle === textContent || currentTitle === 'New chat' || currentTitle === 'Nouvelle conversation') {
+              if (currentTitle === textContent.slice(0, 60) || currentTitle === 'New chat' || currentTitle === 'Nouvelle conversation') {
                 try {
                   const titleRes = await fetch(model.apiUrl, {
                     method: 'POST',
@@ -248,7 +288,7 @@ export async function POST(req: NextRequest) {
                     body: JSON.stringify({
                       model: model.upstreamModel,
                       messages: [
-                        { role: 'system', content: 'Génère un titre court (max 40 caractères) pour cette conversation. Réponds UNIQUEMENT avec le titre, rien d\'autre. Pas de guillemets.' },
+                        { role: 'system', content: 'Génère un titre court (max 40 caractères) pour cette conversation. Réponds UNIQUEMENT avec le titre, rien d\'autre.' },
                         { role: 'user', content: textContent.slice(0, 200) },
                         { role: 'assistant', content: accumulated.slice(0, 300) },
                       ],

@@ -9,7 +9,7 @@ import { useI18n } from '@/lib/i18n'
 import { Message } from './Message'
 import { ChatComposer } from './ChatComposer'
 import { UpgradePopup } from './UpgradePopup'
-import { Globe, FileText, Sparkles } from 'lucide-react'
+import { Globe, FileText, Sparkles, ArrowUp } from 'lucide-react'
 
 interface ChatInterfaceProps {
   initialMessages?: ChatMessage[]
@@ -42,6 +42,7 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
   const [selectionPopup, setSelectionPopup] = useState<{ text: string; x: number; y: number } | null>(null)
   const [userScrolledUp, setUserScrolledUp] = useState(false)
   const [showUpgrade, setShowUpgrade] = useState(false)
+  const [upgradeMsg, setUpgradeMsg] = useState('')
   const scrollRef = useRef<HTMLDivElement>(null)
   const abortRef = useRef<AbortController | null>(null)
   const [didInit, setDidInit] = useState(false)
@@ -55,20 +56,29 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
   }, [initialConversationId])
 
   useEffect(() => {
-    if (!scrollRef.current) return
-    const el = scrollRef.current
-    if (!userScrolledUp) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
+    if (!scrollRef.current || userScrolledUp) return
+    // Use RAF for smooth scroll without blocking
+    requestAnimationFrame(() => {
+      const el = scrollRef.current
+      if (el) el.scrollTop = el.scrollHeight
+    })
   }, [messages, userScrolledUp])
 
-  // Detect user scrolling up
+  // Detect user scrolling up — debounced
   useEffect(() => {
     const el = scrollRef.current
     if (!el) return
+    let ticking = false
     const onScroll = () => {
-      const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 150
-      setUserScrolledUp(!atBottom)
+      if (ticking) return
+      ticking = true
+      requestAnimationFrame(() => {
+        const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 150
+        setUserScrolledUp(!atBottom)
+        ticking = false
+      })
     }
-    el.addEventListener('scroll', onScroll)
+    el.addEventListener('scroll', onScroll, { passive: true })
     return () => el.removeEventListener('scroll', onScroll)
   }, [])
 
@@ -87,6 +97,18 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
     document.addEventListener('touchend', handleSelection)
     return () => { document.removeEventListener('mouseup', handleSelection); document.removeEventListener('touchend', handleSelection) }
   }, [])
+
+  // Keyboard shortcuts: ⌘N new chat, ⌘↑ focus input
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'n') {
+        e.preventDefault()
+        router.push('/chat')
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [router])
 
   const handleSubmit = async (overrideText?: string, attachments?: { type: 'image' | 'file'; data: string; name: string }[]) => {
     const text = (overrideText ?? input).trim()
@@ -135,6 +157,7 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
       if (!response.ok || !response.body) {
         const errText = await response.text().catch(() => '')
         if (errText.includes('Limite') || response.status === 429) {
+          setUpgradeMsg(errText)
           setShowUpgrade(true)
         }
         updateLastMessage(`\n\n${friendlyError(errText)}`)
@@ -145,6 +168,16 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
       const decoder = new TextDecoder()
       let buffer = ''
       let newConversationId: string | null = null
+      let chunkBuffer = ''
+      let flushScheduled = false
+
+      const flushChunks = () => {
+        if (chunkBuffer) {
+          updateLastMessage(chunkBuffer)
+          chunkBuffer = ''
+        }
+        flushScheduled = false
+      }
 
       while (true) {
         const { done, value } = await reader.read()
@@ -167,7 +200,11 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
               setSearchStatus(parsed.status as SearchStatus)
             } else if (parsed.type === 'chunk') {
               setSearchStatus(null)
-              updateLastMessage(parsed.text)
+              chunkBuffer += parsed.text
+              if (!flushScheduled) {
+                flushScheduled = true
+                requestAnimationFrame(flushChunks)
+              }
             } else if (parsed.type === 'error') {
               setSearchStatus(null)
               updateLastMessage(`\n\n${friendlyError(parsed.message)}`)
@@ -180,6 +217,9 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
           } catch {}
         }
       }
+
+      // Flush remaining buffered chunks
+      flushChunks()
 
       if (newConversationId && !initialConversationId) {
         router.replace(`/chat/${newConversationId}`, { scroll: false })
@@ -236,73 +276,97 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
 
   return (
     <div className="flex flex-col h-full relative">
+      {/* Top gradient fade */}
+      <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-b from-[var(--bg)] to-transparent z-[1] pointer-events-none" />
+
       <div ref={scrollRef} className="flex-1 overflow-y-auto">
         {isEmpty ? (
-          <div className="min-h-full flex flex-col items-center justify-center px-6 pb-44 max-w-2xl mx-auto w-full">
+          <div className="min-h-full flex flex-col items-center justify-center px-6 pb-44 max-w-2xl mx-auto w-full relative">
+            {/* Subtle gradient bg */}
+            <div className="absolute inset-0 -z-10 overflow-hidden">
+              <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] gradient-orb rounded-full opacity-[0.06]" />
+            </div>
+
+            <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ type: 'spring', damping: 15, stiffness: 200 }} className="mb-7">
+              <div className="w-14 h-14 rounded-2xl glass-card flex items-center justify-center shadow-colored">
+                <Sparkles size={22} className="text-[var(--fg-muted)]" />
+              </div>
+            </motion.div>
             <motion.h1
-              initial={{ opacity: 0, y: 8 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
-              className="text-[28px] md:text-[32px] font-semibold tracking-[-0.02em] text-center mb-2"
+              transition={{ delay: 0.05, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              className="text-[28px] md:text-[34px] font-bold tracking-[-0.03em] text-center mb-2"
             >
               {firstName ? t.chat.helloName.replace('{name}', firstName) : t.chat.hello}
             </motion.h1>
             <motion.p
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.05, duration: 0.4 }}
+              transition={{ delay: 0.1, duration: 0.4 }}
               className="text-[15px] text-[var(--fg-muted)] text-center mb-10"
             >
               {t.chat.howCanIHelp}
             </motion.p>
 
+            {/* Horizontal chips */}
             <motion.div
-              initial={{ opacity: 0, y: 12 }}
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15, duration: 0.4 }}
-              className="grid grid-cols-1 md:grid-cols-2 gap-2 w-full max-w-xl"
+              transition={{ delay: 0.18, duration: 0.5 }}
+              className="flex flex-wrap justify-center gap-2 w-full max-w-lg"
             >
               {examples.map((text, i) => (
                 <motion.button
                   key={text}
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 + i * 0.04, duration: 0.3 }}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.22 + i * 0.05 }}
                   onClick={() => handleSubmit(text)}
-                  className="group p-3.5 text-left rounded-xl border border-[var(--border)] hover:border-[var(--border-strong)] hover:bg-[var(--bg-soft)] transition-all"
+                  whileHover={{ scale: 1.03, y: -2 }}
+                  whileTap={{ scale: 0.97 }}
+                  className="px-4 py-2.5 text-[12.5px] text-[var(--fg-muted)] hover:text-[var(--fg)] glass-card hover:shadow-colored transition-all duration-200 cursor-pointer"
                 >
-                  <p className="text-[13.5px] text-[var(--fg-soft)] group-hover:text-[var(--fg)] leading-snug">
-                    {text}
-                  </p>
+                  {text}
                 </motion.button>
               ))}
             </motion.div>
           </div>
         ) : (
           <div className="max-w-3xl mx-auto w-full px-4 md:px-6 pt-8 pb-44">
-            <AnimatePresence initial={false}>
-              {messages.map((m, i) => (
-                <motion.div
-                  key={m.id}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.25 }}
-                >
-                  <Message
-                    role={m.role}
-                    content={m.content}
-                    isStreaming={m.isStreaming && i === messages.length - 1}
-                    isLast={i === messages.length - 1 && !isStreaming}
-                    onRegenerate={handleRegenerate}
-                    onEdit={m.role === 'user' ? (newContent) => handleEdit(i, newContent) : undefined}
-                    userInitial={userInitial}
-                  />
-                </motion.div>
-              ))}
-            </AnimatePresence>
+            {messages.map((m, i) => (
+              <div key={m.id} className="animate-slide-up" style={{ animationDelay: i === messages.length - 1 ? '0ms' : '0ms' }}>
+                <Message
+                  role={m.role}
+                  content={m.content}
+                  isStreaming={m.isStreaming && i === messages.length - 1}
+                  isLast={i === messages.length - 1 && !isStreaming}
+                  onRegenerate={handleRegenerate}
+                  onEdit={m.role === 'user' ? (newContent) => handleEdit(i, newContent) : undefined}
+                  userInitial={userInitial}
+                />
+              </div>
+            ))}
           </div>
         )}
       </div>
+
+      {/* Scroll to bottom button */}
+      <AnimatePresence>
+        {userScrolledUp && messages.length > 0 && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 10 }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            onClick={() => { scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' }); setUserScrolledUp(false) }}
+            className="absolute bottom-36 right-6 z-10 w-8 h-8 rounded-full glass-card shadow-colored flex items-center justify-center text-[var(--fg-muted)] hover:text-[var(--fg)] hover:scale-110 transition-all duration-200"
+            aria-label="Scroll to bottom"
+          >
+            <ArrowUp size={14} className="rotate-180" />
+          </motion.button>
+        )}
+      </AnimatePresence>
 
       {/* Composer area */}
       <div className="absolute bottom-0 left-0 right-0 pointer-events-none">
@@ -311,18 +375,20 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
           <AnimatePresence>
             {searchStatus && (
               <motion.div
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 4 }}
-                transition={{ duration: 0.2 }}
+                initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 6, scale: 0.95 }}
+                transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
                 className="flex justify-center mb-2"
               >
-                <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-[var(--bg-elevated)] border border-[var(--border)] shadow-[var(--shadow-sm)] text-[12px] text-[var(--fg-muted)]">
+                <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full glass-card shadow-colored text-[12px] text-[var(--fg-muted)]">
                   <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--accent)] opacity-75" />
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--accent)]" />
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: 'linear-gradient(135deg, #7c3aed, #f97316)' }} />
+                    <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: 'linear-gradient(135deg, #7c3aed, #f97316)' }} />
                   </span>
-                  {t.chat[searchStatus as 'searching' | 'reading' | 'thinking']}
+                  <motion.span key={searchStatus} initial={{ opacity: 0, x: -4 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.15 }}>
+                    {t.chat[searchStatus as 'searching' | 'reading' | 'thinking']}
+                  </motion.span>
                 </div>
               </motion.div>
             )}
@@ -346,10 +412,10 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
         </div>
 
         {/* Bottom fade */}
-        <div className="absolute inset-x-0 bottom-0 h-8 -z-10 bg-[var(--bg)] pointer-events-none" />
+        <div className="absolute inset-x-0 bottom-0 h-12 -z-10 bg-gradient-to-t from-[var(--bg)] to-transparent pointer-events-none" />
       </div>
 
-      <UpgradePopup open={showUpgrade} onClose={() => setShowUpgrade(false)} />
+      <UpgradePopup open={showUpgrade} onClose={() => setShowUpgrade(false)} message={upgradeMsg} />
 
       {/* Text selection popup */}
       <AnimatePresence>

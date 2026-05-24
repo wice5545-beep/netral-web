@@ -65,12 +65,20 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
       .catch(() => {})
   }, [conversationsLoaded, setConversations])
 
-  // Keyboard shortcut: ⌘B to toggle
+  // Keyboard shortcut: ⌘B to toggle, ⌘K to focus search
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'b') {
         e.preventDefault()
         setSidebarOpen(!sidebarOpen)
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        if (!sidebarOpen) setSidebarOpen(true)
+        setTimeout(() => {
+          const searchInput = document.querySelector<HTMLInputElement>('[data-sidebar-search]')
+          searchInput?.focus()
+        }, sidebarOpen ? 0 : 300)
       }
     }
     const onClick = () => setMenuOpen(null)
@@ -156,12 +164,13 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
                     href={`/chat/${c.id}`}
                     onClick={() => isMobile && setSidebarOpen(false)}
                     className={cn(
-                      'group flex items-center gap-2 px-3 py-1.5 mx-1.5 rounded-md text-[13px] transition-colors',
+                      'group flex items-center gap-2.5 px-3 py-2 mx-1.5 rounded-lg text-[13px] transition-all duration-150 relative',
                       isActive
                         ? 'bg-[var(--bg)] text-[var(--fg)] shadow-[var(--shadow-xs)] border border-[var(--border)]'
-                        : 'text-[var(--fg-soft)] hover:bg-[var(--bg)]'
+                        : 'text-[var(--fg-muted)] hover:bg-[var(--bg)] hover:text-[var(--fg)]'
                     )}
                   >
+                    {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-r-full" style={{ background: 'linear-gradient(180deg, #7c3aed, #f97316)' }} />}
                     <span className="flex-1 truncate">{c.title}</span>
                     <button
                       onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMenuOpen(menuOpen === c.id ? null : c.id) }}
@@ -222,8 +231,9 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
             onClick={() => setSidebarOpen(false)}
-            className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 md:hidden"
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 md:hidden"
           />
         )}
       </AnimatePresence>
@@ -232,18 +242,19 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
         animate={{
           x: sidebarOpen ? 0 : isMobile ? '-100%' : 0,
           width: sidebarOpen ? 260 : isMobile ? 260 : 0,
+          opacity: sidebarOpen ? 1 : isMobile ? 1 : 0,
         }}
-        transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+        transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
         className={cn(
           'fixed md:relative top-0 left-0 z-50 h-screen flex flex-col shrink-0 overflow-hidden',
           'border-r border-[var(--border)] bg-[var(--sidebar-bg)]'
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between h-12 px-3 shrink-0">
+        <div className="flex items-center justify-between h-12 px-3 shrink-0 border-b border-[var(--border)]">
           <Link href="/chat" className="flex items-center gap-2 px-1.5">
-            <NetralLogo size={22} />
-            <span className="font-semibold text-[14px]">Netral</span>
+            <NetralLogo size={20} />
+            <span className="font-bold text-[14px] tracking-[-0.3px]">Netral</span>
           </Link>
           <button
             onClick={() => setSidebarOpen(false)}
@@ -258,7 +269,7 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
         <div className="px-3 pb-2">
           <button
             onClick={handleNewChat}
-            className="w-full flex items-center justify-between px-3 py-2 rounded-md bg-[var(--bg)] border border-[var(--border)] text-[13px] font-medium text-[var(--fg)] hover:bg-[var(--bg-elevated)] hover:border-[var(--border-strong)] transition-all shadow-[var(--shadow-xs)] group"
+            className="w-full flex items-center justify-between px-3 py-2 rounded-lg glass-card text-[13px] font-medium text-[var(--fg)] hover:shadow-colored transition-all duration-200 active:scale-[0.98] group"
           >
             <span className="flex items-center gap-2">
               <Plus size={14} strokeWidth={2.2} />
@@ -277,8 +288,17 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
               placeholder={t.chat.search}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full h-8 pl-8 pr-3 rounded-md bg-transparent border border-transparent text-[13px] text-[var(--fg)] placeholder:text-[var(--fg-subtle)] hover:bg-[var(--bg)] focus:outline-none focus:border-[var(--border)] focus:bg-[var(--bg)] transition-all"
+              data-sidebar-search
+              className="w-full h-8 pl-8 pr-8 rounded-md bg-transparent border border-transparent text-[13px] text-[var(--fg)] placeholder:text-[var(--fg-subtle)] hover:bg-[var(--bg)] focus:outline-none focus:border-[var(--border)] focus:bg-[var(--bg)] transition-all"
             />
+            {!search && (
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 kbd text-[10px] opacity-50">⌘K</span>
+            )}
+            {search && (
+              <button onClick={() => setSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors">
+                <X size={11} />
+              </button>
+            )}
           </div>
         </div>
 
@@ -291,9 +311,12 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
               ))}
             </div>
           ) : conversations.length === 0 ? (
-            <div className="px-3 py-12 text-center">
-              <MessageSquareIcon size={16} className="text-[var(--fg-subtle)] mx-auto mb-2" />
-              <p className="text-[12px] text-[var(--fg-muted)]">{t.chat.noConversations}</p>
+            <div className="px-4 py-16 text-center">
+              <div className="w-10 h-10 rounded-xl bg-[var(--bg)] border border-[var(--border)] flex items-center justify-center mx-auto mb-3">
+                <MessageSquareIcon size={16} className="text-[var(--fg-subtle)]" />
+              </div>
+              <p className="text-[13px] font-medium text-[var(--fg-muted)] mb-1">{t.chat.noConversations}</p>
+              <p className="text-[11px] text-[var(--fg-subtle)]">⌘N pour commencer</p>
             </div>
           ) : filtered.length === 0 ? (
             <div className="px-3 py-12 text-center">
@@ -316,7 +339,7 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
             onClick={() => setProfileOpen(!profileOpen)}
             className="w-full flex items-center gap-2.5 px-2 py-2 rounded-md hover:bg-[var(--bg)] transition-colors"
           >
-            <div className="w-7 h-7 rounded-full bg-[var(--accent)] text-[var(--bg)] flex items-center justify-center text-[12px] font-semibold shrink-0">
+            <div className="w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-semibold shrink-0 text-white" style={{ background: 'linear-gradient(135deg, #7c3aed, #f97316)' }}>
               {user.name?.[0]?.toUpperCase() ?? user.email[0].toUpperCase()}
             </div>
             <div className="flex-1 min-w-0 text-left">
@@ -332,7 +355,7 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 4 }}
                 transition={{ duration: 0.15 }}
-                className="absolute bottom-full left-2 right-2 mb-1 bg-[var(--bg-elevated)] border border-[var(--border)] rounded-md py-1 shadow-[var(--shadow-md)] z-50"
+                className="absolute bottom-full left-2 right-2 mb-1 glass-card py-1 shadow-colored z-50"
               >
                 <button
                   onClick={() => { setProfileOpen(false); onOpenSettings() }}
@@ -360,11 +383,12 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
       <AnimatePresence>
         {!sidebarOpen && (
           <motion.button
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            initial={{ opacity: 0, x: -8 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -8 }}
+            transition={{ duration: 0.2, ease: [0.32, 0.72, 0, 1] }}
             onClick={() => setSidebarOpen(true)}
-            className="fixed top-3 left-3 z-40 p-2 rounded-md bg-[var(--bg-elevated)] border border-[var(--border)] shadow-[var(--shadow-sm)] text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors"
+            className="fixed top-3 left-3 z-40 p-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] shadow-[var(--shadow-sm)] text-[var(--fg-muted)] hover:text-[var(--fg)] hover:shadow-[var(--shadow-md)] hover:border-[var(--border-strong)] transition-all duration-200"
             aria-label="Ouvrir"
           >
             {isMobile ? <Menu size={15} /> : <PanelLeft size={15} />}

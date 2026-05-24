@@ -45,7 +45,7 @@ export function ModelSelector() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -4, scale: 0.97 }}
             transition={{ duration: 0.15 }}
-            className="absolute bottom-full left-0 mb-1.5 w-64 bg-[var(--bg-elevated)] border border-[var(--border)] rounded-lg shadow-[var(--shadow-md)] overflow-hidden z-50"
+            className="absolute bottom-full left-0 mb-1.5 w-64 glass-card shadow-colored overflow-hidden z-50"
           >
             <div className="p-1">
               {(Object.values(MODELS) as typeof MODELS[ModelId][]).map((m) => {

@@ -1,9 +1,10 @@
-export const locales = ['fr', 'en', 'es', 'de', 'it', 'pt', 'ar', 'zh', 'ja', 'ko'] as const
+export const locales = ['fr', 'en', 'es', 'de', 'it', 'pt', 'ar', 'zh', 'ja', 'ko', 'ru', 'hi', 'tr', 'nl', 'pl', 'uk'] as const
 export type Locale = (typeof locales)[number]
 
 export const localeNames: Record<Locale, string> = {
   fr: 'Français', en: 'English', es: 'Español', de: 'Deutsch',
   it: 'Italiano', pt: 'Português', ar: 'العربية', zh: '中文', ja: '日本語', ko: '한국어',
+  ru: 'Русский', hi: 'हिन्दी', tr: 'Türkçe', nl: 'Nederlands', pl: 'Polski', uk: 'Українська',
 }
 
 export const translations: Record<Locale, any> = {
@@ -79,6 +80,21 @@ export const translations: Record<Locale, any> = {
       alreadyAccount: 'Déjà inscrit ?',
       signIn: 'Se connecter',
       createAccount: 'Créer mon compte',
+    },
+    vscodeAuth: {
+      title: 'Netral Code',
+      subtitle: 'Connectez votre IDE à Netral',
+      loginRequired: 'Connexion requise',
+      loginDesc: 'Connectez-vous pour lier votre compte à VS Code.',
+      confirmTitle: 'Lier VS Code',
+      confirmDesc: 'Autoriser Netral Code à accéder à votre compte ?',
+      authorize: 'Autoriser la connexion',
+      tokenNote: 'Un token API sera créé pour l\'extension VS Code.',
+      success: 'Connecté !',
+      successDesc: 'Retournez dans VS Code. L\'extension est prête.',
+      expired: 'Code expiré',
+      expiredDesc: 'Tapez /login dans VS Code pour réessayer.',
+      error: 'Erreur',
     },
     featuresPage: {
       back: 'Retour',
@@ -190,6 +206,21 @@ export const translations: Record<Locale, any> = {
       alreadyAccount: 'Already registered?',
       signIn: 'Sign in',
       createAccount: 'Create my account',
+    },
+    vscodeAuth: {
+      title: 'Netral Code',
+      subtitle: 'Connect your IDE to Netral',
+      loginRequired: 'Login required',
+      loginDesc: 'Sign in to link your account to VS Code.',
+      confirmTitle: 'Link VS Code',
+      confirmDesc: 'Allow Netral Code to access your account?',
+      authorize: 'Authorize connection',
+      tokenNote: 'An API token will be created for the extension.',
+      success: 'Connected!',
+      successDesc: 'Go back to VS Code. The extension is ready.',
+      expired: 'Code expired',
+      expiredDesc: 'Type /login in VS Code to try again.',
+      error: 'Error',
     },
     featuresPage: {
       back: 'Back',
@@ -328,4 +359,13 @@ export const translations: Record<Locale, any> = {
     featuresPage: { back: '뒤로', title: '기능', subtitle: '신뢰할 수 있고, 빠르고, 프라이버시를 존중하는 AI에 필요한 모든 것.', cta: '시도할 준비가 되셨나요?', ctaDesc: '10초 만에 계정 생성. 무료, 카드 불필요.', ctaBtn: '무료로 시작', items: [{ title: '실시간 웹 검색', desc: 'Netral은 답변하면서 웹을 검색합니다. 날짜가 있고 검증 가능한 소스.', details: ['링크가 있는 인용 소스', '실시간 업데이트 데이터', '자동 교차 검증'] }, { title: '고급 추론', desc: '단계별로 생각하고 복잡한 문제를 엄밀하게 해결하는 모델.', details: ['구조화된 사고 체인', '다각적 분석', '복잡한 문제 해결'] }, { title: '자연스러운 대화', desc: '복잡한 질문, 코드 요청, 아이디어 토론.', details: ['전체 대화에서 컨텍스트 유지', '지능적 재구성', '사용자 톤에 적응'] }, { title: '초고속 스트리밍', desc: '스트리밍 응답. Netral이 쓰는 동안 읽기.', details: ['지연시간 < 200ms', '토큰별 스트리밍', '언제든 중단 가능'] }, { title: '코드 생성', desc: 'Python, TypeScript, Rust, SQL… 깨끗하고 주석이 달린 기능적 코드.', details: ['구문 강조', '줄별 설명', '자동 언어 감지'] }, { title: '의미 검색', desc: '키워드가 아닌 의미를 이해. 정말 필요한 것을 찾기.', details: ['문맥 이해', '관련 결과', '지능적 노이즈 필터링'] }, { title: '기본 비공개', desc: '암호화된 세션. 언제든 데이터 삭제 가능.', details: ['종단간 암호화', '즉시 삭제', '데이터 보존 없음'] }, { title: '멀티 포맷', desc: '텍스트, 표, 목록, 코드, 수학. 가장 명확한 형식에 적응.', details: ['리치 Markdown', '표와 차트', 'LaTeX 수식'] }] },
     pricingPage: { back: '뒤로', title1: '간단한 요금,', title2: '놀라움 없이.', subtitle: '무료로 시작. 준비되면 Pro.', popular: '인기', faqTitle: '자주 묻는 질문', plans: [{ name: '무료', price: '€0', period: '/월', desc: '부담 없이 Netral 체험.', cta: '시작', features: ['하루 20개 메시지', '기본 웹 검색', '7일 기록', '1개 동시 대화'] }, { name: 'Pro', price: '€12', period: '/월', desc: '전문가와 크리에이터를 위해.', cta: 'Pro로 업그레이드', features: ['무제한 메시지', '고급 웹 검색', '무제한 기록', '무제한 대화', '우선 모델 (GPT-4o)', '대화 내보내기', '우선 지원'] }, { name: '팀', price: '€29', period: '/사용자/월', desc: '협업하려는 팀을 위해.', cta: '문의하기', features: ['Pro의 모든 것 포함', '공유 워크스페이스', '멤버 관리', 'API 접근', 'SSO & SAML', 'SLA 99.9%', '전담 계정 매니저'] }], faq: [{ q: '언제든 취소할 수 있나요?', a: '네. 약정 없음. 설정에서 한 번의 클릭으로 취소.' }, { q: '내 데이터는 안전한가요?', a: '절대적으로. 종단간 암호화, 삭제 후 보존 없음.' }, { q: 'Pro에 메시지 제한이 있나요?', a: '아니요. Pro에서 메시지는 무제한입니다.' }] },
   },
-} satisfies Record<Locale, unknown>
+} as Record<string, any>
+
+// New languages fallback to English with localized nav/hero
+const en = translations.en
+translations.ru = { ...en, nav: { features: 'Функции', pricing: 'Цены', login: 'Войти', start: 'Начать' }, hero: { ...en.hero, title1: 'ИИ, который ищет', title2: 'прежде чем ответить.', cta: 'Начать бесплатно', login: 'Войти', note: 'Бесплатно • Без карты • Готово за 10 секунд' }, chat: { ...en.chat, hello: 'Привет', helloName: 'Привет, {name}', howCanIHelp: 'Чем могу помочь сегодня?' }, footer: { privacy: 'Конфиденциальность', contact: 'Контакты' } } as any
+translations.hi = { ...en, nav: { features: 'सुविधाएँ', pricing: 'मूल्य', login: 'लॉगिन', start: 'शुरू करें' }, hero: { ...en.hero, title1: 'AI जो खोजता है', title2: 'जवाब देने से पहले।', cta: 'मुफ्त शुरू करें', login: 'लॉगिन', note: 'मुफ्त • कोई कार्ड नहीं • 10 सेकंड में तैयार' }, chat: { ...en.chat, hello: 'नमस्ते', helloName: 'नमस्ते, {name}', howCanIHelp: 'आज मैं आपकी कैसे मदद कर सकता हूँ?' }, footer: { privacy: 'गोपनीयता', contact: 'संपर्क' } } as any
+translations.tr = { ...en, nav: { features: 'Özellikler', pricing: 'Fiyatlar', login: 'Giriş', start: 'Başla' }, hero: { ...en.hero, title1: 'Cevaplamadan önce', title2: 'arayan yapay zeka.', cta: 'Ücretsiz başla', login: 'Giriş', note: 'Ücretsiz • Kart gerekmez • 10 saniyede hazır' }, chat: { ...en.chat, hello: 'Merhaba', helloName: 'Merhaba, {name}', howCanIHelp: 'Bugün size nasıl yardımcı olabilirim?' }, footer: { privacy: 'Gizlilik', contact: 'İletişim' } } as any
+translations.nl = { ...en, nav: { features: 'Functies', pricing: 'Prijzen', login: 'Inloggen', start: 'Starten' }, hero: { ...en.hero, title1: 'De AI die zoekt', title2: 'voordat hij antwoordt.', cta: 'Gratis beginnen', login: 'Inloggen', note: 'Gratis • Geen creditcard • Klaar in 10 seconden' }, chat: { ...en.chat, hello: 'Hallo', helloName: 'Hallo, {name}', howCanIHelp: 'Hoe kan ik je vandaag helpen?' }, footer: { privacy: 'Privacy', contact: 'Contact' } } as any
+translations.pl = { ...en, nav: { features: 'Funkcje', pricing: 'Cennik', login: 'Zaloguj', start: 'Rozpocznij' }, hero: { ...en.hero, title1: 'AI, które szuka', title2: 'zanim odpowie.', cta: 'Zacznij za darmo', login: 'Zaloguj', note: 'Za darmo • Bez karty • Gotowe w 10 sekund' }, chat: { ...en.chat, hello: 'Cześć', helloName: 'Cześć, {name}', howCanIHelp: 'Jak mogę ci dziś pomóc?' }, footer: { privacy: 'Prywatność', contact: 'Kontakt' } } as any
+translations.uk = { ...en, nav: { features: 'Функції', pricing: 'Ціни', login: 'Увійти', start: 'Почати' }, hero: { ...en.hero, title1: 'ШІ, що шукає', title2: 'перш ніж відповісти.', cta: 'Почати безкоштовно', login: 'Увійти', note: 'Безкоштовно • Без картки • Готово за 10 секунд' }, chat: { ...en.chat, hello: 'Привіт', helloName: 'Привіт, {name}', howCanIHelp: 'Чим можу допомогти сьогодні?' }, footer: { privacy: 'Конфіденційність', contact: 'Контакти' } } as any

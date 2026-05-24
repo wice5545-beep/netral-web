@@ -2,94 +2,106 @@
 
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Download, Terminal, Zap } from 'lucide-react'
+import { ArrowLeft, Download, Code2, Sparkles, Shield, RefreshCw, Zap } from 'lucide-react'
 import { NetralLogo } from '@/components/ui/NetralLogo'
 import { useI18n } from '@/lib/i18n'
+import { extensionsTranslations } from '@/lib/i18n/extensions'
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher'
+import { useEffect, useState } from 'react'
+
+type VersionInfo = { version: string; filename: string; downloadUrl: string; allVersions?: { version: string; filename: string }[] }
 
 export default function ExtensionsPage() {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const ext = extensionsTranslations[locale] || extensionsTranslations.en
+  const [latest, setLatest] = useState<VersionInfo | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch('/api/extensions/latest').then(r => r.json()).then(d => { setLatest(d); setLoading(false) }).catch(() => setLoading(false))
+  }, [])
+
+  const icons = [Sparkles, Zap, Shield, RefreshCw]
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--fg)]">
-      <nav className="sticky top-0 z-40 backdrop-blur-md bg-[var(--bg-overlay)] border-b border-[var(--border)]">
-        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <NetralLogo size={24} />
-            <span className="font-semibold text-[15px]">Netral</span>
-          </Link>
-          <div className="flex items-center gap-4">
+      <nav className="fixed top-4 left-1/2 -translate-x-1/2 z-50 nav-pill px-2 py-1.5">
+        <div className="flex items-center gap-1">
+          <Link href="/" className="flex items-center gap-2 px-3 py-1.5"><NetralLogo size={20} /><span className="font-semibold text-[14px]">Netral</span></Link>
+          <div className="flex items-center gap-1.5 ml-2">
             <LanguageSwitcher />
-            <Link href="/register">
-              <button className="h-8 px-3.5 text-[13px] font-medium rounded-[8px] bg-[var(--accent)] text-[var(--bg)] hover:bg-[var(--accent-hover)] transition-colors">{t.nav.start}</button>
-            </Link>
+            <Link href="/register"><button className="h-8 px-3.5 text-[13px] font-medium rounded-full bg-[var(--accent)] text-[var(--bg)] hover:bg-[var(--accent-hover)] transition-colors">{t.nav.start}</button></Link>
           </div>
         </div>
       </nav>
 
-      <section className="max-w-4xl mx-auto px-6 pt-16 pb-12">
-        <Link href="/" className="inline-flex items-center gap-1.5 text-[13px] text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors mb-8">
-          <ArrowLeft size={14} />
-          Retour
-        </Link>
-
-        <motion.h1 initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="text-[36px] md:text-[48px] font-semibold tracking-[-0.025em] leading-[1.1] mb-4">
-          Extensions
-        </motion.h1>
-        <motion.p initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="text-[17px] text-[var(--fg-muted)] max-w-xl leading-relaxed">
-          Utilisez Netral directement dans votre éditeur de code.
-        </motion.p>
+      <section className="max-w-4xl mx-auto px-6 pt-24 pb-10">
+        <Link href="/" className="inline-flex items-center gap-1.5 text-[13px] text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors mb-8"><ArrowLeft size={14} />{ext.back}</Link>
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
+          <h1 className="text-[36px] md:text-[48px] font-semibold tracking-[-0.03em] leading-[1.1]">{ext.title}</h1>
+          <p className="text-[17px] text-[var(--fg-muted)] mt-3 max-w-xl leading-relaxed">{ext.subtitle}</p>
+        </motion.div>
+        {latest && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--accent-soft)] border border-[var(--accent)]/20 text-[12px] font-medium text-[var(--accent)] mt-6">
+            <RefreshCw size={11} />{ext.latestVersion} : v{latest.version}
+          </motion.div>
+        )}
       </section>
 
-      <section className="max-w-4xl mx-auto px-6 pb-24">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-8 shadow-[var(--shadow-sm)]">
-          <div className="flex items-start gap-5">
-            <div className="w-14 h-14 rounded-xl bg-[var(--bg-soft)] border border-[var(--border)] flex items-center justify-center shrink-0">
-              <Terminal size={24} className="text-[var(--fg)]" />
+      <section className="max-w-4xl mx-auto px-6 pb-12">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="rounded-2xl glass-card shadow-colored overflow-hidden">
+          <div className="p-8 pb-6 border-b border-[var(--border)]">
+            <div className="flex items-start gap-5">
+              <div className="w-14 h-14 rounded-xl flex items-center justify-center shrink-0 shadow-colored" style={{ background: 'linear-gradient(135deg, #7c3aed, #f97316)' }}><Code2 size={24} className="text-white" /></div>
+              <div className="flex-1">
+                <h2 className="text-[22px] font-bold mb-1">Netral Code</h2>
+                <p className="text-[14px] text-[var(--fg-muted)] leading-relaxed">{ext.subtitle}</p>
+              </div>
             </div>
-            <div className="flex-1">
-              <h2 className="text-[22px] font-bold mb-1">Netral for VS Code</h2>
-              <p className="text-[14px] text-[var(--fg-muted)] mb-4">Chat avec Netral directement dans VS Code. Streaming en temps réel, commandes slash, et plus.</p>
-
-              <div className="flex flex-wrap gap-2 mb-6">
-                {['Chat IA', 'Streaming', '/agent', '/init', '/usage', '/logout'].map(tag => (
-                  <span key={tag} className="px-2.5 py-1 rounded-md bg-[var(--bg-soft)] border border-[var(--border)] text-[11px] font-medium text-[var(--fg-muted)]">{tag}</span>
-                ))}
-              </div>
-
-              <div className="flex items-center gap-3">
-                <a href="vscode:extension/netral.netral" className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-[var(--accent)] text-[var(--bg)] text-[14px] font-medium hover:bg-[var(--accent-hover)] transition-all active:scale-[0.98]">
-                  <Download size={15} />
-                  Installer dans VS Code
-                </a>
-                <a href="/netral-0.8.0.vsix" download className="inline-flex items-center gap-2 h-10 px-5 rounded-xl border border-[var(--border)] text-[14px] font-medium hover:bg-[var(--bg-soft)] transition-all">
-                  <Download size={15} />
-                  Télécharger .vsix (v0.8.0)
-                </a>
-              </div>
+            <div className="flex flex-wrap items-center gap-3 mt-6">
+              <a href="vscode:extension/netral.netral" className="inline-flex items-center gap-2 h-11 px-6 rounded-xl text-white text-[14px] font-semibold hover:scale-[1.02] transition-all active:scale-[0.98] shadow-colored" style={{ background: 'linear-gradient(135deg, #7c3aed, #f97316)' }}><Download size={15} />{ext.installVSCode}</a>
+              {latest ? (
+                <a href={`/${latest.filename}`} download className="inline-flex items-center gap-2 h-11 px-6 rounded-xl border border-[var(--border)] text-[14px] font-medium hover:bg-[var(--bg-soft)] transition-all active:scale-[0.98]"><Download size={15} />{ext.downloadVsix} (v{latest.version})</a>
+              ) : loading ? <span className="text-[13px] text-[var(--fg-muted)]">{ext.loading}</span> : null}
             </div>
           </div>
 
-          <div className="mt-8 pt-6 border-t border-[var(--border)]">
-            <h3 className="text-[14px] font-semibold mb-3">Comment ça marche</h3>
-            <div className="grid md:grid-cols-3 gap-4">
-              {[
-                { step: '1', title: 'Installer', desc: 'Installez l\'extension depuis VS Code ou téléchargez le .vsix' },
-                { step: '2', title: 'Se connecter', desc: 'Utilisez la commande /init et entrez votre token (Paramètres > API)' },
-                { step: '3', title: 'Coder', desc: 'Chattez avec Netral dans la sidebar, utilisez /agent pour l\'analyse' },
-              ].map(s => (
-                <div key={s.step} className="flex gap-3">
-                  <div className="w-6 h-6 rounded-full bg-[var(--accent-soft)] flex items-center justify-center text-[11px] font-bold shrink-0">{s.step}</div>
-                  <div>
-                    <p className="text-[13px] font-medium">{s.title}</p>
-                    <p className="text-[12px] text-[var(--fg-muted)] mt-0.5">{s.desc}</p>
-                  </div>
+          <div className="p-8 grid md:grid-cols-2 gap-5">
+            {ext.features.map((f, i) => { const Icon = icons[i]; return (
+              <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 + i * 0.05 }} className="flex gap-3 p-4 rounded-xl glass-card hover:shadow-colored transition-all duration-200 hover:-translate-y-0.5">
+                <Icon size={18} className="shrink-0 mt-0.5 gradient-text" />
+                <div><p className="text-[13px] font-semibold">{f.title}</p><p className="text-[12px] text-[var(--fg-muted)] mt-0.5 leading-relaxed">{f.desc}</p></div>
+              </motion.div>
+            )})}
+          </div>
+
+          <div className="px-8 pb-8">
+            <h3 className="text-[14px] font-semibold mb-4">Installation</h3>
+            <div className="space-y-3">
+              {ext.setup.map(s => (
+                <div key={s.step} className="flex gap-3 items-start">
+                  <div className="w-6 h-6 rounded-full bg-[var(--accent)] flex items-center justify-center text-[11px] font-bold text-white shrink-0">{s.step}</div>
+                  <div><p className="text-[13px] font-medium">{s.title}</p><p className="text-[12px] text-[var(--fg-muted)] mt-0.5">{s.desc}</p></div>
                 </div>
               ))}
             </div>
           </div>
         </motion.div>
       </section>
+
+      {latest?.allVersions && latest.allVersions.length > 1 && (
+        <section className="max-w-4xl mx-auto px-6 pb-24">
+          <h3 className="text-[14px] font-semibold mb-3">{ext.olderVersions}</h3>
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] divide-y divide-[var(--border)]">
+            {latest.allVersions.slice(1, 6).map(v => (
+              <div key={v.version} className="flex items-center justify-between px-5 py-3">
+                <span className="text-[13px] font-mono text-[var(--fg-muted)]">v{v.version}</span>
+                <a href={`/${v.filename}`} download className="text-[12px] text-[var(--accent)] hover:underline flex items-center gap-1"><Download size={12} />{ext.download}</a>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   )
 }

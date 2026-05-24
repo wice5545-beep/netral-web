@@ -3,20 +3,12 @@
 import Link from 'next/link'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { useRef, useState } from 'react'
-import { ArrowRight, ArrowUp } from 'lucide-react'
+import { ArrowRight, ArrowUp, Globe, Brain, Zap, Search, Lock, MessageSquare } from 'lucide-react'
 import { NetralLogo } from '@/components/ui/NetralLogo'
 import { useI18n } from '@/lib/i18n'
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher'
-import { EarthIcon } from '@/components/ui/earth'
-import { BrainIcon } from '@/components/ui/brain'
-import { MessageSquareIcon } from '@/components/ui/message-square'
-import { ZapIcon } from '@/components/ui/zap'
-import { SearchIcon } from '@/components/ui/search'
-import { LockIcon } from '@/components/ui/lock'
-import { SparklesIcon } from '@/components/ui/sparkles'
-import { AutoAnimate } from '@/components/ui/AutoAnimate'
 
-const featureIcons = [EarthIcon, BrainIcon, MessageSquareIcon, ZapIcon, SearchIcon, LockIcon]
+const featureIcons = [Globe, Brain, MessageSquare, Zap, Search, Lock]
 const stats = [{ value: '< 200ms' }, { value: '99.9%' }, { value: '50k+' }]
 
 export function LandingPage() {
@@ -26,110 +18,103 @@ export function LandingPage() {
   const [showLoginPopup, setShowLoginPopup] = useState(false)
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] })
   const heroY = useTransform(scrollYProgress, [0, 1], [0, -80])
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0])
   const statsLabels = [t.stats.latency, t.stats.uptime, t.stats.users]
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--fg)]">
-      {/* Nav */}
-      <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-[var(--bg)]/80 border-b border-[var(--border)]">
-        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <NetralLogo size={22} />
-            <span className="font-semibold text-[15px]">Netral</span>
+      {/* Nav — pill style */}
+      <nav className="fixed top-4 left-1/2 -translate-x-1/2 z-50 nav-pill px-2 py-1.5">
+        <div className="flex items-center gap-1">
+          <Link href="/" className="flex items-center gap-2 px-3 py-1.5">
+            <NetralLogo size={20} />
+            <span className="font-semibold text-[14px] tracking-[-0.3px]">Netral</span>
           </Link>
-          <div className="hidden md:flex items-center gap-6">
-            <Link href="/fonctionnalites" className="text-[13px] text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors">{t.nav.features}</Link>
-            <Link href="/tarifs" className="text-[13px] text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors">{t.nav.pricing}</Link>
-            <Link href="/extensions" className="text-[13px] text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors">VS Code</Link>
-            <Link href="/login" className="text-[13px] text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors">{t.nav.login}</Link>
-            <LanguageSwitcher />
+          <div className="hidden md:flex items-center">
+            <Link href="/fonctionnalites" className="px-3 py-1.5 text-[13px] text-[var(--fg-muted)] hover:text-[var(--fg)] rounded-full hover:bg-[var(--accent-soft)] transition-all">{t.nav.features}</Link>
+            <Link href="/tarifs" className="px-3 py-1.5 text-[13px] text-[var(--fg-muted)] hover:text-[var(--fg)] rounded-full hover:bg-[var(--accent-soft)] transition-all">{t.nav.pricing}</Link>
+            <Link href="/extensions" className="px-3 py-1.5 text-[13px] text-[var(--fg-muted)] hover:text-[var(--fg)] rounded-full hover:bg-[var(--accent-soft)] transition-all">VS Code</Link>
           </div>
-          <Link href="/register">
-            <button className="h-8 px-4 text-[13px] font-medium rounded-lg bg-[var(--accent)] text-[var(--bg)] hover:bg-[var(--accent-hover)] transition-all active:scale-95">{t.nav.start}</button>
-          </Link>
+          <div className="flex items-center gap-1.5 ml-2">
+            <LanguageSwitcher />
+            <Link href="/login" className="px-3 py-1.5 text-[13px] text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors">{t.nav.login}</Link>
+            <Link href="/register">
+              <button className="h-8 px-4 text-[13px] font-medium rounded-full bg-[var(--accent)] text-[var(--bg)] hover:bg-[var(--accent-hover)] transition-all shadow-sm">{t.nav.start}</button>
+            </Link>
+          </div>
         </div>
       </nav>
 
       {/* Hero */}
-      <section ref={heroRef} className="relative pt-32 md:pt-44 pb-20 overflow-hidden">
-        {/* Background gradient */}
-        <div className="absolute inset-0 -z-10">
-          <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-gradient-radial from-[var(--accent-soft)] to-transparent rounded-full blur-3xl opacity-40" />
-        </div>
+      <section ref={heroRef} className="relative pt-36 md:pt-48 pb-28 overflow-hidden">
+        {/* Gradient orb */}
+        <div className="absolute top-1/2 left-1/2 w-[700px] h-[700px] -translate-x-1/2 -translate-y-1/2 gradient-orb rounded-full -z-10" />
+        {/* Dot grid */}
+        <div className="absolute inset-0 opacity-[0.02] dark:opacity-[0.04] -z-10" style={{ backgroundImage: 'radial-gradient(var(--fg) 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
 
-        <motion.div style={{ y: heroY }} className="max-w-3xl mx-auto px-6 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--bg-soft)] border border-[var(--border)] text-[12px] text-[var(--fg-muted)] mb-8"
-          >
-            <AutoAnimate icon={SparklesIcon} size={12} className="text-[var(--fg-subtle)]" interval={3000} />
+        <motion.div style={{ y: heroY, opacity: heroOpacity }} className="max-w-3xl mx-auto px-6 text-center">
+          {/* Badge */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass-card text-[12px] text-[var(--fg-muted)] mb-8">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             {t.hero.badge}
           </motion.div>
 
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-            className="text-[clamp(2.5rem,8vw,4.5rem)] font-bold tracking-[-0.035em] leading-[1.05] mb-5"
-          >
+          {/* Title with gradient */}
+          <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.7, ease: [0.16, 1, 0.3, 1] }} className="text-[clamp(2.8rem,9vw,5.2rem)] font-bold tracking-[-0.045em] leading-[1.0] mb-6">
             {t.hero.title1}<br />
-            <span className="text-[var(--fg-muted)]">{t.hero.title2}</span>
+            <span className="gradient-text">{t.hero.title2}</span>
           </motion.h1>
 
-          <motion.p
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.5 }}
-            className="text-[17px] md:text-[19px] text-[var(--fg-muted)] max-w-xl mx-auto mb-9 leading-relaxed"
-          >
+          {/* Subtitle */}
+          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.6 }} className="text-[18px] md:text-[21px] text-[var(--fg-muted)] max-w-lg mx-auto mb-11 leading-[1.6]">
             {t.hero.subtitle}
           </motion.p>
 
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.4 }}
-            className="w-full max-w-xl mx-auto"
-          >
-            <p className="text-[13px] text-[var(--fg-muted)] mb-2 text-center">{t.chat?.howCanIHelp ?? 'Que puis-je faire pour vous ?'}</p>
-            <div className="relative rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] shadow-[var(--shadow-sm)] hover:border-[var(--border-strong)] transition-colors">
+          {/* Input — glass style */}
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35, duration: 0.6 }} className="w-full max-w-xl mx-auto">
+            <div className="relative glass-card shadow-colored hover:shadow-lg transition-all duration-300 group">
               <input
                 value={landingInput}
                 onChange={(e) => setLandingInput(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter' && landingInput.trim()) setShowLoginPopup(true) }}
                 placeholder={t.hero.cta}
-                className="w-full h-12 px-5 pr-12 bg-transparent text-[15px] text-[var(--fg)] placeholder:text-[var(--fg-subtle)] focus:outline-none rounded-2xl"
+                className="w-full h-14 px-5 pr-14 bg-transparent text-[15px] text-[var(--fg)] placeholder:text-[var(--fg-subtle)] focus:outline-none rounded-xl"
               />
               <button
                 onClick={() => { if (landingInput.trim()) setShowLoginPopup(true) }}
-                className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-[var(--accent)] text-[var(--bg)] flex items-center justify-center hover:bg-[var(--accent-hover)] transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-lg bg-[var(--accent)] text-[var(--bg)] flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-sm"
               >
-                <ArrowUp size={14} strokeWidth={2.2} />
+                <ArrowUp size={15} strokeWidth={2.5} />
               </button>
             </div>
           </motion.div>
 
-          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="mt-5 text-[12px] text-[var(--fg-subtle)]">
-            {t.hero.note}
-          </motion.p>
+          {/* Feature pills */}
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="flex items-center justify-center gap-2 mt-6">
+            {[{ icon: Globe, label: 'Web' }, { icon: Brain, label: 'Deep' }, { icon: Zap, label: 'Fast' }].map(({ icon: Icon, label }) => (
+              <div key={label} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full glass-card text-[11px] text-[var(--fg-muted)]">
+                <Icon size={11} />
+                {label}
+              </div>
+            ))}
+          </motion.div>
         </motion.div>
 
         {/* Login popup */}
         {showLoginPopup && (
           <>
-            <div onClick={() => setShowLoginPopup(false)} className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50" />
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} onClick={() => setShowLoginPopup(false)} className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50" />
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-              <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-[var(--bg-elevated)] rounded-2xl p-6 w-full max-w-sm border border-[var(--border)] shadow-[var(--shadow-xl)]">
-                <h3 className="text-[18px] font-bold mb-2 text-center">{t.chat?.loginTitle ?? 'Connectez-vous'}</h3>
-                <p className="text-[13px] text-[var(--fg-muted)] text-center mb-5">{t.chat?.loginSubtitle ?? 'Pour envoyer votre message'}</p>
-                <div className="space-y-2">
+              <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ type: 'spring', damping: 25 }} className="bg-[var(--bg-elevated)] rounded-2xl p-7 w-full max-w-sm border border-[var(--border)] shadow-[var(--shadow-xl)]">
+                <div className="flex justify-center mb-4"><NetralLogo size={32} /></div>
+                <h3 className="text-[18px] font-bold mb-1.5 text-center">{t.chat?.loginTitle ?? 'Connectez-vous'}</h3>
+                <p className="text-[13px] text-[var(--fg-muted)] text-center mb-6">{t.chat?.loginSubtitle ?? 'Pour envoyer votre message'}</p>
+                <div className="space-y-2.5">
                   <Link href={`/login?q=${encodeURIComponent(landingInput)}`} className="block">
-                    <button className="w-full h-10 rounded-xl bg-[var(--accent)] text-[var(--bg)] text-[14px] font-medium hover:bg-[var(--accent-hover)] transition-all">{t.chat?.signIn ?? 'Se connecter'}</button>
+                    <button className="w-full h-11 rounded-xl bg-[var(--accent)] text-[var(--bg)] text-[14px] font-semibold hover:bg-[var(--accent-hover)] transition-all">{t.chat?.signIn ?? 'Se connecter'}</button>
                   </Link>
                   <Link href={`/register?q=${encodeURIComponent(landingInput)}`} className="block">
-                    <button className="w-full h-10 rounded-xl border border-[var(--border)] text-[14px] font-medium hover:bg-[var(--bg-soft)] transition-all">{t.chat?.createAccount ?? 'Créer un compte'}</button>
+                    <button className="w-full h-11 rounded-xl border border-[var(--border)] text-[14px] font-medium hover:bg-[var(--bg-soft)] transition-all">{t.chat?.createAccount ?? 'Créer un compte'}</button>
                   </Link>
                 </div>
               </motion.div>
@@ -139,42 +124,36 @@ export function LandingPage() {
       </section>
 
       {/* Demo */}
-      <section className="max-w-4xl mx-auto px-6 pb-28">
-        <motion.div
-          initial={{ opacity: 0, y: 32 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-60px' }}
-          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-          className="bg-[var(--bg-elevated)] border border-[var(--border)] rounded-2xl shadow-[var(--shadow-xl)] overflow-hidden"
-        >
-          <div className="h-9 flex items-center gap-1.5 px-4 border-b border-[var(--border)] bg-[var(--bg-soft)]">
-            <div className="flex gap-1.5">
-              <div className="w-2.5 h-2.5 rounded-full bg-[#ff5f57]" />
-              <div className="w-2.5 h-2.5 rounded-full bg-[#febc2e]" />
-              <div className="w-2.5 h-2.5 rounded-full bg-[#28c840]" />
+      <section className="max-w-4xl mx-auto px-6 pb-32">
+        <motion.div initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }} className="relative">
+          <div className="absolute -inset-4 gradient-orb rounded-3xl opacity-[0.06] blur-3xl -z-10" />
+          <div className="glass-card shadow-colored overflow-hidden">
+            <div className="h-11 flex items-center gap-2 px-4 border-b border-[var(--glass-border)] bg-[var(--bg-soft)]/50">
+              <div className="flex gap-1.5">
+                <div className="w-3 h-3 rounded-full bg-[#ff5f57]" />
+                <div className="w-3 h-3 rounded-full bg-[#febc2e]" />
+                <div className="w-3 h-3 rounded-full bg-[#28c840]" />
+              </div>
+              <div className="flex-1 flex justify-center">
+                <div className="px-4 py-1.5 rounded-lg bg-[var(--bg)]/60 border border-[var(--glass-border)] text-[11px] font-mono text-[var(--fg-subtle)]">
+                  <Lock size={9} className="inline text-emerald-500 mr-1.5" />netral.app/chat
+                </div>
+              </div>
             </div>
-            <p className="ml-3 text-[11px] font-mono text-[var(--fg-subtle)]">netral.app/chat</p>
-          </div>
-          <div className="p-6 md:p-8 space-y-5">
-            <div className="flex justify-end">
-              <div className="max-w-[75%] px-4 py-2.5 rounded-2xl rounded-br-md bg-[var(--accent)] text-[var(--bg)] text-[14px]">{t.demo.userMsg}</div>
-            </div>
-            <div className="flex items-center gap-2 text-[12px] text-[var(--fg-muted)]">
-              <AutoAnimate icon={EarthIcon} size={12} interval={2000} />
-              <span>{t.demo.searching}</span>
-            </div>
-            <div className="flex gap-3">
-              <NetralLogo size={22} />
-              <div className="flex-1 text-[14px] leading-relaxed text-[var(--fg-soft)] space-y-1.5">
-                <p>{t.demo.response1}</p>
-                <p><strong className="text-[var(--fg)]">GPT-5 Turbo</strong><sup className="text-[10px] opacity-50">[1]</sup> {t.demo.response2}</p>
-                <p><strong className="text-[var(--fg)]">Claude 4.5</strong><sup className="text-[10px] opacity-50">[2]</sup> {t.demo.response3}<span className="stream-cursor" /></p>
-                <div className="flex gap-2 mt-3">
-                  {['techcrunch.com', 'arxiv.org'].map((src) => (
-                    <div key={src} className="flex items-center gap-1.5 px-2 py-0.5 rounded border border-[var(--border)] text-[11px] text-[var(--fg-muted)]">
-                      <div className="w-1.5 h-1.5 rounded-full bg-green-500/70" />{src}
-                    </div>
-                  ))}
+            <div className="p-6 md:p-8 space-y-6">
+              <div className="flex justify-end">
+                <div className="max-w-[75%] px-4 py-3 rounded-2xl rounded-br-md bg-[var(--accent)] text-[var(--bg)] text-[14px] leading-relaxed shadow-sm">{t.demo.userMsg}</div>
+              </div>
+              <div className="flex items-center gap-2 text-[12px] text-[var(--fg-muted)]">
+                <Globe size={12} className="animate-spin" style={{ animationDuration: '3s' }} />
+                <span>{t.demo.searching}</span>
+              </div>
+              <div className="flex gap-3">
+                <div className="shrink-0 mt-0.5"><NetralLogo size={24} /></div>
+                <div className="flex-1 text-[14px] leading-[1.7] text-[var(--fg-soft)] space-y-2">
+                  <p>{t.demo.response1}</p>
+                  <p><strong className="text-[var(--fg)]">GPT-5 Turbo</strong> {t.demo.response2}</p>
+                  <p><strong className="text-[var(--fg)]">Claude 4.5</strong> {t.demo.response3}<span className="stream-cursor" /></p>
                 </div>
               </div>
             </div>
@@ -183,70 +162,67 @@ export function LandingPage() {
       </section>
 
       {/* Stats */}
-      <section className="border-t border-[var(--border)] py-14">
+      <section className="border-t border-[var(--border)] py-20">
         <div className="max-w-3xl mx-auto px-6 grid grid-cols-3 gap-6">
           {stats.map((s, i) => (
-            <motion.div key={i} initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} className="text-center">
-              <p className="text-[28px] md:text-[34px] font-bold tracking-tight">{s.value}</p>
-              <p className="text-[12px] text-[var(--fg-muted)] mt-0.5">{statsLabels[i]}</p>
+            <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} className="text-center">
+              <p className="text-[34px] md:text-[44px] font-bold tracking-[-0.04em]">{s.value}</p>
+              <p className="text-[12px] text-[var(--fg-muted)] mt-1.5 uppercase tracking-wider">{statsLabels[i]}</p>
             </motion.div>
           ))}
         </div>
       </section>
 
-      {/* Features */}
-      <section className="border-t border-[var(--border)] py-20">
+      {/* Features — Bento Grid */}
+      <section className="border-t border-[var(--border)] py-28">
         <div className="max-w-5xl mx-auto px-6">
-          <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="text-center mb-14">
-            <h2 className="text-[30px] md:text-[40px] font-bold tracking-[-0.02em] mb-3">{t.features.title}</h2>
-            <p className="text-[15px] text-[var(--fg-muted)] max-w-md mx-auto">{t.features.subtitle}</p>
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-16">
+            <h2 className="text-[34px] md:text-[46px] font-bold tracking-[-0.035em] mb-4">{t.features.title}</h2>
+            <p className="text-[16px] text-[var(--fg-muted)] max-w-md mx-auto">{t.features.subtitle}</p>
           </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-3">
+          <div className="bento-grid">
             {t.features.items.map((f: { title: string; desc: string }, i: number) => {
               const Icon = featureIcons[i]
+              const isLarge = i === 0 || i === 3
               return (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 16 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.06, duration: 0.4 }}
-                  className="p-5 rounded-xl border border-[var(--border)] hover:border-[var(--border-strong)] hover:shadow-[var(--shadow-sm)] transition-all duration-200"
-                >
-                  <div className="w-9 h-9 rounded-lg bg-[var(--bg-soft)] border border-[var(--border)] flex items-center justify-center mb-3">
-                    <AutoAnimate icon={Icon} size={16} className="text-[var(--fg)]" interval={5000 + i * 1000} />
+                <motion.div key={i} initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.06 }} className={`group p-6 rounded-2xl border border-[var(--border)] hover:border-[var(--border-strong)] glass-card hover:shadow-colored transition-all duration-300 hover:-translate-y-1 ${isLarge ? 'bento-lg' : ''}`}>
+                  <div className="w-10 h-10 rounded-xl bg-[var(--bg-soft)] border border-[var(--border)] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                    <Icon size={18} className="text-[var(--fg-muted)] group-hover:text-[var(--fg)] transition-colors" />
                   </div>
-                  <h3 className="text-[14px] font-semibold mb-1">{f.title}</h3>
-                  <p className="text-[13px] text-[var(--fg-muted)] leading-relaxed">{f.desc}</p>
+                  <h3 className="text-[15px] font-semibold mb-1.5">{f.title}</h3>
+                  <p className="text-[13px] text-[var(--fg-muted)] leading-[1.6]">{f.desc}</p>
                 </motion.div>
               )
             })}
           </div>
 
-          <div className="text-center mt-8">
-            <Link href="/fonctionnalites" className="text-[13px] text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors underline underline-offset-4 decoration-[var(--border-strong)]">{t.features.seeAll}</Link>
-          </div>
+          <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="text-center mt-12">
+            <Link href="/fonctionnalites" className="inline-flex items-center gap-2 text-[13px] text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors group px-4 py-2 rounded-full hover:bg-[var(--accent-soft)]">
+              {t.features.seeAll}
+              <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </motion.div>
         </div>
       </section>
 
-      {/* Pricing CTA */}
-      <section className="border-t border-[var(--border)] py-20">
+      {/* CTA */}
+      <section className="border-t border-[var(--border)] py-28">
         <div className="max-w-2xl mx-auto px-6 text-center">
-          <motion.div initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-            <h2 className="text-[30px] md:text-[40px] font-bold tracking-[-0.02em] mb-3">
-              {t.pricing.title1}<br /><span className="text-[var(--fg-muted)]">{t.pricing.title2}</span>
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+            <h2 className="text-[34px] md:text-[46px] font-bold tracking-[-0.035em] mb-4">
+              {t.pricing.title1}<br /><span className="gradient-text">{t.pricing.title2}</span>
             </h2>
-            <p className="text-[15px] text-[var(--fg-muted)] max-w-md mx-auto mb-8">{t.pricing.subtitle}</p>
+            <p className="text-[16px] text-[var(--fg-muted)] max-w-md mx-auto mb-10">{t.pricing.subtitle}</p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <Link href="/register">
-                <button className="group h-11 px-6 text-[15px] font-medium rounded-xl bg-[var(--accent)] text-[var(--bg)] hover:bg-[var(--accent-hover)] transition-all hover:scale-[1.02] active:scale-[0.98] inline-flex items-center gap-2">
+                <button className="group h-12 px-7 text-[15px] font-semibold rounded-full bg-[var(--accent)] text-[var(--bg)] hover:bg-[var(--accent-hover)] transition-all hover:scale-[1.02] active:scale-[0.98] inline-flex items-center gap-2 shadow-md hover:shadow-lg">
                   {t.pricing.cta}
                   <ArrowRight size={15} className="group-hover:translate-x-0.5 transition-transform" />
                 </button>
               </Link>
               <Link href="/tarifs">
-                <button className="h-11 px-6 text-[15px] font-medium rounded-xl border border-[var(--border)] hover:bg-[var(--bg-soft)] transition-all active:scale-[0.98]">{t.pricing.seePricing}</button>
+                <button className="h-12 px-7 text-[15px] font-medium rounded-full border border-[var(--border)] hover:bg-[var(--bg-soft)] hover:border-[var(--border-strong)] transition-all">{t.pricing.seePricing}</button>
               </Link>
             </div>
           </motion.div>
@@ -254,19 +230,18 @@ export function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-[var(--border)] py-7">
-        <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-2 text-[13px] text-[var(--fg-muted)]">
+      <footer className="border-t border-[var(--border)] py-8">
+        <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5 text-[13px] text-[var(--fg-muted)]">
             <NetralLogo size={16} />
             <span className="font-medium">Netral</span>
             <span className="text-[var(--fg-subtle)]">© {new Date().getFullYear()}</span>
           </div>
-          <div className="flex items-center gap-5 text-[12px] text-[var(--fg-muted)]">
+          <div className="flex items-center gap-6 text-[12px] text-[var(--fg-muted)]">
             <Link href="/fonctionnalites" className="hover:text-[var(--fg)] transition-colors">{t.nav.features}</Link>
             <Link href="/tarifs" className="hover:text-[var(--fg)] transition-colors">{t.nav.pricing}</Link>
             <Link href="/extensions" className="hover:text-[var(--fg)] transition-colors">VS Code</Link>
             <Link href="#" className="hover:text-[var(--fg)] transition-colors">{t.footer.privacy}</Link>
-            <Link href="#" className="hover:text-[var(--fg)] transition-colors">{t.footer.contact}</Link>
           </div>
         </div>
       </footer>

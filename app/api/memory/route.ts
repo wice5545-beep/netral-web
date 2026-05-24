@@ -2,6 +2,12 @@ import { NextRequest } from 'next/server'
 import { getSession } from '@/lib/session'
 import { db } from '@/lib/db'
 
+// Strip HTML tags and limit length
+function sanitize(input: string | undefined, maxLen: number): string | undefined {
+  if (input === undefined) return undefined
+  return input.replace(/<[^>]*>/g, '').trim().slice(0, maxLen)
+}
+
 export async function GET() {
   const session = await getSession()
   if (!session?.userId) return Response.json({ error: 'Unauthorized' }, { status: 401 })
@@ -15,9 +21,13 @@ export async function PATCH(req: NextRequest) {
   if (!session?.userId) return Response.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await req.json().catch(() => ({}))
-  const { fullName, profession, interests, tone, customInstructions } = body as {
-    fullName?: string; profession?: string; interests?: string; tone?: string; customInstructions?: string
-  }
+  const raw = body as { fullName?: string; profession?: string; interests?: string; tone?: string; customInstructions?: string }
+
+  const fullName = sanitize(raw.fullName, 100)
+  const profession = sanitize(raw.profession, 200)
+  const interests = sanitize(raw.interests, 300)
+  const tone = raw.tone && ['balanced', 'concise', 'friendly', 'technical', 'creative'].includes(raw.tone) ? raw.tone : undefined
+  const customInstructions = sanitize(raw.customInstructions, 2000)
 
   // Upsert
   const { rows: existing } = await db.query(`SELECT id FROM "Memory" WHERE "userId" = $1`, [session.userId])

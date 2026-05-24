@@ -26,22 +26,22 @@ export default function FonctionnalitesPage() {
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--fg)]">
-      <nav className="sticky top-0 z-40 backdrop-blur-md bg-[var(--bg-overlay)] border-b border-[var(--border)]">
-        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <NetralLogo size={24} />
-            <span className="font-semibold text-[15px]">Netral</span>
+      <nav className="fixed top-4 left-1/2 -translate-x-1/2 z-50 nav-pill px-2 py-1.5">
+        <div className="flex items-center gap-1">
+          <Link href="/" className="flex items-center gap-2 px-3 py-1.5">
+            <NetralLogo size={20} />
+            <span className="font-semibold text-[14px]">Netral</span>
           </Link>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1.5 ml-2">
             <LanguageSwitcher />
             <Link href="/register">
-              <button className="h-8 px-3.5 text-[13px] font-medium rounded-[8px] bg-[var(--accent)] text-[var(--bg)] hover:bg-[var(--accent-hover)] transition-colors">{t.nav.start}</button>
+              <button className="h-8 px-3.5 text-[13px] font-medium rounded-full bg-[var(--accent)] text-[var(--bg)] hover:bg-[var(--accent-hover)] transition-colors">{t.nav.start}</button>
             </Link>
           </div>
         </div>
       </nav>
 
-      <section className="max-w-4xl mx-auto px-6 pt-16 pb-12">
+      <section className="max-w-4xl mx-auto px-6 pt-24 pb-12">
         <Link href="/" className="inline-flex items-center gap-1.5 text-[13px] text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors mb-8">
           <ArrowLeft size={14} />
           {t.featuresPage.back}
@@ -59,9 +59,9 @@ export default function FonctionnalitesPage() {
           {t.featuresPage.items.map((f: { title: string; desc: string; details: string[] }, i: number) => {
             const Icon = featureIcons[i]
             return (
-              <motion.div key={i} variants={item} className="group p-6 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border)] hover:border-[var(--border-strong)] hover:shadow-[var(--shadow-md)] transition-all duration-300">
-                <div className="w-10 h-10 rounded-lg bg-[var(--bg-soft)] border border-[var(--border)] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                  <AutoAnimate icon={Icon} size={18} className="text-[var(--fg)]" interval={4000 + i * 600} />
+              <motion.div key={i} variants={item} className="group p-6 rounded-2xl glass-card hover:shadow-colored transition-all duration-300 hover:-translate-y-1">
+                <div className="w-11 h-11 rounded-xl bg-[var(--bg-soft)] border border-[var(--border)] flex items-center justify-center mb-4 group-hover:scale-110 group-hover:shadow-colored transition-all duration-300">
+                  <AutoAnimate icon={Icon} size={20} className="text-[var(--fg)]" interval={4000 + i * 600} />
                 </div>
                 <h3 className="text-[16px] font-semibold mb-2">{f.title}</h3>
                 <p className="text-[14px] text-[var(--fg-muted)] leading-relaxed mb-4">{f.desc}</p>

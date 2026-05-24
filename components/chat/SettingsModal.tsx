@@ -106,30 +106,31 @@ export function SettingsModal({ open, onClose, user }: SettingsModalProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
+            transition={{ duration: 0.2 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
           />
           <motion.div
-            initial={{ opacity: 0, scale: 0.97, y: 8 }}
+            initial={{ opacity: 0, scale: 0.95, y: 12 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.97, y: 8 }}
-            transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+            exit={{ opacity: 0, scale: 0.95, y: 12 }}
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
           >
-            <div className="bg-[var(--bg-elevated)] rounded-xl w-full max-w-3xl max-h-[85vh] overflow-hidden pointer-events-auto shadow-[var(--shadow-xl)] flex flex-col md:flex-row border border-[var(--border)]">
+            <div className="glass-card w-full max-w-3xl max-h-[85vh] overflow-hidden pointer-events-auto shadow-colored flex flex-col md:flex-row">
               {/* Sidebar - icon only */}
               <div className="md:w-14 shrink-0 p-2 md:border-r border-b md:border-b-0 border-[var(--border)] flex md:flex-col items-center gap-1 overflow-x-auto md:overflow-x-visible bg-[var(--bg-soft)]">
                 {tabs.map((t) => {
                   const Icon = t.icon
+                  const isActive = tab === t.id
                   return (
                     <button
                       key={t.id}
                       onClick={() => setTab(t.id)}
                       title={t.label}
                       className={cn(
-                        'w-9 h-9 rounded-lg flex items-center justify-center transition-all shrink-0',
-                        tab === t.id
+                        'w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-150 shrink-0 relative',
+                        isActive
                           ? 'bg-[var(--bg-elevated)] text-[var(--fg)] border border-[var(--border)] shadow-[var(--shadow-xs)]'
                           : 'text-[var(--fg-muted)] hover:bg-[var(--bg-elevated)] hover:text-[var(--fg)]'
                       )}
@@ -201,7 +202,7 @@ export function SettingsModal({ open, onClose, user }: SettingsModalProps) {
                         <h2 className="text-[18px] font-semibold mb-1">Apparence</h2>
                         <p className="text-[13px] text-[var(--fg-muted)]">Choisissez votre thème.</p>
                       </div>
-                      <div className="grid grid-cols-3 gap-2">
+                      <div className="grid grid-cols-3 gap-3">
                         {[
                           { id: 'light', label: 'Clair', icon: Sun },
                           { id: 'dark', label: 'Sombre', icon: Moon },
@@ -213,13 +214,13 @@ export function SettingsModal({ open, onClose, user }: SettingsModalProps) {
                               key={t.id}
                               onClick={() => setTheme(t.id as 'light' | 'dark' | 'system')}
                               className={cn(
-                                'p-4 rounded-lg border flex flex-col items-center gap-2 transition-all',
+                                'p-4 rounded-xl border flex flex-col items-center gap-2.5 transition-all duration-200 hover:-translate-y-0.5',
                                 theme === t.id
-                                  ? 'border-[var(--accent)] bg-[var(--accent-soft)]'
-                                  : 'border-[var(--border)] hover:border-[var(--border-strong)] hover:bg-[var(--bg-soft)]'
+                                  ? 'border-transparent shadow-colored glass-card'
+                                  : 'border-[var(--border)] hover:border-[var(--border-strong)] hover:shadow-sm'
                               )}
                             >
-                              <Icon size={18} strokeWidth={1.5} />
+                              <Icon size={20} strokeWidth={1.5} />
                               <span className="text-[12.5px] font-medium">{t.label}</span>
                             </button>
                           )
@@ -413,64 +414,87 @@ export function SettingsModal({ open, onClose, user }: SettingsModalProps) {
                         <h2 className="text-[18px] font-semibold mb-1">Abonnement</h2>
                         <p className="text-[13px] text-[var(--fg-muted)]">Gérez votre plan.</p>
                       </div>
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-2 gap-3">
                         {[
-                          { id: 'free', name: 'Free', price: '0€', msgs: '1 msg/mois' },
-                          { id: 'plus', name: 'Plus', price: '5€', msgs: '150 msgs/mois' },
-                          { id: 'pro', name: 'Pro', price: '20€', msgs: '750 msgs/mois' },
-                          { id: 'pro_plus', name: 'Pro+', price: '60€', msgs: '2000 msgs/mois' },
+                          { id: 'free', name: 'Free', price: '0€', msgs: '1 msg/jour' },
+                          { id: 'plus', name: 'Plus', price: '5€', msgs: '150 msgs / 2j' },
+                          { id: 'pro', name: 'Pro', price: '20€', msgs: '750 msgs / 2j' },
+                          { id: 'pro_plus', name: 'Pro+', price: '60€', msgs: '2000 msgs / 2j' },
                         ].map((p) => (
-                          <div key={p.id} className={cn('rounded-lg border p-3 transition-all', userPlan === p.id ? 'border-[var(--accent)] bg-[var(--accent-soft)]' : 'border-[var(--border)] hover:border-[var(--border-strong)]')}>
-                            <p className="text-[14px] font-semibold">{p.name}</p>
-                            <p className="text-[18px] font-bold mt-1">{p.price}<span className="text-[11px] text-[var(--fg-muted)] font-normal">/mois</span></p>
-                            <p className="text-[11px] text-[var(--fg-muted)] mt-1">{p.msgs}</p>
+                          <div key={p.id} className={cn('rounded-xl border p-4 transition-all cursor-pointer hover:-translate-y-0.5', userPlan === p.id ? 'border-transparent shadow-colored glass-card' : 'border-[var(--border)] hover:border-[var(--border-strong)] hover:shadow-sm')}>
+                            <div className="flex items-center justify-between mb-2">
+                              <p className="text-[14px] font-bold">{p.name}</p>
+                              {userPlan === p.id && <span className="text-[9px] font-bold px-2 py-0.5 rounded-full gradient-text bg-[var(--accent-soft)]">ACTIF</span>}
+                            </div>
+                            <p className="text-[20px] font-bold">{p.price}<span className="text-[11px] text-[var(--fg-muted)] font-normal">/mois</span></p>
+                            <p className="text-[11px] text-[var(--fg-muted)] mt-1.5">{p.msgs}</p>
                           </div>
                         ))}
                       </div>
-                      <button className="w-full h-10 rounded-md bg-[var(--accent)] text-[var(--bg)] text-[13px] font-medium hover:bg-[var(--accent-hover)] transition-colors">
-                        Changer de plan
-                      </button>
-                      <a href="https://discord.gg/netral" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 w-full h-10 rounded-md border border-[var(--border)] text-[13px] font-medium text-[var(--fg-muted)] hover:bg-[var(--bg-soft)] hover:text-[var(--fg)] transition-colors mt-2">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
-                        S'abonner via Discord
+                      <a href="/tarifs" className="block">
+                        <button className="w-full h-10 rounded-xl bg-[var(--accent)] text-[var(--bg)] text-[13px] font-semibold hover:bg-[var(--accent-hover)] transition-all active:scale-[0.98]">
+                          Gérer mon abonnement
+                        </button>
                       </a>
                     </div>
                   )}
 
                   {tab === 'vscode' && (
-                    <div className="space-y-5">
+                    <div className="space-y-6">
                       <div>
                         <h2 className="text-[18px] font-semibold mb-1">VS Code</h2>
-                        <p className="text-[13px] text-[var(--fg-muted)]">Connectez Netral à votre éditeur.</p>
+                        <p className="text-[13px] text-[var(--fg-muted)]">Connectez Netral à votre éditeur de code.</p>
                       </div>
-                      <div className="rounded-lg border border-[var(--border)] p-4">
-                        <p className="text-[13px] font-medium mb-3">Token API</p>
+
+                      {/* Token API */}
+                      <div className="rounded-xl border border-[var(--border)] p-5 bg-[var(--bg-soft)]/50">
+                        <div className="flex items-center gap-2 mb-3">
+                          <Shield size={14} className="text-[var(--fg-muted)]" />
+                          <p className="text-[13px] font-semibold">Token API</p>
+                        </div>
                         {apiToken ? (
-                          <div className="space-y-2">
+                          <div className="space-y-3">
                             <div className="flex items-center gap-2">
-                              <code className="flex-1 px-3 py-2 rounded-md bg-[var(--bg-soft)] border border-[var(--border)] text-[12px] font-mono break-all">{apiToken}</code>
-                              <button onClick={() => { navigator.clipboard.writeText(apiToken) }} className="h-8 px-3 rounded-md border border-[var(--border)] text-[12px] hover:bg-[var(--bg-soft)] transition-colors">Copier</button>
+                              <code className="flex-1 px-3 py-2.5 rounded-lg bg-[var(--bg)] border border-[var(--border)] text-[11px] font-mono break-all select-all">{apiToken}</code>
+                              <button onClick={() => { navigator.clipboard.writeText(apiToken) }} className="h-9 px-3.5 rounded-lg border border-[var(--border)] text-[12px] font-medium hover:bg-[var(--bg-soft)] transition-colors shrink-0">Copier</button>
                             </div>
-                            <p className="text-[11px] text-[var(--fg-muted)]">Collez ce token dans VS Code avec la commande /init</p>
+                            <p className="text-[11px] text-[var(--fg-muted)]">Collez ce token dans VS Code : Ctrl+Shift+P → &quot;Netral: Initialize&quot;</p>
+                            <button onClick={() => setApiToken('')} className="text-[11px] text-[var(--error)] hover:underline">Révoquer ce token</button>
                           </div>
                         ) : (
-                          <button
-                            onClick={async () => {
-                              try {
-                                const res = await fetch('/api/auth/token', { method: 'POST' })
-                                const data = await res.json()
-                                if (data.token) setApiToken(data.token)
-                              } catch {}
-                            }}
-                            className="h-9 px-4 rounded-md bg-[var(--accent)] text-[var(--bg)] text-[13px] font-medium hover:bg-[var(--accent-hover)] transition-colors"
-                          >
-                            Générer un token Netral
-                          </button>
+                          <div className="space-y-2">
+                            <p className="text-[12px] text-[var(--fg-muted)] mb-3">Générez un token pour connecter l&apos;extension VS Code à votre compte.</p>
+                            <button
+                              onClick={async () => {
+                                try {
+                                  const res = await fetch('/api/auth/token', { method: 'POST' })
+                                  const data = await res.json()
+                                  if (data.token) setApiToken(data.token)
+                                } catch {}
+                              }}
+                              className="h-10 px-5 rounded-lg bg-[var(--accent)] text-[var(--bg)] text-[13px] font-semibold hover:bg-[var(--accent-hover)] transition-all active:scale-[0.98]"
+                            >
+                              Générer un token
+                            </button>
+                          </div>
                         )}
                       </div>
-                      <a href="/netral-0.8.0.vsix" download className="flex items-center gap-2 h-9 px-4 rounded-md border border-[var(--border)] text-[13px] font-medium hover:bg-[var(--bg-soft)] transition-colors w-fit">
-                        Télécharger l'extension .vsix (v0.8.0)
-                      </a>
+
+                      {/* Download */}
+                      <div className="rounded-xl border border-[var(--border)] p-5">
+                        <div className="flex items-center gap-2 mb-3">
+                          <Download size={14} className="text-[var(--fg-muted)]" />
+                          <p className="text-[13px] font-semibold">Extension</p>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <a href="vscode:extension/netral.netral" className="inline-flex items-center gap-2 h-9 px-4 rounded-lg bg-[var(--accent)] text-[var(--bg)] text-[12px] font-medium hover:bg-[var(--accent-hover)] transition-all">
+                            <Download size={12} /> Installer dans VS Code
+                          </a>
+                          <a href="/extensions" className="inline-flex items-center gap-2 h-9 px-4 rounded-lg border border-[var(--border)] text-[12px] font-medium hover:bg-[var(--bg-soft)] transition-all">
+                            Voir toutes les versions
+                          </a>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
