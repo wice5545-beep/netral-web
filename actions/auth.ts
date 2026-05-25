@@ -34,20 +34,25 @@ export async function signup(state: AuthState, formData: FormData): Promise<Auth
   const rl = rateLimit(`signup:${email.toLowerCase()}`, 3, 60 * 60 * 1000)
   if (!rl.allowed) return { message: 'Trop de tentatives. Réessayez plus tard.' }
 
-  // Check if email already exists
-  const { rows: existing } = await db.query(`SELECT id FROM "User" WHERE email = $1`, [email.toLowerCase()])
-  if (existing[0]) return { errors: { email: ['Cet email est déjà utilisé'] } }
+  try {
+    const { rows: existing } = await db.query(`SELECT id FROM "User" WHERE email = $1`, [email.toLowerCase()])
+    if (existing[0]) return { errors: { email: ['Cet email est déjà utilisé'] } }
 
-  const id = randomBytes(12).toString('hex')
-  const hash = await bcrypt.hash(password, 12)
+    const id = randomBytes(12).toString('hex')
+    const hash = await bcrypt.hash(password, 12)
 
-  await db.query(
-    `INSERT INTO "User" (id, name, email, password, onboarded, "preferredModel", plan, "messagesUsed", "messagesResetAt", "createdAt") VALUES ($1, $2, $3, $4, false, 'ntrl-1.3', 'free', 0, $5, now())`,
-    [id, name, email.toLowerCase(), hash, new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1)]
-  )
+    await db.query(
+      `INSERT INTO "User" (id, name, email, password, onboarded, "preferredModel", plan, "messagesUsed", "messagesResetAt", "createdAt") VALUES ($1, $2, $3, $4, false, 'ntrl-1.3', 'free', 0, $5, now())`,
+      [id, name, email.toLowerCase(), hash, new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1)]
+    )
 
-  await createSession(id)
-  redirect('/chat')
+    await createSession(id)
+  } catch (e: any) {
+    if (e?.digest?.includes('NEXT_REDIRECT')) throw e
+    return { message: e.message || 'Erreur lors de la création du compte' }
+  }
+
+  redirect('/onboarding')
 }
 
 export async function login(state: AuthState, formData: FormData): Promise<AuthState> {
@@ -62,23 +67,26 @@ export async function login(state: AuthState, formData: FormData): Promise<AuthS
   const rl = rateLimit(`login:${email.toLowerCase()}`, 5, 15 * 60 * 1000)
   if (!rl.allowed) return { message: 'Trop de tentatives. Réessayez dans 15 minutes.' }
 
-  const { rows } = await db.query(`SELECT id, password FROM "User" WHERE email = $1`, [email.toLowerCase()])
-  if (!rows[0]) return { errors: { email: ['Email ou mot de passe incorrect'] } }
+  try {
+    const { rows } = await db.query(`SELECT id, password FROM "User" WHERE email = $1`, [email.toLowerCase()])
+    if (!rows[0]) return { errors: { email: ['Email ou mot de passe incorrect'] } }
 
-  const user = rows[0]
+    const user = rows[0]
 
-  // First login migration (no password stored yet)
-  if (!user.password) {
-    const hash = await bcrypt.hash(password, 12)
-    await db.query(`UPDATE "User" SET password = $1 WHERE id = $2`, [hash, user.id])
-    await createSession(user.id)
-    redirect('/chat')
+    if (!user.password) {
+      const hash = await bcrypt.hash(password, 12)
+      await db.query(`UPDATE "User" SET password = $1 WHERE id = $2`, [hash, user.id])
+      await createSession(user.id)
+    } else {
+      const valid = await bcrypt.compare(password, user.password)
+      if (!valid) return { errors: { email: ['Email ou mot de passe incorrect'] } }
+      await createSession(user.id)
+    }
+  } catch (e: any) {
+    if (e?.digest?.includes('NEXT_REDIRECT')) throw e
+    return { message: e.message || 'Erreur de connexion' }
   }
 
-  const valid = await bcrypt.compare(password, user.password)
-  if (!valid) return { errors: { email: ['Email ou mot de passe incorrect'] } }
-
-  await createSession(user.id)
   redirect('/chat')
 }
 
