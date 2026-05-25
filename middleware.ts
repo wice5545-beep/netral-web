@@ -21,7 +21,10 @@ export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
 
   // Block suspicious paths
-  if (/\.(php|asp|env|git|sql|bak|config)$/i.test(pathname)) {
+  if (/\.(php|asp|env|git|sql|bak|config|log|ini|htaccess|htpasswd|DS_Store)$/i.test(pathname)) {
+    return new NextResponse('Not Found', { status: 404 })
+  }
+  if (/\/(wp-admin|wp-login|xmlrpc|phpmyadmin|admin|\.well-known\/security)/i.test(pathname)) {
     return new NextResponse('Not Found', { status: 404 })
   }
 

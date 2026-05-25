@@ -20,14 +20,15 @@ export async function POST(req: NextRequest) {
 
   const user = rows[0]
 
-  // If no password stored yet, hash and save it (first login migration)
+  // If no password stored, set it (first login after migration)
   if (!user.password) {
-    const hash = await bcrypt.hash(password, 10)
+    const hash = await bcrypt.hash(password, 12)
     await db.query(`UPDATE "User" SET password = $1 WHERE id = $2`, [hash, user.id])
     await createSession(user.id)
     return Response.json({ ok: true })
   }
 
+  // Constant-time comparison via bcrypt
   const valid = await bcrypt.compare(password, user.password)
   if (!valid) return Response.json({ error: 'Email ou mot de passe incorrect' }, { status: 401 })
 

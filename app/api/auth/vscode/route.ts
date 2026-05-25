@@ -3,6 +3,7 @@ import { SignJWT } from 'jose'
 import { getSession } from '@/lib/session'
 import { db } from '@/lib/db'
 import { randomBytes } from 'crypto'
+import { rateLimit } from '@/lib/rate-limit'
 
 const API_TOKEN_SECRET = new TextEncoder().encode(process.env.API_TOKEN_SECRET || process.env.SESSION_SECRET || 'fallback')
 
@@ -20,7 +21,11 @@ async function ensureTable() {
 }
 
 // POST: Extension initiates a link request (creates a code)
-export async function POST() {
+export async function POST(req: NextRequest) {
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
+  const rl = rateLimit(`vscode-link:${ip}`, 5, 60_000)
+  if (!rl.allowed) return Response.json({ error: 'Too many requests' }, { status: 429 })
+
   await ensureTable()
   const code = randomBytes(16).toString('hex')
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000)
