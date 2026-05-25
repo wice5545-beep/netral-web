@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { createSession } from '@/lib/session'
-import { supabase } from '@/lib/supabase'
+import { getSupabase } from '@/lib/supabase'
 import { db } from '@/lib/db'
 import { rateLimit } from '@/lib/rate-limit'
 
@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
   const rl = rateLimit(`login-api:${email.toLowerCase()}`, 5, 15 * 60 * 1000)
   if (!rl.allowed) return Response.json({ error: 'Trop de tentatives' }, { status: 429 })
 
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+  const { data, error } = await getSupabase().auth.signInWithPassword({ email, password })
 
   if (error || !data.user) {
     // Fallback: create in Supabase if user exists in DB
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
       const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
       await admin.auth.admin.createUser({ email, password, email_confirm: true, user_metadata: { name: rows[0].name } }).catch(() => {})
       await admin.auth.admin.updateUserById(rows[0].id, { password }).catch(() => {})
-      const { data: retry, error: retryErr } = await supabase.auth.signInWithPassword({ email, password })
+      const { data: retry, error: retryErr } = await getSupabase().auth.signInWithPassword({ email, password })
       if (retryErr || !retry.user) return Response.json({ error: 'Email ou mot de passe incorrect' }, { status: 401 })
       await createSession(retry.user.id)
       return Response.json({ ok: true })

@@ -2,7 +2,7 @@
 
 import { z } from 'zod'
 import { redirect } from 'next/navigation'
-import { supabaseAdmin, supabase } from '@/lib/supabase'
+import { getSupabase, getSupabaseAdmin } from '@/lib/supabase'
 import { createSession, deleteSession } from '@/lib/session'
 
 const SignupSchema = z.object({
@@ -33,7 +33,7 @@ export async function signup(state: AuthState, formData: FormData): Promise<Auth
   const rl = rateLimit(`signup:${email.toLowerCase()}`, 3, 60 * 60 * 1000)
   if (!rl.allowed) return { message: 'Trop de tentatives. Réessayez plus tard.' }
 
-  const { data, error } = await supabaseAdmin.auth.admin.createUser({
+  const { data, error } = await getSupabaseAdmin().auth.admin.createUser({
     email,
     password,
     user_metadata: { name },
@@ -70,7 +70,7 @@ export async function login(state: AuthState, formData: FormData): Promise<AuthS
   if (!rl.allowed) return { message: 'Trop de tentatives. Réessayez dans 15 minutes.' }
 
   // Verify password via Supabase signInWithPassword
-  const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ email, password })
+  const { data: signInData, error: signInError } = await getSupabase().auth.signInWithPassword({ email, password })
 
   if (signInError || !signInData.user) {
     // Fallback: try to create user in Supabase if they exist in DB but not in Supabase
@@ -79,7 +79,7 @@ export async function login(state: AuthState, formData: FormData): Promise<AuthS
 
     if (rows[0]) {
       // User exists in DB but not in Supabase — recreate in Supabase
-      const { data: newUser, error: createErr } = await supabaseAdmin.auth.admin.createUser({
+      const { data: newUser, error: createErr } = await getSupabaseAdmin().auth.admin.createUser({
         email,
         password,
         email_confirm: true,
@@ -91,12 +91,12 @@ export async function login(state: AuthState, formData: FormData): Promise<AuthS
       }
 
       // Try login again
-      const { data: retryData, error: retryErr } = await supabase.auth.signInWithPassword({ email, password })
+      const { data: retryData, error: retryErr } = await getSupabase().auth.signInWithPassword({ email, password })
       if (retryErr || !retryData.user) {
         // If still fails, update password in Supabase
         if (rows[0].id) {
-          await supabaseAdmin.auth.admin.updateUserById(rows[0].id, { password })
-          const { data: finalData, error: finalErr } = await supabase.auth.signInWithPassword({ email, password })
+          await getSupabaseAdmin().auth.admin.updateUserById(rows[0].id, { password })
+          const { data: finalData, error: finalErr } = await getSupabase().auth.signInWithPassword({ email, password })
           if (finalErr || !finalData.user) {
             return { errors: { email: ['Email ou mot de passe incorrect'] } }
           }
