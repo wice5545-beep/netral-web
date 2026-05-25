@@ -61,7 +61,7 @@ export default function ExtensionsPage() {
             <div className="flex flex-wrap items-center gap-3 mt-6">
               <a href="vscode:extension/netral.netral" className="inline-flex items-center gap-2 h-11 px-6 rounded-xl text-white text-[14px] font-semibold hover:scale-[1.02] transition-all active:scale-[0.98] shadow-colored" style={{ background: 'linear-gradient(135deg, #7c3aed, #f97316)' }}><Download size={15} />{ext.installVSCode}</a>
               {latest ? (
-                <a href={`/${latest.filename}`} download className="inline-flex items-center gap-2 h-11 px-6 rounded-xl border border-[var(--border)] text-[14px] font-medium hover:bg-[var(--bg-soft)] transition-all active:scale-[0.98]"><Download size={15} />{ext.downloadVsix} (v{latest.version})</a>
+                <a href={latest.downloadUrl || latest.marketplaceUrl} target="_blank" className="inline-flex items-center gap-2 h-11 px-6 rounded-xl border border-[var(--border)] text-[14px] font-medium hover:bg-[var(--bg-soft)] transition-all active:scale-[0.98]"><Download size={15} />{ext.downloadVsix} (v{latest.version})</a>
               ) : loading ? <span className="text-[13px] text-[var(--fg-muted)]">{ext.loading}</span> : null}
             </div>
           </div>
@@ -89,19 +89,6 @@ export default function ExtensionsPage() {
         </motion.div>
       </section>
 
-      {latest?.allVersions && latest.allVersions.length > 1 && (
-        <section className="max-w-4xl mx-auto px-6 pb-24">
-          <h3 className="text-[14px] font-semibold mb-3">{ext.olderVersions}</h3>
-          <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] divide-y divide-[var(--border)]">
-            {latest.allVersions.slice(1, 6).map(v => (
-              <div key={v.version} className="flex items-center justify-between px-5 py-3">
-                <span className="text-[13px] font-mono text-[var(--fg-muted)]">v{v.version}</span>
-                <a href={`/${v.filename}`} download className="text-[12px] text-[var(--accent)] hover:underline flex items-center gap-1"><Download size={12} />{ext.download}</a>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
     </div>
   )
 }
