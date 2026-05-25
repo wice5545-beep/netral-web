@@ -1,18 +1,15 @@
 'use client'
 
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense, useEffect, useState, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Check, Code2, Loader2, X, ArrowRight, Shield, Zap } from 'lucide-react'
-import { useI18n } from '@/lib/i18n'
+import { Check, Code2, Loader2, X, ArrowRight, Shield, Zap, Terminal, Clock } from 'lucide-react'
 
 type Status = 'loading' | 'login' | 'confirm' | 'authorizing' | 'success' | 'error' | 'expired'
 
 function VSCodeAuthContent() {
   const params = useSearchParams()
   const code = params.get('code')
-  const { t } = useI18n()
-  const v = t.vscodeAuth || {}
   const [status, setStatus] = useState<Status>('loading')
   const [error, setError] = useState('')
   const [email, setEmail] = useState('')
@@ -20,6 +17,7 @@ function VSCodeAuthContent() {
   const [loginLoading, setLoginLoading] = useState(false)
   const [loginError, setLoginError] = useState('')
   const [userName, setUserName] = useState('')
+  const [timeLeft, setTimeLeft] = useState(600) // 10 min
 
   useEffect(() => {
     if (!code) { setStatus('error'); setError('Code manquant. Relancez /login dans VS Code.'); return }
@@ -31,7 +29,20 @@ function VSCodeAuthContent() {
     }).catch(() => setStatus('login'))
   }, [code])
 
-  const doAuthorize = async () => {
+  // Countdown timer
+  useEffect(() => {
+    if (status === 'login' || status === 'confirm') {
+      const interval = setInterval(() => {
+        setTimeLeft(t => {
+          if (t <= 1) { clearInterval(interval); setStatus('expired'); return 0 }
+          return t - 1
+        })
+      }, 1000)
+      return () => clearInterval(interval)
+    }
+  }, [status])
+
+  const doAuthorize = useCallback(async () => {
     setStatus('authorizing')
     try {
       const res = await fetch('/api/auth/vscode', {
@@ -39,15 +50,14 @@ function VSCodeAuthContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code }),
       })
-      if (res.ok) {
-        setStatus('success')
-      } else {
+      if (res.ok) setStatus('success')
+      else {
         const data = await res.json()
         if (res.status === 410) setStatus('expired')
-        else { setStatus('error'); setError(data.error || 'Erreur de liaison') }
+        else { setStatus('error'); setError(data.error || 'Erreur') }
       }
-    } catch { setStatus('error'); setError('Erreur réseau. Vérifiez votre connexion.') }
-  }
+    } catch { setStatus('error'); setError('Erreur réseau') }
+  }, [code])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -63,183 +73,187 @@ function VSCodeAuthContent() {
         const userRes = await fetch('/api/user')
         const userData = await userRes.json()
         if (userData?.user) setUserName(userData.user.name || userData.user.email)
-        // Auto-authorize after login
         await doAuthorize()
       } else {
         const data = await res.json()
-        setLoginError(data.error || 'Email ou mot de passe incorrect')
+        setLoginError(data.error || 'Identifiants incorrects')
       }
     } catch { setLoginError('Erreur réseau') }
     setLoginLoading(false)
   }
 
-  const stepIndicator = (
-    <div className="flex items-center justify-center gap-2 mb-6">
-      {['Connexion', 'Autorisation', 'Terminé'].map((label, i) => {
-        const stepNum = status === 'login' ? 0 : status === 'confirm' || status === 'authorizing' ? 1 : status === 'success' ? 2 : -1
-        const isActive = i === stepNum
-        const isDone = i < stepNum
-        return (
-          <div key={label} className="flex items-center gap-2">
-            {i > 0 && <div className={`w-6 h-[1px] ${isDone ? 'bg-emerald-500' : 'bg-[var(--border)]'}`} />}
-            <div className={`flex items-center gap-1.5 ${isActive ? 'text-[var(--fg)]' : isDone ? 'text-emerald-500' : 'text-[var(--fg-subtle)]'}`}>
-              <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold border ${isDone ? 'bg-emerald-500 border-emerald-500 text-white' : isActive ? 'border-[var(--fg)] text-[var(--fg)]' : 'border-[var(--border)] text-[var(--fg-subtle)]'}`}>
-                {isDone ? <Check size={10} /> : i + 1}
-              </div>
-              <span className="text-[10px] font-medium hidden sm:inline">{label}</span>
-            </div>
-          </div>
-        )
-      })}
-    </div>
-  )
+  const formatTime = (s: number) => `${Math.floor(s/60)}:${(s%60).toString().padStart(2,'0')}`
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[var(--bg)] px-6 relative overflow-hidden">
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] gradient-orb rounded-full -z-10" />
+    <div className="min-h-screen flex items-center justify-center bg-[var(--bg)] px-4 relative overflow-hidden">
+      {/* Background effects */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] rounded-full bg-blue-500/[0.02] blur-[100px]" />
+        <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full bg-purple-500/[0.02] blur-[80px]" />
+      </div>
 
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="w-full max-w-[400px]"
+        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+        className="w-full max-w-[420px] relative"
       >
-        {/* Header icons */}
-        <div className="flex items-center justify-center gap-3 mb-6">
-          <div className="w-11 h-11 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #7c3aed, #f97316)' }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M6 18V6h2.5l7 9.5V6H18v12h-2.5l-7-9.5V18H6z" fill="white"/></svg>
+        {/* Device code header */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg shadow-blue-500/20">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 18V6h2.5l7 9.5V6H18v12h-2.5l-7-9.5V18H6z" fill="white"/></svg>
+            </div>
+            <div>
+              <p className="text-[14px] font-bold text-[var(--fg)]">Netral Code</p>
+              <p className="text-[11px] text-[var(--fg-muted)]">Liaison IDE</p>
+            </div>
           </div>
-          <div className="flex items-center gap-1">
-            <div className="w-1.5 h-1.5 rounded-full bg-[var(--border-strong)]" />
-            <div className="w-1.5 h-1.5 rounded-full bg-[var(--border-strong)]" />
-            <div className="w-1.5 h-1.5 rounded-full bg-[var(--border-strong)]" />
-          </div>
-          <div className="w-11 h-11 rounded-xl bg-[var(--bg-soft)] border border-[var(--border)] flex items-center justify-center">
-            <Code2 size={20} className="text-[var(--fg-muted)]" />
-          </div>
+          {(status === 'login' || status === 'confirm') && (
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[var(--bg-soft)] border border-[var(--border)] text-[11px] text-[var(--fg-muted)]">
+              <Clock size={10} />
+              <span className="font-mono">{formatTime(timeLeft)}</span>
+            </div>
+          )}
         </div>
 
-        <div className="text-center mb-5">
-          <h1 className="text-[22px] font-bold tracking-[-0.02em] mb-1">Lier VS Code</h1>
-          <p className="text-[13px] text-[var(--fg-muted)]">Connectez Netral Code à votre compte</p>
-        </div>
+        {/* Device code display */}
+        {code && status !== 'success' && status !== 'error' && status !== 'expired' && (
+          <div className="mb-5 p-3 rounded-lg bg-[var(--bg-soft)] border border-[var(--border)] flex items-center gap-3">
+            <Terminal size={14} className="text-[var(--fg-muted)] shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-[9px] text-[var(--fg-subtle)] uppercase tracking-wider font-semibold mb-0.5">Device Code</p>
+              <p className="text-[13px] font-mono font-bold text-[var(--fg)] tracking-wide">{code.slice(0, 8).toUpperCase()}</p>
+            </div>
+            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+          </div>
+        )}
 
-        {/* Step indicator */}
-        {status !== 'error' && status !== 'expired' && status !== 'loading' && stepIndicator}
-
-        {/* Card */}
-        <div className="glass-card p-6 shadow-colored">
+        {/* Main card */}
+        <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-xl shadow-black/10">
           <AnimatePresence mode="wait">
             {status === 'loading' && (
-              <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="py-10 flex flex-col items-center gap-3">
-                <Loader2 size={22} className="animate-spin text-[var(--fg-muted)]" />
-                <p className="text-[13px] text-[var(--fg-muted)]">Vérification...</p>
+              <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="py-8 flex flex-col items-center gap-3">
+                <Loader2 size={20} className="animate-spin text-blue-500" />
+                <p className="text-[12px] text-[var(--fg-muted)]">Vérification de la session...</p>
               </motion.div>
             )}
 
             {status === 'login' && (
-              <motion.form key="login" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} onSubmit={handleLogin} className="space-y-4">
-                <p className="text-[12px] text-[var(--fg-muted)] text-center mb-2">Connectez-vous à votre compte Netral</p>
-                <div>
-                  <label className="text-[11px] font-medium text-[var(--fg-muted)] mb-1.5 block uppercase tracking-wide">Email</label>
-                  <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" required autoFocus className="w-full h-10 px-3.5 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[14px] text-[var(--fg)] placeholder:text-[var(--fg-subtle)] focus:outline-none focus:border-[var(--border-strong)] focus:shadow-[0_0_0_3px_var(--accent-soft)] transition-all" />
+              <motion.div key="login" initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 8 }}>
+                <div className="text-center mb-5">
+                  <h2 className="text-[17px] font-bold text-[var(--fg)] mb-1">Connexion</h2>
+                  <p className="text-[12px] text-[var(--fg-muted)]">Identifiez-vous pour autoriser VS Code</p>
                 </div>
-                <div>
-                  <label className="text-[11px] font-medium text-[var(--fg-muted)] mb-1.5 block uppercase tracking-wide">Mot de passe</label>
-                  <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required className="w-full h-10 px-3.5 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] text-[14px] text-[var(--fg)] placeholder:text-[var(--fg-subtle)] focus:outline-none focus:border-[var(--border-strong)] focus:shadow-[0_0_0_3px_var(--accent-soft)] transition-all" />
-                </div>
-                {loginError && (
-                  <div className="flex items-center gap-2 p-2.5 rounded-lg bg-red-500/5 border border-red-500/10">
-                    <X size={12} className="text-red-500 shrink-0" />
-                    <p className="text-[12px] text-red-500">{loginError}</p>
+                <form onSubmit={handleLogin} className="space-y-3">
+                  <div>
+                    <label className="text-[11px] font-semibold text-[var(--fg-muted)] mb-1 block">Email</label>
+                    <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="vous@email.com" required autoFocus className="w-full h-10 px-3 rounded-lg bg-[var(--bg)] border border-[var(--border)] text-[13px] text-[var(--fg)] placeholder:text-[var(--fg-subtle)] focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all" />
                   </div>
-                )}
-                <button type="submit" disabled={loginLoading} className="w-full h-11 rounded-lg bg-[var(--accent)] text-[var(--bg)] text-[14px] font-semibold hover:bg-[var(--accent-hover)] transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2">
-                  {loginLoading ? <Loader2 size={14} className="animate-spin" /> : <><span>Se connecter et autoriser</span><ArrowRight size={14} /></>}
-                </button>
-              </motion.form>
+                  <div>
+                    <label className="text-[11px] font-semibold text-[var(--fg-muted)] mb-1 block">Mot de passe</label>
+                    <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required className="w-full h-10 px-3 rounded-lg bg-[var(--bg)] border border-[var(--border)] text-[13px] text-[var(--fg)] placeholder:text-[var(--fg-subtle)] focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all" />
+                  </div>
+                  {loginError && (
+                    <div className="flex items-center gap-2 p-2.5 rounded-lg bg-red-500/5 border border-red-500/10 text-[11px] text-red-400">
+                      <X size={12} className="shrink-0" />{loginError}
+                    </div>
+                  )}
+                  <button type="submit" disabled={loginLoading} className="w-full h-10 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 text-white text-[13px] font-semibold hover:from-blue-600 hover:to-blue-700 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20">
+                    {loginLoading ? <Loader2 size={14} className="animate-spin" /> : <><span>Connecter et autoriser</span><ArrowRight size={14} /></>}
+                  </button>
+                </form>
+              </motion.div>
             )}
 
             {status === 'confirm' && (
-              <motion.div key="confirm" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} className="py-2">
-                <div className="flex items-center gap-3 p-3.5 rounded-lg bg-[var(--bg-soft)] border border-[var(--border)] mb-5">
-                  <div className="w-9 h-9 rounded-full flex items-center justify-center text-[13px] font-bold text-white" style={{ background: 'linear-gradient(135deg, #7c3aed, #f97316)' }}>
+              <motion.div key="confirm" initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 8 }}>
+                <div className="text-center mb-5">
+                  <h2 className="text-[17px] font-bold text-[var(--fg)] mb-1">Autoriser l&apos;accès</h2>
+                  <p className="text-[12px] text-[var(--fg-muted)]">Netral Code demande accès à votre compte</p>
+                </div>
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-[var(--bg-soft)] border border-[var(--border)] mb-4">
+                  <div className="w-9 h-9 rounded-full flex items-center justify-center text-[12px] font-bold text-white bg-gradient-to-br from-blue-500 to-purple-600">
                     {userName[0]?.toUpperCase()}
                   </div>
                   <div className="flex-1">
-                    <p className="text-[13px] font-medium">{userName}</p>
-                    <p className="text-[11px] text-[var(--fg-muted)]">Compte Netral</p>
+                    <p className="text-[13px] font-semibold text-[var(--fg)]">{userName}</p>
+                    <p className="text-[10px] text-[var(--fg-muted)]">Compte Netral</p>
                   </div>
-                  <Check size={16} className="text-emerald-500" />
+                  <Check size={14} className="text-green-500" />
                 </div>
-
-                <div className="space-y-2.5 mb-5">
-                  <div className="flex items-center gap-2.5 text-[12px] text-[var(--fg-muted)]">
-                    <Shield size={13} className="text-[var(--fg-subtle)]" />
-                    <span>Accès à votre quota de messages</span>
+                <div className="space-y-2 mb-5 px-1">
+                  <div className="flex items-center gap-2.5 text-[11px] text-[var(--fg-muted)]">
+                    <Shield size={12} className="text-blue-400" /><span>Accès au quota de messages</span>
                   </div>
-                  <div className="flex items-center gap-2.5 text-[12px] text-[var(--fg-muted)]">
-                    <Zap size={13} className="text-[var(--fg-subtle)]" />
-                    <span>Utilisation de l&apos;AI depuis VS Code</span>
+                  <div className="flex items-center gap-2.5 text-[11px] text-[var(--fg-muted)]">
+                    <Zap size={12} className="text-amber-400" /><span>Exécution de code dans VS Code</span>
+                  </div>
+                  <div className="flex items-center gap-2.5 text-[11px] text-[var(--fg-muted)]">
+                    <Code2 size={12} className="text-purple-400" /><span>Lecture/écriture de fichiers</span>
                   </div>
                 </div>
-
-                <button onClick={doAuthorize} className="w-full h-11 rounded-lg bg-[var(--accent)] text-[var(--bg)] text-[14px] font-semibold hover:bg-[var(--accent-hover)] transition-all active:scale-[0.98] flex items-center justify-center gap-2">
-                  <Shield size={14} />
-                  <span>Autoriser Netral Code</span>
+                <button onClick={doAuthorize} className="w-full h-10 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 text-white text-[13px] font-semibold hover:from-blue-600 hover:to-blue-700 transition-all active:scale-[0.98] flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20">
+                  <Shield size={14} /><span>Autoriser</span>
                 </button>
-                <p className="text-[10px] text-[var(--fg-subtle)] mt-3 text-center">Un token API sera créé. Révocable à tout moment.</p>
+                <p className="text-[10px] text-[var(--fg-subtle)] mt-3 text-center">Token API créé · Révocable dans les paramètres</p>
               </motion.div>
             )}
 
             {status === 'authorizing' && (
-              <motion.div key="authorizing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="py-10 flex flex-col items-center gap-3">
-                <Loader2 size={22} className="animate-spin text-[var(--fg-muted)]" />
-                <p className="text-[13px] text-[var(--fg-muted)]">Autorisation en cours...</p>
+              <motion.div key="auth" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="py-8 flex flex-col items-center gap-3">
+                <div className="relative">
+                  <Loader2 size={20} className="animate-spin text-blue-500" />
+                  <div className="absolute inset-0 animate-ping opacity-20"><Loader2 size={20} className="text-blue-500" /></div>
+                </div>
+                <p className="text-[12px] text-[var(--fg-muted)]">Génération du token sécurisé...</p>
               </motion.div>
             )}
 
             {status === 'success' && (
-              <motion.div key="success" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="py-8 flex flex-col items-center gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center">
-                  <Check size={28} className="text-emerald-500" />
+              <motion.div key="success" initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="py-6 flex flex-col items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-green-500/10 flex items-center justify-center ring-4 ring-green-500/5">
+                  <Check size={24} className="text-green-500" />
                 </div>
                 <div className="text-center">
-                  <h2 className="text-[18px] font-bold mb-1">Connecté !</h2>
-                  <p className="text-[13px] text-[var(--fg-muted)]">Retournez dans VS Code — l&apos;extension est prête.</p>
+                  <h2 className="text-[16px] font-bold text-[var(--fg)] mb-1">Connecté</h2>
+                  <p className="text-[12px] text-[var(--fg-muted)]">Retournez dans VS Code — l&apos;extension est prête.</p>
                 </div>
-                <p className="text-[11px] text-[var(--fg-subtle)] mt-2">Vous pouvez fermer cette page.</p>
+                <div className="mt-2 px-3 py-1.5 rounded-full bg-green-500/5 border border-green-500/10 text-[10px] text-green-400 font-medium">
+                  Vous pouvez fermer cette page
+                </div>
               </motion.div>
             )}
 
             {status === 'expired' && (
-              <motion.div key="expired" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-8 flex flex-col items-center gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-amber-500/10 flex items-center justify-center">
-                  <X size={28} className="text-amber-500" />
+              <motion.div key="expired" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-6 flex flex-col items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center">
+                  <Clock size={24} className="text-amber-500" />
                 </div>
                 <div className="text-center">
-                  <h2 className="text-[16px] font-bold mb-1">Code expiré</h2>
-                  <p className="text-[13px] text-[var(--fg-muted)]">Le code a expiré (5 min). Tapez <code className="px-1.5 py-0.5 rounded bg-[var(--bg-soft)] text-[12px] font-mono">/login</code> dans VS Code pour réessayer.</p>
+                  <h2 className="text-[15px] font-bold text-[var(--fg)] mb-1">Code expiré</h2>
+                  <p className="text-[12px] text-[var(--fg-muted)]">Tapez <code className="px-1.5 py-0.5 rounded bg-[var(--bg-soft)] text-[11px] font-mono">/login</code> dans VS Code pour réessayer.</p>
                 </div>
               </motion.div>
             )}
 
             {status === 'error' && (
-              <motion.div key="error" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-8 flex flex-col items-center gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-red-500/10 flex items-center justify-center">
-                  <X size={28} className="text-red-500" />
+              <motion.div key="error" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-6 flex flex-col items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center">
+                  <X size={24} className="text-red-500" />
                 </div>
                 <div className="text-center">
-                  <h2 className="text-[16px] font-bold mb-1">Erreur</h2>
-                  <p className="text-[13px] text-[var(--fg-muted)]">{error}</p>
+                  <h2 className="text-[15px] font-bold text-[var(--fg)] mb-1">Erreur</h2>
+                  <p className="text-[12px] text-[var(--fg-muted)]">{error}</p>
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
 
-        <p className="text-[10px] text-[var(--fg-subtle)] text-center mt-5">
-          netral.app — Agent IA pour développeurs
+        {/* Footer */}
+        <p className="text-[10px] text-[var(--fg-subtle)] text-center mt-4">
+          netral.app · Connexion sécurisée chiffrée
         </p>
       </motion.div>
     </div>
