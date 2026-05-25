@@ -106,10 +106,10 @@ export async function POST(req: NextRequest) {
       const now = new Date()
       const resetAt = new Date(userData.messagesResetAt)
       if (now > resetAt) {
-        // Free: reset monthly, Paid: reset every 2 days
+        // Free: reset weekly, Paid: reset every 2 days
         const isFree = (userData.plan || 'free') === 'free'
         const nextReset = isFree
-          ? new Date(now.getFullYear(), now.getMonth() + 1, 1)
+          ? new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
           : new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000)
         await db.query(`UPDATE "User" SET "messagesUsed" = 0, "messagesResetAt" = $1 WHERE id = $2`, [nextReset, userId])
         userData.messagesUsed = 0
