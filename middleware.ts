@@ -55,6 +55,13 @@ export async function middleware(req: NextRequest) {
   response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
   response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
 
+  // CORS for API routes (allow VS Code extension)
+  if (pathname.startsWith('/api')) {
+    response.headers.set('Access-Control-Allow-Origin', '*')
+    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  }
+
   // CSP for non-API routes
   if (!pathname.startsWith('/api')) {
     response.headers.set(

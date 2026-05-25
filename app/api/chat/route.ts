@@ -58,6 +58,7 @@ async function authenticateRequest(req: NextRequest): Promise<AuthResult | null>
 }
 
 export async function POST(req: NextRequest) {
+  try {
   const auth = await authenticateRequest(req)
   if (!auth) return new Response('Unauthorized', { status: 401 })
 
@@ -76,14 +77,24 @@ export async function POST(req: NextRequest) {
 
   // Rate limit per IP — skip for Plus/Pro/Pro+ plans
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
-  const { rows: planRows } = await db.query(`SELECT plan FROM "User" WHERE id = $1`, [userId])
+  const { rows: planRows } = await db.query(`SELECT plan, role FROM "User" WHERE id = $1`, [userId])
   const userPlan = planRows[0]?.plan || 'free'
+  const userRole = planRows[0]?.role || 'user'
+
+  // Block banned users
+  if (userRole === 'banned') return new Response('Votre compte a été suspendu.', { status: 403 })
+
   const isPaid = userPlan === 'plus' || userPlan === 'pro' || userPlan === 'pro_plus'
 
   if (!isPaid) {
     const ipRl = rateLimit(`ip:${ip}`, 3, 30_000)
     if (!ipRl.allowed) return new Response('Trop de requêtes depuis cette adresse. Réessayez dans 30 secondes.', { status: 429 })
   }
+
+  // Per-user rate limit (even for paid users)
+  const userRlLimit = isPaid ? 60 : 10
+  const userRl = rateLimit(`user:${userId}`, userRlLimit, 60_000)
+  if (!userRl.allowed) return new Response('Trop de requêtes. Attendez un moment.', { status: 429 })
 
   // Plan-based message limit
   try {
@@ -323,4 +334,8 @@ export async function POST(req: NextRequest) {
   return new Response(stream, {
     headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache, no-transform', Connection: 'keep-alive', 'X-Accel-Buffering': 'no' },
   })
+  } catch (e: any) {
+    console.error('[CHAT ERROR]', e.message)
+    return new Response(e.message || 'Internal server error', { status: 500 })
+  }
 }
