@@ -1,4 +1,4 @@
-﻿node_modules/
+node_modules/
 .next/
 *.db
 *.db-journal
@@ -11,3 +11,4 @@ tsconfig.tsbuildinfo
 
 .vercel
 .env*.local
+*.vsix
