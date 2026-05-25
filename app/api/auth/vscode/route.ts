@@ -23,7 +23,7 @@ async function ensureTable() {
 export async function POST() {
   await ensureTable()
   const code = randomBytes(16).toString('hex')
-  const expiresAt = new Date(Date.now() + 5 * 60 * 1000)
+  const expiresAt = new Date(Date.now() + 10 * 60 * 1000)
 
   await db.query(
     `INSERT INTO "VscodeLink" ("code", "expiresAt") VALUES ($1, $2)`,
