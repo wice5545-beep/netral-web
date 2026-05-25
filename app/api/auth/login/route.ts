@@ -7,6 +7,8 @@ import bcrypt from 'bcryptjs'
 export async function POST(req: NextRequest) {
   const { email, password } = await req.json().catch(() => ({ email: '', password: '' }))
   if (!email || !password) return Response.json({ error: 'Email et mot de passe requis' }, { status: 400 })
+  if (email.length > 254 || password.length > 128) return Response.json({ error: 'Input trop long' }, { status: 400 })
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return Response.json({ error: 'Email invalide' }, { status: 400 })
 
   const rl = rateLimit(`login:${email.toLowerCase()}`, 5, 15 * 60 * 1000)
   if (!rl.allowed) return Response.json({ error: 'Trop de tentatives' }, { status: 429 })

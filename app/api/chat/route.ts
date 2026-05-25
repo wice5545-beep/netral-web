@@ -84,6 +84,12 @@ export async function POST(req: NextRequest) {
   // Block banned users
   if (userRole === 'banned') return new Response('Votre compte a été suspendu.', { status: 403 })
 
+  // Input size limit (prevent abuse)
+  const contentLength = req.headers.get('content-length')
+  if (contentLength && parseInt(contentLength) > 500_000) {
+    return new Response('Message trop long.', { status: 413 })
+  }
+
   const isPaid = userPlan === 'plus' || userPlan === 'pro' || userPlan === 'pro_plus'
 
   if (!isPaid) {

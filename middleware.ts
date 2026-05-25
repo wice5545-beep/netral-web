@@ -24,8 +24,13 @@ export async function middleware(req: NextRequest) {
   if (/\.(php|asp|env|git|sql|bak|config|log|ini|htaccess|htpasswd|DS_Store)$/i.test(pathname)) {
     return new NextResponse('Not Found', { status: 404 })
   }
-  if (/\/(wp-admin|wp-login|xmlrpc|phpmyadmin|admin|\.well-known\/security)/i.test(pathname)) {
+  if (/\/(wp-admin|wp-login|xmlrpc|phpmyadmin|admin|\.well-known\/security|cgi-bin|\.aws|\.docker|\.ssh)/i.test(pathname)) {
     return new NextResponse('Not Found', { status: 404 })
+  }
+
+  // Block path traversal attempts
+  if (pathname.includes('..') || pathname.includes('%2e%2e')) {
+    return new NextResponse('Forbidden', { status: 403 })
   }
 
   // CSRF protection for non-GET API requests
