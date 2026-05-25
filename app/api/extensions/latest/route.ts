@@ -1,6 +1,6 @@
 // Returns the latest VSIX version info for auto-update
 export async function GET() {
-  const version = '0.31.0'
+  const version = '0.37.0'
   const baseUrl = 'https://marketplace.visualstudio.com/items?itemName=netral.netral'
 
   return Response.json({
