@@ -702,6 +702,10 @@ input::placeholder, textarea::placeholder {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  color: #7c3aed;
+}
+.dark .gradient-text {
+  color: #a78bfa;
 }
 
 /* Glass card */
