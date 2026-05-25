@@ -821,4 +821,39 @@ input::placeholder, textarea::placeholder {
     grid-column: span 1;
     grid-row: span 1;
   }
+  .nav-pill {
+    left: 8px;
+    right: 8px;
+    transform: none;
+    border-radius: 16px;
+    padding: 4px 6px;
+  }
+  .nav-pill .hidden {
+    display: none !important;
+  }
+}
+
+@media (max-width: 640px) {
+  h1 {
+    font-size: clamp(2rem, 10vw, 3rem) !important;
+  }
+  section {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+  .glass-card {
+    border-radius: 16px;
+  }
+  .nav-pill {
+    top: 8px;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .bento-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .bento-grid .bento-lg {
+    grid-column: span 2;
+  }
 }

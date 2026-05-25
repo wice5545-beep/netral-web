@@ -190,7 +190,7 @@ export function LandingPage() {
 
       {/* Stats */}
       <section className="border-t border-[var(--border)] py-20">
-        <div className="max-w-3xl mx-auto px-6 grid grid-cols-3 gap-6">
+        <div className="max-w-3xl mx-auto px-6 grid grid-cols-1 sm:grid-cols-3 gap-6">
           {stats.map((s, i) => (
             <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} className="text-center">
               <p className="text-[34px] md:text-[44px] font-bold tracking-[-0.04em]">{s.value}</p>
