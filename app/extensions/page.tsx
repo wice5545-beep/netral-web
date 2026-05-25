@@ -9,7 +9,7 @@ import { extensionsTranslations } from '@/lib/i18n/extensions'
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher'
 import { useEffect, useState } from 'react'
 
-type VersionInfo = { version: string; filename: string; downloadUrl: string; allVersions?: { version: string; filename: string }[] }
+type VersionInfo = { version: string; filename: string; downloadUrl: string; marketplaceUrl?: string; allVersions?: { version: string; filename: string }[] }
 
 export default function ExtensionsPage() {
   const { t, locale } = useI18n()
