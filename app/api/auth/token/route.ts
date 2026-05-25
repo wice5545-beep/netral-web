@@ -34,7 +34,8 @@ export async function POST() {
 
   const tokenId = randomBytes(16).toString('hex')
 
-  // Store token reference in DB (for revocation)
+  await db.query(`CREATE TABLE IF NOT EXISTS "ApiToken" ("id" TEXT PRIMARY KEY, "userId" TEXT NOT NULL, "name" TEXT DEFAULT 'API', "createdAt" TIMESTAMP DEFAULT now(), "revokedAt" TIMESTAMP)`).catch(() => {})
+
   await db.query(
     `INSERT INTO "ApiToken" (id, "userId", "createdAt") VALUES ($1, $2, now())`,
     [tokenId, session.userId]
