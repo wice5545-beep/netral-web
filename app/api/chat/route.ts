@@ -74,10 +74,16 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Rate limit per IP (strict)
+  // Rate limit per IP — skip for Plus/Pro/Pro+ plans
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
-  const ipRl = rateLimit(`ip:${ip}`, 3, 60_000)
-  if (!ipRl.allowed) return new Response('Trop de requêtes depuis cette adresse.', { status: 429 })
+  const { rows: planRows } = await db.query(`SELECT plan FROM "User" WHERE id = $1`, [userId])
+  const userPlan = planRows[0]?.plan || 'free'
+  const isPaid = userPlan === 'plus' || userPlan === 'pro' || userPlan === 'pro_plus'
+
+  if (!isPaid) {
+    const ipRl = rateLimit(`ip:${ip}`, 3, 30_000)
+    if (!ipRl.allowed) return new Response('Trop de requêtes depuis cette adresse. Réessayez dans 30 secondes.', { status: 429 })
+  }
 
   // Plan-based message limit
   try {
