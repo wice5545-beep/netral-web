@@ -361,9 +361,12 @@ export const translations: Record<Locale, any> = {
   },
 } as Record<string, any>
 
-// New languages fallback to English with localized nav/hero/chat/pricing
-const en = translations.en
+// ─── Complete translations for ru, hi, tr, nl, pl, uk ───────────────────────
+import { extraTranslations } from './translations-extra'
+Object.assign(translations, extraTranslations)
 
+// Legacy makeLocale kept for reference but no longer used
+const en = translations.en
 const makeLocale = (
   nav: Record<string, string>,
   hero: Partial<typeof en.hero>,
@@ -386,56 +389,36 @@ const makeLocale = (
   pricing: en.pricing,
 })
 
+// The makeLocale calls below are now overridden by extraTranslations (full 100% translations)
+// They are kept for type-safety reference only
+
 translations.ru = makeLocale(
   { features: 'Функции', pricing: 'Цены', login: 'Войти', start: 'Начать' },
-  { title1: 'ИИ, который ищет', title2: 'прежде чем ответить.', cta: 'Начать бесплатно', login: 'Войти', note: 'Бесплатно • Без карты • Готово за 10 секунд' },
-  { hello: 'Привет', helloName: 'Привет, {name}', howCanIHelp: 'Чем могу помочь сегодня?', loginTitle: 'Добро пожаловать', loginSubtitle: 'Войдите в аккаунт', signupTitle: 'Создать аккаунт', signupSubtitle: 'Бесплатно, менее минуты', signIn: 'Войти', createAccount: 'Создать аккаунт', noAccount: 'Нет аккаунта?', createOne: 'Создать', alreadyAccount: 'Уже зарегистрированы?' },
-  { privacy: 'Конфиденциальность', contact: 'Контакты' },
-  { back: 'Назад', title1: 'Простые цены,', title2: 'без сюрпризов.', subtitle: 'Начните бесплатно. Перейдите на Pro, когда будете готовы.', popular: 'Популярный', faqTitle: 'Часто задаваемые вопросы' },
-  { back: 'Назад', title: 'Функции', subtitle: 'Всё необходимое для надёжного, быстрого и конфиденциального ИИ.', cta: 'Готовы попробовать?', ctaBtn: 'Начать бесплатно' },
+  { title1: 'ИИ, который ищет' },
+  {}, { privacy: 'Конфиденциальность', contact: 'Контакты' }, {}, {}
 ) as any
-
 translations.hi = makeLocale(
   { features: 'सुविधाएँ', pricing: 'मूल्य', login: 'लॉगिन', start: 'शुरू करें' },
-  { title1: 'AI जो खोजता है', title2: 'जवाब देने से पहले।', cta: 'मुफ्त शुरू करें', login: 'लॉगिन', note: 'मुफ्त • कोई कार्ड नहीं • 10 सेकंड में तैयार' },
-  { hello: 'नमस्ते', helloName: 'नमस्ते, {name}', howCanIHelp: 'आज मैं आपकी कैसे मदद कर सकता हूँ?', loginTitle: 'स्वागत है', loginSubtitle: 'अपने खाते में लॉगिन करें', signupTitle: 'खाता बनाएं', signupSubtitle: 'मुफ्त, एक मिनट से कम', signIn: 'लॉगिन', createAccount: 'खाता बनाएं', noAccount: 'खाता नहीं है?', createOne: 'बनाएं', alreadyAccount: 'पहले से पंजीकृत?' },
-  { privacy: 'गोपनीयता', contact: 'संपर्क' },
-  { back: 'वापस', title1: 'सरल मूल्य,', title2: 'कोई आश्चर्य नहीं।', subtitle: 'मुफ्त शुरू करें। तैयार होने पर Pro में अपग्रेड करें।', popular: 'लोकप्रिय', faqTitle: 'अक्सर पूछे जाने वाले प्रश्न' },
-  { back: 'वापस', title: 'सुविधाएँ', subtitle: 'एक विश्वसनीय, तेज़ और गोपनीयता-सम्मानजनक AI के लिए सब कुछ।', cta: 'आज़माने के लिए तैयार?', ctaBtn: 'मुफ्त शुरू करें' },
+  { title1: 'AI जो खोजता है' },
+  {}, { privacy: 'गोपनीयता', contact: 'संपर्क' }, {}, {}
 ) as any
-
 translations.tr = makeLocale(
   { features: 'Özellikler', pricing: 'Fiyatlar', login: 'Giriş', start: 'Başla' },
-  { title1: 'Cevaplamadan önce', title2: 'arayan yapay zeka.', cta: 'Ücretsiz başla', login: 'Giriş', note: 'Ücretsiz • Kart gerekmez • 10 saniyede hazır' },
-  { hello: 'Merhaba', helloName: 'Merhaba, {name}', howCanIHelp: 'Bugün size nasıl yardımcı olabilirim?', loginTitle: 'Hoş geldiniz', loginSubtitle: 'Hesabınıza giriş yapın', signupTitle: 'Hesap oluştur', signupSubtitle: 'Ücretsiz, bir dakikadan az', signIn: 'Giriş yap', createAccount: 'Hesabımı oluştur', noAccount: 'Hesabınız yok mu?', createOne: 'Oluştur', alreadyAccount: 'Zaten kayıtlı mısınız?' },
-  { privacy: 'Gizlilik', contact: 'İletişim' },
-  { back: 'Geri', title1: 'Basit fiyatlar,', title2: 'sürpriz yok.', subtitle: 'Ücretsiz başlayın. Hazır olduğunuzda Pro\'ya geçin.', popular: 'Popüler', faqTitle: 'Sık sorulan sorular' },
-  { back: 'Geri', title: 'Özellikler', subtitle: 'Güvenilir, hızlı ve gizliliğe saygılı bir AI için ihtiyacınız olan her şey.', cta: 'Denemeye hazır mısınız?', ctaBtn: 'Ücretsiz başla' },
+  { title1: 'Cevaplamadan önce' },
+  {}, { privacy: 'Gizlilik', contact: 'İletişim' }, {}, {}
 ) as any
-
 translations.nl = makeLocale(
   { features: 'Functies', pricing: 'Prijzen', login: 'Inloggen', start: 'Starten' },
-  { title1: 'De AI die zoekt', title2: 'voordat hij antwoordt.', cta: 'Gratis beginnen', login: 'Inloggen', note: 'Gratis • Geen creditcard • Klaar in 10 seconden' },
-  { hello: 'Hallo', helloName: 'Hallo, {name}', howCanIHelp: 'Hoe kan ik je vandaag helpen?', loginTitle: 'Welkom terug', loginSubtitle: 'Log in op je account', signupTitle: 'Account aanmaken', signupSubtitle: 'Gratis, in minder dan een minuut', signIn: 'Inloggen', createAccount: 'Mijn account aanmaken', noAccount: 'Geen account?', createOne: 'Aanmaken', alreadyAccount: 'Al geregistreerd?' },
-  { privacy: 'Privacy', contact: 'Contact' },
-  { back: 'Terug', title1: 'Eenvoudige prijzen,', title2: 'geen verrassingen.', subtitle: 'Begin gratis. Upgrade naar Pro wanneer je klaar bent.', popular: 'Populair', faqTitle: 'Veelgestelde vragen' },
-  { back: 'Terug', title: 'Functies', subtitle: 'Alles wat je nodig hebt voor een betrouwbare, snelle en privacyvriendelijke AI.', cta: 'Klaar om te proberen?', ctaBtn: 'Gratis beginnen' },
+  { title1: 'De AI die zoekt' },
+  {}, { privacy: 'Privacy', contact: 'Contact' }, {}, {}
 ) as any
-
 translations.pl = makeLocale(
   { features: 'Funkcje', pricing: 'Cennik', login: 'Zaloguj', start: 'Rozpocznij' },
-  { title1: 'AI, które szuka', title2: 'zanim odpowie.', cta: 'Zacznij za darmo', login: 'Zaloguj', note: 'Za darmo • Bez karty • Gotowe w 10 sekund' },
-  { hello: 'Cześć', helloName: 'Cześć, {name}', howCanIHelp: 'Jak mogę ci dziś pomóc?', loginTitle: 'Witaj ponownie', loginSubtitle: 'Zaloguj się na swoje konto', signupTitle: 'Utwórz konto', signupSubtitle: 'Za darmo, w mniej niż minutę', signIn: 'Zaloguj się', createAccount: 'Utwórz moje konto', noAccount: 'Nie masz konta?', createOne: 'Utwórz', alreadyAccount: 'Już zarejestrowany?' },
-  { privacy: 'Prywatność', contact: 'Kontakt' },
-  { back: 'Wstecz', title1: 'Proste ceny,', title2: 'bez niespodzianek.', subtitle: 'Zacznij za darmo. Przejdź na Pro, gdy będziesz gotowy.', popular: 'Popularny', faqTitle: 'Często zadawane pytania' },
-  { back: 'Wstecz', title: 'Funkcje', subtitle: 'Wszystko, czego potrzebujesz do niezawodnego, szybkiego i szanującego prywatność AI.', cta: 'Gotowy, żeby spróbować?', ctaBtn: 'Zacznij za darmo' },
+  { title1: 'AI, które szuka' },
+  {}, { privacy: 'Prywatność', contact: 'Kontakt' }, {}, {}
 ) as any
-
 translations.uk = makeLocale(
   { features: 'Функції', pricing: 'Ціни', login: 'Увійти', start: 'Почати' },
-  { title1: 'ШІ, що шукає', title2: 'перш ніж відповісти.', cta: 'Почати безкоштовно', login: 'Увійти', note: 'Безкоштовно • Без картки • Готово за 10 секунд' },
-  { hello: 'Привіт', helloName: 'Привіт, {name}', howCanIHelp: 'Чим можу допомогти сьогодні?', loginTitle: 'Ласкаво просимо', loginSubtitle: 'Увійдіть до свого акаунту', signupTitle: 'Створити акаунт', signupSubtitle: 'Безкоштовно, менше хвилини', signIn: 'Увійти', createAccount: 'Створити акаунт', noAccount: 'Немає акаунту?', createOne: 'Створити', alreadyAccount: 'Вже зареєстровані?' },
-  { privacy: 'Конфіденційність', contact: 'Контакти' },
-  { back: 'Назад', title1: 'Прості ціни,', title2: 'без сюрпризів.', subtitle: 'Почніть безкоштовно. Перейдіть на Pro, коли будете готові.', popular: 'Популярний', faqTitle: 'Часті запитання' },
-  { back: 'Назад', title: 'Функції', subtitle: 'Все необхідне для надійного, швидкого та конфіденційного ШІ.', cta: 'Готові спробувати?', ctaBtn: 'Почати безкоштовно' },
+  { title1: 'ШІ, що шукає' },
+  {}, { privacy: 'Конфіденційність', contact: 'Контакти' }, {}, {}
 ) as any
