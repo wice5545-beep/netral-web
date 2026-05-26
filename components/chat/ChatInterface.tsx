@@ -9,7 +9,7 @@ import { useI18n } from '@/lib/i18n'
 import { Message } from './Message'
 import { ChatComposer } from './ChatComposer'
 import { UpgradePopup } from './UpgradePopup'
-import { Globe, FileText, Sparkles, ArrowUp } from 'lucide-react'
+import { Globe, FileText, Sparkles, ArrowUp, ArrowRight } from 'lucide-react'
 
 interface ChatInterfaceProps {
   initialMessages?: ChatMessage[]

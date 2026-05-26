@@ -27,12 +27,6 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const { t } = useI18n()
 
-  function handleGoogle() {
-    startGoogleTransition(async () => {
-      await signInWithGoogle()
-    })
-  }
-
   return (
     <div className="min-h-screen flex bg-[var(--bg)] relative overflow-hidden">
       {/* Left panel — branding */}

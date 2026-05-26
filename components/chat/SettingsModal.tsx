@@ -1,5 +1,6 @@
 'use client'
 
+import React from 'react'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -93,7 +94,7 @@ export function SettingsModal({ open, onClose, user }: SettingsModalProps) {
     setTimeout(() => setSavedMsg(''), 2000)
   }
 
-  const tabs: { id: Tab; label: string; icon: typeof UserIcon }[] = [
+  const tabs: { id: Tab; label: string; icon: React.ComponentType<{ size?: number }> }[] = [
     { id: 'general', label: 'Général', icon: SettingsIcon },
     { id: 'appearance', label: 'Apparence', icon: LanguagesIcon },
     { id: 'memory', label: 'Mémoire', icon: BrainIcon },
