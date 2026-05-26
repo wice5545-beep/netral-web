@@ -6,17 +6,23 @@ function cuid() {
   return 'intg_' + randomBytes(12).toString('hex')
 }
 
+// Always redirect back to /integrations with success or detailed error
+function redirectWith(origin: string, params: Record<string, string>) {
+  const u = new URL(`${origin}/integrations`)
+  Object.entries(params).forEach(([k, v]) => u.searchParams.set(k, v))
+  return NextResponse.redirect(u.toString())
+}
+
 export async function GET(req: NextRequest) {
   const { searchParams, origin } = req.nextUrl
   const code = searchParams.get('code')
   const stateRaw = searchParams.get('state')
   const error = searchParams.get('error')
 
-  if (error || !code || !stateRaw) {
-    return NextResponse.redirect(`${origin}/chat?integration_error=${encodeURIComponent(error ?? 'missing_code')}`)
-  }
+  if (error) return redirectWith(origin, { error: `google_${error}` })
+  if (!code || !stateRaw) return redirectWith(origin, { error: 'missing_code' })
 
-  // Handle login state (from /api/auth/google)
+  // Handle login state (from /api/auth/google) — different flow
   if (stateRaw === 'login') {
     return NextResponse.redirect(`${origin}/api/auth/callback?code=${code}&state=${stateRaw}`)
   }
@@ -25,7 +31,11 @@ export async function GET(req: NextRequest) {
   try {
     state = JSON.parse(Buffer.from(stateRaw, 'base64url').toString())
   } catch {
-    return NextResponse.redirect(`${origin}/chat?integration_error=invalid_state`)
+    return redirectWith(origin, { error: 'invalid_state' })
+  }
+
+  if (!state.userId || !Array.isArray(state.services) || !state.services.length) {
+    return redirectWith(origin, { error: 'invalid_state_data' })
   }
 
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET
@@ -33,50 +43,78 @@ export async function GET(req: NextRequest) {
   const redirectUri = process.env.GOOGLE_REDIRECT_URI ?? `${origin}/api/integrations/callback/google`
 
   if (!clientId || !clientSecret) {
-    return NextResponse.redirect(`${origin}/chat?integration_error=google_not_configured`)
+    return redirectWith(origin, { error: 'google_not_configured' })
   }
 
-  const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      code,
-      client_id: clientId,
-      client_secret: clientSecret,
-      redirect_uri: redirectUri,
-      grant_type: 'authorization_code',
-    }),
-  })
-
-  if (!tokenRes.ok) {
-    const err = await tokenRes.text()
-    console.error('Token exchange failed:', err)
-    return NextResponse.redirect(`${origin}/chat?integration_error=token_exchange_failed`)
-  }
-
-  const tokens = await tokenRes.json() as {
-    access_token: string
-    refresh_token?: string
-    expires_in: number
-    scope: string
-  }
-
-  const expiresAt = new Date(Date.now() + tokens.expires_in * 1000)
-
+  // Exchange authorization code for tokens
+  let tokens: { access_token: string; refresh_token?: string; expires_in: number; scope: string }
   try {
-    for (const service of state.services) {
-      await db.query(
-        `INSERT INTO "Integration" (id, "userId", provider, service, "accessToken", "refreshToken", "expiresAt", scope, "createdAt", "updatedAt")
-         VALUES ($1, $2, 'google', $3, $4, $5, $6, $7, now(), now())
-         ON CONFLICT ("userId", provider, service)
-         DO UPDATE SET "accessToken" = $4, "refreshToken" = COALESCE($5, "Integration"."refreshToken"), "expiresAt" = $6, scope = $7, "updatedAt" = now()`,
-        [cuid(), state.userId, service, tokens.access_token, tokens.refresh_token ?? null, expiresAt, tokens.scope]
-      )
+    const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        code,
+        client_id: clientId,
+        client_secret: clientSecret,
+        redirect_uri: redirectUri,
+        grant_type: 'authorization_code',
+      }),
+    })
+
+    if (!tokenRes.ok) {
+      const errBody = await tokenRes.text()
+      console.error('[OAuth] Token exchange failed:', tokenRes.status, errBody)
+      return redirectWith(origin, { error: 'token_exchange_failed' })
     }
+    tokens = await tokenRes.json()
   } catch (e) {
-    console.error('DB error saving integration:', e)
-    return NextResponse.redirect(`${origin}/integrations?error=db_error`)
+    console.error('[OAuth] Token fetch error:', e)
+    return redirectWith(origin, { error: 'token_fetch_failed' })
   }
 
-  return NextResponse.redirect(`${origin}/integrations?success=google`)
+  if (!tokens.access_token) {
+    return redirectWith(origin, { error: 'no_access_token' })
+  }
+
+  const expiresAt = new Date(Date.now() + (tokens.expires_in ?? 3600) * 1000)
+  const savedServices: string[] = []
+
+  // Save each service — use SELECT+UPDATE/INSERT to avoid ON CONFLICT issues
+  // if the unique constraint doesn't exist on the production DB yet
+  for (const service of state.services) {
+    try {
+      const { rows: existing } = await db.query(
+        `SELECT id FROM "Integration" WHERE "userId" = $1 AND provider = 'google' AND service = $2`,
+        [state.userId, service]
+      )
+
+      if (existing.length > 0) {
+        // Update existing
+        await db.query(
+          `UPDATE "Integration"
+           SET "accessToken" = $1, "refreshToken" = COALESCE($2, "refreshToken"),
+               "expiresAt" = $3, scope = $4, "updatedAt" = now()
+           WHERE id = $5`,
+          [tokens.access_token, tokens.refresh_token ?? null, expiresAt, tokens.scope, existing[0].id]
+        )
+      } else {
+        // Insert new
+        await db.query(
+          `INSERT INTO "Integration" (id, "userId", provider, service, "accessToken", "refreshToken", "expiresAt", scope, "createdAt", "updatedAt")
+           VALUES ($1, $2, 'google', $3, $4, $5, $6, $7, now(), now())`,
+          [cuid(), state.userId, service, tokens.access_token, tokens.refresh_token ?? null, expiresAt, tokens.scope]
+        )
+      }
+      savedServices.push(service)
+    } catch (e: any) {
+      console.error(`[OAuth] DB error for service ${service}:`, e?.message || e)
+      // Continue trying other services
+    }
+  }
+
+  if (savedServices.length === 0) {
+    return redirectWith(origin, { error: 'db_error', detail: 'no_services_saved' })
+  }
+
+  return redirectWith(origin, { success: 'google', services: savedServices.join(',') })
 }
