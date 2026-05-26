@@ -1,12 +1,11 @@
 'use client'
 
 import Link from 'next/link'
-import { useActionState, useTransition } from 'react'
+import { useActionState } from 'react'
 import { motion } from 'framer-motion'
 import { ArrowRight, Eye, EyeOff, Check } from 'lucide-react'
 import { useState } from 'react'
 import { signup } from '@/actions/auth'
-import { signInWithGoogle } from '@/lib/supabase-auth'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { NetralLogo } from '@/components/ui/NetralLogo'
@@ -46,14 +45,7 @@ export default function RegisterPage() {
   const [state, action, pending] = useActionState(signup, undefined)
   const [showPassword, setShowPassword] = useState(false)
   const [password, setPassword] = useState('')
-  const [googlePending, startGoogleTransition] = useTransition()
   const { t } = useI18n()
-
-  function handleGoogle() {
-    startGoogleTransition(async () => {
-      await signInWithGoogle()
-    })
-  }
 
   return (
     <div className="min-h-screen flex bg-[var(--bg)] relative overflow-hidden">
@@ -157,24 +149,15 @@ export default function RegisterPage() {
             </motion.div>
           )}
 
-          {/* Google OAuth button */}
-          <button
-            type="button"
-            onClick={handleGoogle}
-            disabled={googlePending || pending}
-            className="w-full h-11 flex items-center justify-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--fg)] text-[14px] font-medium hover:bg-[var(--bg-soft)] hover:border-[var(--border-strong)] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]"
+          {/* Google OAuth button — direct link */}
+          <a
+            href="/api/auth/google"
+            className="w-full h-11 flex items-center justify-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--fg)] text-[14px] font-medium hover:bg-[var(--bg-soft)] hover:border-[var(--border-strong)] transition-all duration-200 active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
             aria-label="S'inscrire avec Google"
           >
-            {googlePending ? (
-              <svg className="animate-spin h-4 w-4 text-[var(--fg-muted)]" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <circle className="opacity-20" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3"/>
-                <path className="opacity-80" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-              </svg>
-            ) : (
-              <GoogleIcon />
-            )}
+            <GoogleIcon />
             S'inscrire avec Google
-          </button>
+          </a>
 
           {/* Divider */}
           <div className="relative my-6">
