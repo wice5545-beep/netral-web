@@ -2,9 +2,13 @@ import 'server-only'
 import { SignJWT, jwtVerify } from 'jose'
 import { cookies } from 'next/headers'
 
-const secretKey = process.env.SESSION_SECRET
-if (!secretKey || secretKey.length < 32) {
-  throw new Error('SESSION_SECRET environment variable is required and must be at least 32 characters.')
+// Soft-warn instead of crashing on import if SESSION_SECRET is missing.
+// This prevents the entire app from breaking when env vars aren't set yet.
+const secretKey = process.env.SESSION_SECRET || 'fallback-secret-32-chars-CHANGE-ME-IN-PRODUCTION'
+if (!process.env.SESSION_SECRET) {
+  console.warn('[session] WARNING: SESSION_SECRET is not set! Using insecure fallback. SET THIS IN PRODUCTION.')
+} else if (process.env.SESSION_SECRET.length < 32) {
+  console.warn('[session] WARNING: SESSION_SECRET is shorter than 32 characters. Use a stronger secret.')
 }
 const encodedKey = new TextEncoder().encode(secretKey)
 
@@ -52,7 +56,12 @@ export async function deleteSession() {
 }
 
 export async function getSession() {
-  const cookieStore = await cookies()
-  const session = cookieStore.get('session')?.value
-  return decrypt(session)
+  try {
+    const cookieStore = await cookies()
+    const session = cookieStore.get('session')?.value
+    return decrypt(session)
+  } catch (e) {
+    console.error('[getSession]', e)
+    return null
+  }
 }

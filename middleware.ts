@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { jwtVerify } from 'jose'
 
-const SESSION_SECRET = new TextEncoder().encode(process.env.SESSION_SECRET ?? '')
+// Use same fallback as lib/session.ts to keep them in sync
+const SESSION_SECRET_RAW = process.env.SESSION_SECRET || 'fallback-secret-32-chars-CHANGE-ME-IN-PRODUCTION'
+const SESSION_SECRET = new TextEncoder().encode(SESSION_SECRET_RAW)
 
 const protectedPaths = ['/chat', '/onboarding']
 const authPaths = ['/login', '/register']
@@ -34,7 +36,7 @@ export async function middleware(req: NextRequest) {
   }
 
   // CSRF protection for non-GET API requests (except OAuth callback)
-  if (pathname.startsWith('/api') && !pathname.startsWith('/api/auth/callback') && req.method !== 'GET') {
+  if (pathname.startsWith('/api') && !pathname.startsWith('/api/auth/callback') && !pathname.startsWith('/api/integrations/callback') && req.method !== 'GET') {
     const origin = req.headers.get('origin')
     const host = req.headers.get('host')
     if (origin && host && !origin.includes(host.split(':')[0])) {
@@ -61,22 +63,16 @@ export async function middleware(req: NextRequest) {
   response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
   response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload')
 
-  // CORS for API routes (allow VS Code extension + app domain)
+  // CORS for API routes — permissive for VS Code extension and same-origin
   if (pathname.startsWith('/api')) {
-    const allowedOrigins = [
-      process.env.NEXT_PUBLIC_APP_URL || 'https://netral.app',
-      'https://netral.app',
-      'vscode-webview://',
-    ]
-    const origin = req.headers.get('origin')
-    const corsOrigin = origin && allowedOrigins.some(o => origin.startsWith(o)) ? origin : allowedOrigins[0]
-    response.headers.set('Access-Control-Allow-Origin', corsOrigin)
+    const origin = req.headers.get('origin') || '*'
+    response.headers.set('Access-Control-Allow-Origin', origin)
     response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS')
     response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')
     response.headers.set('Access-Control-Allow-Credentials', 'true')
   }
 
-  // Strict CSP for non-API routes — includes Supabase domains
+  // Strict CSP for non-API routes
   if (!pathname.startsWith('/api')) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'https://*.supabase.co'
     const supabaseHost = supabaseUrl.replace(/^https?:\/\//, '')

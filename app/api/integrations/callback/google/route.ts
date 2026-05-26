@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { ensureTables } from '@/lib/db-init'
 import { randomBytes } from 'crypto'
 
 function cuid() {
@@ -46,6 +47,9 @@ export async function GET(req: NextRequest) {
     return redirectWith(origin, { error: 'google_not_configured' })
   }
 
+  // Ensure Integration table exists before insert
+  await ensureTables()
+
   // Exchange authorization code for tokens
   let tokens: { access_token: string; refresh_token?: string; expires_in: number; scope: string }
   try {
@@ -64,7 +68,7 @@ export async function GET(req: NextRequest) {
     if (!tokenRes.ok) {
       const errBody = await tokenRes.text()
       console.error('[OAuth] Token exchange failed:', tokenRes.status, errBody)
-      return redirectWith(origin, { error: 'token_exchange_failed' })
+      return redirectWith(origin, { error: 'token_exchange_failed', detail: String(tokenRes.status) })
     }
     tokens = await tokenRes.json()
   } catch (e) {
@@ -78,9 +82,9 @@ export async function GET(req: NextRequest) {
 
   const expiresAt = new Date(Date.now() + (tokens.expires_in ?? 3600) * 1000)
   const savedServices: string[] = []
+  const errors: string[] = []
 
   // Save each service — use SELECT+UPDATE/INSERT to avoid ON CONFLICT issues
-  // if the unique constraint doesn't exist on the production DB yet
   for (const service of state.services) {
     try {
       const { rows: existing } = await db.query(
@@ -89,7 +93,6 @@ export async function GET(req: NextRequest) {
       )
 
       if (existing.length > 0) {
-        // Update existing
         await db.query(
           `UPDATE "Integration"
            SET "accessToken" = $1, "refreshToken" = COALESCE($2, "refreshToken"),
@@ -98,7 +101,6 @@ export async function GET(req: NextRequest) {
           [tokens.access_token, tokens.refresh_token ?? null, expiresAt, tokens.scope, existing[0].id]
         )
       } else {
-        // Insert new
         await db.query(
           `INSERT INTO "Integration" (id, "userId", provider, service, "accessToken", "refreshToken", "expiresAt", scope, "createdAt", "updatedAt")
            VALUES ($1, $2, 'google', $3, $4, $5, $6, $7, now(), now())`,
@@ -107,13 +109,17 @@ export async function GET(req: NextRequest) {
       }
       savedServices.push(service)
     } catch (e: any) {
-      console.error(`[OAuth] DB error for service ${service}:`, e?.message || e)
-      // Continue trying other services
+      const errMsg = e?.message || String(e)
+      console.error(`[OAuth] DB error for service ${service}:`, errMsg)
+      errors.push(`${service}:${errMsg.slice(0, 50)}`)
     }
   }
 
   if (savedServices.length === 0) {
-    return redirectWith(origin, { error: 'db_error', detail: 'no_services_saved' })
+    return redirectWith(origin, {
+      error: 'db_error',
+      detail: errors.join(';').slice(0, 200) || 'no_services_saved'
+    })
   }
 
   return redirectWith(origin, { success: 'google', services: savedServices.join(',') })
