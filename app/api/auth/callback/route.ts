@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
 import { createSession } from '@/lib/session'
 import { db } from '@/lib/db'
 import { randomBytes } from 'crypto'
@@ -12,27 +11,53 @@ export async function GET(req: NextRequest) {
   if (error) {
     return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(error)}`)
   }
-
   if (!code) {
     return NextResponse.redirect(`${origin}/login?error=missing_code`)
   }
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
+  const clientId = process.env.GOOGLE_CLIENT_ID
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET
+  const redirectUri = process.env.GOOGLE_REDIRECT_URI ?? `${origin}/api/auth/callback`
 
-  const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+  if (!clientId || !clientSecret) {
+    return NextResponse.redirect(`${origin}/login?error=google_not_configured`)
+  }
 
-  if (exchangeError || !data.user) {
+  // Exchange code for tokens directly with Google
+  const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      code,
+      client_id: clientId,
+      client_secret: clientSecret,
+      redirect_uri: redirectUri,
+      grant_type: 'authorization_code',
+    }),
+  })
+
+  if (!tokenRes.ok) {
+    const err = await tokenRes.text()
+    console.error('Google token exchange failed:', err)
     return NextResponse.redirect(`${origin}/login?error=auth_failed`)
   }
 
-  const { user } = data
-  const email = user.email!.toLowerCase()
-  const name = user.user_metadata?.full_name || user.user_metadata?.name || email.split('@')[0]
+  const tokens = await tokenRes.json() as { access_token: string; id_token?: string }
 
-  // Upsert user in our DB
+  // Get user info from Google
+  const userRes = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+    headers: { Authorization: `Bearer ${tokens.access_token}` },
+  })
+
+  if (!userRes.ok) {
+    return NextResponse.redirect(`${origin}/login?error=userinfo_failed`)
+  }
+
+  const googleUser = await userRes.json() as { email: string; name?: string; given_name?: string }
+  const email = googleUser.email.toLowerCase()
+  const name = googleUser.name || googleUser.given_name || email.split('@')[0]
+
+  // Upsert user in DB
   const { rows } = await db.query(`SELECT id, onboarded FROM "User" WHERE email = $1`, [email])
 
   let userId: string
@@ -52,6 +77,5 @@ export async function GET(req: NextRequest) {
   }
 
   await createSession(userId)
-
   return NextResponse.redirect(`${origin}${onboarded ? '/chat' : '/onboarding'}`)
 }
