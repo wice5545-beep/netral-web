@@ -1,0 +1,98 @@
+# Google Credentials — Netral
+
+## Variables nécessaires
+
+```
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GOOGLE_REDIRECT_URI=https://ton-domaine.vercel.app/api/integrations/callback/google
+NEXT_PUBLIC_APP_URL=https://ton-domaine.vercel.app
+```
+
+---
+
+## Comment les obtenir
+
+### 1. Google Cloud Console
+→ https://console.cloud.google.com
+
+### 2. Créer un projet
+- Clique sur le sélecteur de projet en haut → "Nouveau projet"
+- Nom : `Netral` → Créer
+
+### 3. Activer les APIs
+- Menu → "APIs et services" → "Bibliothèque"
+- Cherche et active :
+  - **Gmail API**
+  - **Google Calendar API**
+  - **Google People API** (pour le profil OAuth)
+
+### 4. Créer les credentials OAuth
+- Menu → "APIs et services" → "Identifiants"
+- "+ Créer des identifiants" → "ID client OAuth 2.0"
+- Type d'application : **Application Web**
+- Nom : `Netral Web`
+
+### 5. Configurer les URIs autorisés
+
+**Origines JavaScript autorisées :**
+```
+https://ton-domaine.vercel.app
+http://localhost:3000
+```
+
+**URIs de redirection autorisés :**
+```
+https://ton-domaine.vercel.app/api/integrations/callback/google
+http://localhost:3000/api/integrations/callback/google
+```
+
+→ Clique "Créer"
+
+### 6. Récupérer les clés
+- Une popup s'affiche avec **Client ID** et **Client Secret**
+- Copie-les ici :
+
+```
+GOOGLE_CLIENT_ID=xxxx.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=GOCSPX-xxxx
+```
+
+### 7. Écran de consentement OAuth
+- Menu → "APIs et services" → "Écran de consentement OAuth"
+- Type : **Externe**
+- Nom de l'app : `Netral`
+- Email support : ton email
+- Domaines autorisés : `ton-domaine.vercel.app`
+- Scopes : ajouter `gmail.readonly`, `gmail.send`, `gmail.modify`, `calendar.readonly`, `calendar.events`
+- Utilisateurs test : ajoute ton email (tant que l'app n'est pas vérifiée)
+
+---
+
+## Déploiement sur Vercel
+
+1. Dashboard Vercel → ton projet → **Settings** → **Environment Variables**
+2. Ajouter chaque variable :
+
+| Variable | Valeur |
+|---|---|
+| `GOOGLE_CLIENT_ID` | `xxxx.apps.googleusercontent.com` |
+| `GOOGLE_CLIENT_SECRET` | `GOCSPX-xxxx` |
+| `GOOGLE_REDIRECT_URI` | `https://ton-domaine.vercel.app/api/integrations/callback/google` |
+| `NEXT_PUBLIC_APP_URL` | `https://ton-domaine.vercel.app` |
+
+3. **Redeploy** le projet pour que les variables soient prises en compte
+
+---
+
+## Test en local
+
+Ajoute dans `.env.local` :
+```
+GOOGLE_CLIENT_ID=xxxx.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=GOCSPX-xxxx
+GOOGLE_REDIRECT_URI=http://localhost:3000/api/integrations/callback/google
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
+
+Puis dans Netral → Paramètres → Intégrations → Connecter Gmail/Calendar

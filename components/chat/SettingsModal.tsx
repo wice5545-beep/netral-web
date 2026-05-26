@@ -1,8 +1,9 @@
 'use client'
 
+import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Trash2, Sun, Moon, Monitor, Download, Shield } from 'lucide-react'
+import { X, Trash2, Sun, Moon, Monitor, Download, Shield, Zap } from 'lucide-react'
 import { UserIcon } from '@/components/ui/user'
 import { BrainIcon } from '@/components/ui/brain'
 import { ShieldCheckIcon } from '@/components/ui/shield-check'
@@ -14,13 +15,16 @@ import { useI18n } from '@/lib/i18n'
 import { locales, localeNames, type Locale } from '@/lib/i18n/translations'
 import { cn } from '@/lib/utils'
 
+// Wrapper for Zap from lucide-react to match icon component signature
+function ZapIcon({ size }: { size?: number }) { return <Zap size={size} /> }
+
 interface SettingsModalProps {
   open: boolean
   onClose: () => void
   user: { id: string; name?: string | null; email: string }
 }
 
-type Tab = 'general' | 'appearance' | 'memory' | 'privacy' | 'security' | 'account' | 'shortcuts' | 'subscription' | 'vscode'
+type Tab = 'general' | 'appearance' | 'memory' | 'privacy' | 'security' | 'account' | 'shortcuts' | 'subscription' | 'vscode' | 'integrations'
 
 export function SettingsModal({ open, onClose, user }: SettingsModalProps) {
   const [tab, setTab] = useState<Tab>('general')
@@ -32,6 +36,8 @@ export function SettingsModal({ open, onClose, user }: SettingsModalProps) {
   const [saving, setSaving] = useState(false)
   const [userPlan, setUserPlan] = useState('free')
   const [apiToken, setApiToken] = useState('')
+  const [integrations, setIntegrations] = useState<{ service: string; updatedAt: string }[]>([])
+  const [integLoading, setIntegLoading] = useState(false)
 
   useEffect(() => {
     if (!open) return
@@ -50,6 +56,7 @@ export function SettingsModal({ open, onClose, user }: SettingsModalProps) {
       })
       .catch(() => {})
     fetch('/api/user').then(r => r.json()).then(d => { if (d.user?.plan) setUserPlan(d.user.plan) }).catch(() => {})
+    fetch('/api/integrations').then(r => r.json()).then(d => { if (d.integrations) setIntegrations(d.integrations) }).catch(() => {})
   }, [open])
 
   useEffect(() => {
@@ -90,6 +97,7 @@ export function SettingsModal({ open, onClose, user }: SettingsModalProps) {
     { id: 'general', label: 'Général', icon: SettingsIcon },
     { id: 'appearance', label: 'Apparence', icon: LanguagesIcon },
     { id: 'memory', label: 'Mémoire', icon: BrainIcon },
+    { id: 'integrations', label: 'Intégrations', icon: ZapIcon },
     { id: 'account', label: 'Compte', icon: UserIcon },
     { id: 'security', label: 'Sécurité', icon: ShieldCheckIcon },
     { id: 'privacy', label: 'Confidentialité', icon: LockIcon },
@@ -123,19 +131,41 @@ export function SettingsModal({ open, onClose, user }: SettingsModalProps) {
                 {tabs.map((t) => {
                   const Icon = t.icon
                   const isActive = tab === t.id
+                  const isIntegrations = t.id === 'integrations'
                   return (
                     <button
                       key={t.id}
                       onClick={() => setTab(t.id)}
                       title={t.label}
                       className={cn(
-                        'w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-150 shrink-0 relative',
+                        'w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-150 shrink-0 relative overflow-hidden',
                         isActive
                           ? 'bg-[var(--bg-elevated)] text-[var(--fg)] border border-[var(--border)] shadow-[var(--shadow-xs)]'
                           : 'text-[var(--fg-muted)] hover:bg-[var(--bg-elevated)] hover:text-[var(--fg)]'
                       )}
                     >
-                      <Icon size={16} />
+                      {isIntegrations ? (
+                        <div className="w-full h-full flex items-center justify-center relative">
+                          {/* Video always mounted, opacity controlled */}
+                          <video
+                            src="/api.mp4"
+                            autoPlay
+                            loop
+                            muted
+                            playsInline
+                            className={cn(
+                              'w-7 h-7 object-cover rounded-md transition-opacity duration-200',
+                              isActive ? 'opacity-100' : 'opacity-50'
+                            )}
+                          />
+                          {/* Active glow ring */}
+                          {isActive && (
+                            <span className="absolute inset-0 rounded-lg ring-1 ring-violet-500/40 pointer-events-none" />
+                          )}
+                        </div>
+                      ) : (
+                        <Icon size={16} />
+                      )}
                     </button>
                   )
                 })}
@@ -436,6 +466,78 @@ export function SettingsModal({ open, onClose, user }: SettingsModalProps) {
                           Gérer mon abonnement
                         </button>
                       </a>
+                    </div>
+                  )}
+
+                  {tab === 'integrations' && (
+                    <div className="space-y-5">
+                      {/* Header with animated API icon */}
+                      <div className="flex items-center gap-4">
+                        <div className="relative w-12 h-12 shrink-0">
+                          {[0, 1].map(i => (
+                            <motion.div key={i} className="absolute inset-0 rounded-full border border-violet-500/30"
+                              animate={{ scale: [1, 1.7 + i * 0.3], opacity: [0.5, 0] }}
+                              transition={{ duration: 2, delay: i * 0.6, repeat: Infinity, ease: 'easeOut' }} />
+                          ))}
+                          <motion.div className="absolute inset-0 rounded-full flex items-center justify-center"
+                            style={{ background: 'linear-gradient(135deg, #7c3aed, #ec4899, #f97316)' }}
+                            animate={{ rotate: [0, 360] }} transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}>
+                            <motion.div className="absolute inset-0 rounded-full flex items-center justify-center"
+                              animate={{ rotate: [0, -360] }} transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}>
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round">
+                                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                              </svg>
+                            </motion.div>
+                          </motion.div>
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <h2 className="text-[18px] font-semibold">Intégrations</h2>
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded border border-violet-500/30 bg-violet-500/10 text-violet-500 font-mono tracking-widest">API</span>
+                          </div>
+                          <p className="text-[12px] text-[var(--fg-muted)]">Connectez Gmail, Calendar, Drive, Docs et Sheets.</p>
+                        </div>
+                      </div>
+
+                      {/* Service status list */}
+                      <div className="rounded-xl border border-[var(--border)] divide-y divide-[var(--border)] overflow-hidden">
+                        {[
+                          { id: 'gmail', label: 'Gmail', emoji: '✉️' },
+                          { id: 'calendar', label: 'Google Calendar', emoji: '📅' },
+                          { id: 'drive', label: 'Google Drive', emoji: '📁' },
+                          { id: 'docs', label: 'Google Docs', emoji: '📄' },
+                          { id: 'sheets', label: 'Google Sheets', emoji: '📊' },
+                        ].map(({ id, label, emoji }) => {
+                          const connected = integrations.some(i => i.service === id)
+                          return (
+                            <div key={id} className="flex items-center gap-3 px-4 py-3 bg-[var(--bg-elevated)]">
+                              <span className="text-[16px] w-6 text-center">{emoji}</span>
+                              <span className="flex-1 text-[13px] font-medium">{label}</span>
+                              {connected ? (
+                                <div className="flex items-center gap-1.5 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                  Connecté
+                                </div>
+                              ) : (
+                                <span className="text-[11px] text-[var(--fg-subtle)]">Non connecté</span>
+                              )}
+                            </div>
+                          )
+                        })}
+                      </div>
+
+                      {/* CTA to full page */}
+                      <Link href="/integrations" onClick={onClose}
+                        className="flex items-center justify-between w-full px-4 py-3 rounded-xl border border-violet-500/25 bg-violet-500/5 hover:bg-violet-500/10 hover:border-violet-500/40 transition-all group">
+                        <div>
+                          <div className="text-[13px] font-semibold text-violet-600 dark:text-violet-400">Gérer les intégrations</div>
+                          <div className="text-[11.5px] text-[var(--fg-muted)] mt-0.5">Connecter, déconnecter, voir les permissions</div>
+                        </div>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="text-violet-500 group-hover:translate-x-0.5 transition-transform">
+                          <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                      </Link>
                     </div>
                   )}
 

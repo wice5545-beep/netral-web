@@ -28,13 +28,13 @@ export async function middleware(req: NextRequest) {
     return new NextResponse('Not Found', { status: 404 })
   }
 
-  // Block path traversal attempts
+  // Block path traversal
   if (pathname.includes('..') || pathname.includes('%2e%2e')) {
     return new NextResponse('Forbidden', { status: 403 })
   }
 
-  // CSRF protection for non-GET API requests
-  if (pathname.startsWith('/api') && req.method !== 'GET') {
+  // CSRF protection for non-GET API requests (except OAuth callback)
+  if (pathname.startsWith('/api') && !pathname.startsWith('/api/auth/callback') && req.method !== 'GET') {
     const origin = req.headers.get('origin')
     const host = req.headers.get('host')
     if (origin && host && !origin.includes(host.split(':')[0])) {
@@ -51,14 +51,15 @@ export async function middleware(req: NextRequest) {
     }
   }
 
-  // Security headers
   const response = NextResponse.next()
+
+  // Security headers
   response.headers.set('X-Content-Type-Options', 'nosniff')
   response.headers.set('X-Frame-Options', 'DENY')
   response.headers.set('X-XSS-Protection', '1; mode=block')
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
   response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
-  response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
+  response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload')
 
   // CORS for API routes (allow VS Code extension)
   if (pathname.startsWith('/api')) {
@@ -67,11 +68,25 @@ export async function middleware(req: NextRequest) {
     response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')
   }
 
-  // CSP for non-API routes
+  // Strict CSP for non-API routes — includes Supabase domains
   if (!pathname.startsWith('/api')) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'https://*.supabase.co'
+    const supabaseHost = supabaseUrl.replace(/^https?:\/\//, '')
+
     response.headers.set(
       'Content-Security-Policy',
-      "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https:; frame-ancestors 'none';"
+      [
+        "default-src 'self'",
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+        "img-src 'self' data: https: blob:",
+        "font-src 'self' https://fonts.gstatic.com",
+        `connect-src 'self' https: wss: https://${supabaseHost} wss://${supabaseHost}`,
+        "frame-ancestors 'none'",
+        "base-uri 'self'",
+        "form-action 'self'",
+        "upgrade-insecure-requests",
+      ].join('; ')
     )
   }
 

@@ -43,6 +43,7 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
   const [userScrolledUp, setUserScrolledUp] = useState(false)
   const [showUpgrade, setShowUpgrade] = useState(false)
   const [upgradeMsg, setUpgradeMsg] = useState('')
+  const [integrationStatus, setIntegrationStatus] = useState<string | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const abortRef = useRef<AbortController | null>(null)
   const [didInit, setDidInit] = useState(false)
@@ -198,6 +199,9 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
               }
             } else if (parsed.type === 'status') {
               setSearchStatus(parsed.status as SearchStatus)
+            } else if (parsed.type === 'integrations') {
+              setIntegrationStatus(parsed.summary || `Lecture ${parsed.services?.join(', ')}...`)
+              setTimeout(() => setIntegrationStatus(null), 4000)
             } else if (parsed.type === 'chunk') {
               setSearchStatus(null)
               chunkBuffer += parsed.text
@@ -282,20 +286,28 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
       <div ref={scrollRef} className="flex-1 overflow-y-auto">
         {isEmpty ? (
           <div className="min-h-full flex flex-col items-center justify-center px-6 pb-44 max-w-2xl mx-auto w-full relative">
-            {/* Subtle gradient bg */}
-            <div className="absolute inset-0 -z-10 overflow-hidden">
-              <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] gradient-orb rounded-full opacity-[0.06]" />
+            {/* Ambient glow */}
+            <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
+              <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full opacity-[0.05]" style={{ background: 'radial-gradient(circle, rgba(124,58,237,0.4) 0%, rgba(249,115,22,0.2) 50%, transparent 70%)' }} />
             </div>
 
-            <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ type: 'spring', damping: 15, stiffness: 200 }} className="mb-7">
-              <div className="w-14 h-14 rounded-2xl glass-card flex items-center justify-center shadow-colored">
-                <Sparkles size={22} className="text-[var(--fg-muted)]" />
+            {/* Logo */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.7, rotate: -10 }}
+              animate={{ opacity: 1, scale: 1, rotate: 0 }}
+              transition={{ type: 'spring', damping: 14, stiffness: 180 }}
+              className="mb-6"
+            >
+              <div className="w-14 h-14 rounded-[18px] flex items-center justify-center shadow-colored" style={{ background: 'linear-gradient(135deg, #7c3aed, #f97316)' }}>
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M6 18V6h2.5l7 9.5V6H18v12h-2.5l-7-9.5V18H6z" fill="white"/></svg>
               </div>
             </motion.div>
+
+            {/* Greeting */}
             <motion.h1
-              initial={{ opacity: 0, y: 12 }}
+              initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.05, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ delay: 0.08, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
               className="text-[28px] md:text-[34px] font-bold tracking-[-0.03em] text-center mb-2"
             >
               {firstName ? t.chat.helloName.replace('{name}', firstName) : t.chat.hello}
@@ -303,32 +315,52 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
             <motion.p
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1, duration: 0.4 }}
-              className="text-[15px] text-[var(--fg-muted)] text-center mb-10"
+              transition={{ delay: 0.14, duration: 0.4 }}
+              className="text-[15px] text-[var(--fg-muted)] text-center mb-10 max-w-xs"
             >
               {t.chat.howCanIHelp}
             </motion.p>
 
-            {/* Horizontal chips */}
+            {/* Suggestion chips — 2 rows, staggered */}
             <motion.div
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.18, duration: 0.5 }}
+              transition={{ delay: 0.2, duration: 0.5 }}
               className="flex flex-wrap justify-center gap-2 w-full max-w-lg"
             >
               {examples.map((text, i) => (
                 <motion.button
                   key={text}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.22 + i * 0.05 }}
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ delay: 0.24 + i * 0.06, duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
                   onClick={() => handleSubmit(text)}
                   whileHover={{ scale: 1.03, y: -2 }}
                   whileTap={{ scale: 0.97 }}
-                  className="px-4 py-2.5 text-[12.5px] text-[var(--fg-muted)] hover:text-[var(--fg)] glass-card hover:shadow-colored transition-all duration-200 cursor-pointer"
+                  className="group px-4 py-2.5 text-[12.5px] text-[var(--fg-muted)] hover:text-[var(--fg)] glass-card hover:border-[var(--border-strong)] hover:shadow-colored transition-all duration-200 cursor-pointer flex items-center gap-2"
                 >
+                  <ArrowRight size={11} className="opacity-0 group-hover:opacity-100 -ml-1 transition-all duration-200 group-hover:translate-x-0.5 text-[var(--fg-subtle)]" />
                   {text}
                 </motion.button>
+              ))}
+            </motion.div>
+
+            {/* Quick action pills */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="flex items-center gap-2 mt-8"
+            >
+              {[
+                { icon: Globe, label: 'Web' },
+                { icon: FileText, label: 'Fichier' },
+                { icon: Sparkles, label: 'Créer' },
+              ].map(({ icon: Icon, label }) => (
+                <div key={label} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[var(--border)] text-[11px] text-[var(--fg-subtle)] bg-[var(--bg-soft)]/50">
+                  <Icon size={10} />
+                  {label}
+                </div>
               ))}
             </motion.div>
           </div>
@@ -372,6 +404,27 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
       <div className="absolute bottom-0 left-0 right-0 pointer-events-none">
         <div className="max-w-3xl mx-auto px-4 md:px-6 pb-4 pb-safe">
           {/* Status pill */}
+          <AnimatePresence>
+            {integrationStatus && (
+              <motion.div
+                initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 6, scale: 0.95 }}
+                transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                className="flex justify-center mb-2"
+              >
+                <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full glass-card shadow-colored text-[12px] text-[var(--fg-muted)]">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: 'linear-gradient(135deg, #7c3aed, #ec4899)' }} />
+                    <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: 'linear-gradient(135deg, #7c3aed, #ec4899)' }} />
+                  </span>
+                  <motion.span initial={{ opacity: 0, x: -4 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.15 }}>
+                    {integrationStatus}
+                  </motion.span>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
           <AnimatePresence>
             {searchStatus && (
               <motion.div

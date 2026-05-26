@@ -176,6 +176,25 @@ export async function POST(req: NextRequest) {
 
   let systemPrompt = buildSystemPrompt(parsed.data.messages as any)
 
+  // Inject Google integrations context if user has active integrations
+  if (!isVSCode) {
+    try {
+      const { rows: integRows } = await db.query(
+        `SELECT service FROM "Integration" WHERE "userId" = $1`,
+        [userId]
+      )
+      if (integRows.length > 0) {
+        const { buildGoogleContext } = await import('@/lib/integrations/google')
+        const { context: googleCtx, activity } = await buildGoogleContext(userId)
+        if (googleCtx) {
+          // Store activity for SSE — will be sent inside the stream
+          ;(parsed.data as Record<string, unknown>).__integrationActivity = activity
+          systemPrompt += `\n\n## Données personnelles de l'utilisateur (temps réel)\n${googleCtx}\n\nTu peux utiliser ces données pour répondre aux questions sur les emails et le calendrier. Pour envoyer un email ou créer un événement, demande confirmation à l'utilisateur.`
+        }
+      }
+    } catch {}
+  }
+
   const stream = new ReadableStream({
     async start(controller) {
       const send = (data: object) => controller.enqueue(sseEvent(data))
@@ -208,6 +227,12 @@ export async function POST(req: NextRequest) {
       }
 
       send({ type: 'meta', conversationId: isVSCode ? undefined : convId, model: model.id })
+
+      // Notify client about active integrations being read
+      const integActivity = (parsed.data as Record<string, unknown>).__integrationActivity as { services: string[]; summary: string } | undefined
+      if (integActivity?.services?.length) {
+        send({ type: 'integrations', services: integActivity.services, summary: integActivity.summary })
+      }
 
       // Web search
       const shouldSearch = useWebSearch || (textContent ? needsWebSearch(textContent) : false)
