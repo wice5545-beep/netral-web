@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import dynamic from 'next/dynamic'
 import { Sidebar } from '@/components/layout/Sidebar'
-import { SettingsModal } from '@/components/chat/SettingsModal'
+
+const SettingsModal = dynamic(() => import('@/components/chat/SettingsModal').then(m => ({ default: m.SettingsModal })), { ssr: false })
 import { useChatStore } from '@/lib/store/chat'
 
 interface AppShellProps {

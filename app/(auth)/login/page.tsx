@@ -176,6 +176,8 @@ export default function LoginPage() {
                   autoComplete="current-password"
                   required
                   maxLength={128}
+                  aria-describedby={state?.errors?.password?.[0] ? 'password-error' : undefined}
+                  aria-invalid={!!state?.errors?.password?.[0]}
                   className={[
                     'w-full h-10 px-3.5 pr-10 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--fg)] text-[14px]',
                     'placeholder:text-[var(--fg-subtle)]',
@@ -195,7 +197,7 @@ export default function LoginPage() {
                 </button>
               </div>
               {state?.errors?.password?.[0] && (
-                <p className="text-[12px] text-red-500">{state.errors.password[0]}</p>
+                <p id="password-error" className="text-[12px] text-red-500" role="alert">{state.errors.password[0]}</p>
               )}
             </div>
 

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { jwtVerify } from 'jose'
 
-const SESSION_SECRET = new TextEncoder().encode(process.env.SESSION_SECRET ?? 'fallback-secret-32-characters-min')
+const SESSION_SECRET = new TextEncoder().encode(process.env.SESSION_SECRET ?? '')
 
 const protectedPaths = ['/chat', '/onboarding']
 const authPaths = ['/login', '/register']
@@ -61,11 +61,19 @@ export async function middleware(req: NextRequest) {
   response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
   response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload')
 
-  // CORS for API routes (allow VS Code extension)
+  // CORS for API routes (allow VS Code extension + app domain)
   if (pathname.startsWith('/api')) {
-    response.headers.set('Access-Control-Allow-Origin', '*')
-    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+    const allowedOrigins = [
+      process.env.NEXT_PUBLIC_APP_URL || 'https://netral.app',
+      'https://netral.app',
+      'vscode-webview://',
+    ]
+    const origin = req.headers.get('origin')
+    const corsOrigin = origin && allowedOrigins.some(o => origin.startsWith(o)) ? origin : allowedOrigins[0]
+    response.headers.set('Access-Control-Allow-Origin', corsOrigin)
+    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS')
     response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+    response.headers.set('Access-Control-Allow-Credentials', 'true')
   }
 
   // Strict CSP for non-API routes — includes Supabase domains

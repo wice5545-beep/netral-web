@@ -2,14 +2,16 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useChatStore, type ChatMessage } from '@/lib/store/chat'
 import { getRandomSuggestions } from '@/lib/suggestions'
 import { useI18n } from '@/lib/i18n'
 import { Message } from './Message'
 import { ChatComposer } from './ChatComposer'
-import { UpgradePopup } from './UpgradePopup'
 import { Globe, FileText, Sparkles, ArrowUp, ArrowRight } from 'lucide-react'
+
+const UpgradePopup = dynamic(() => import('./UpgradePopup').then(m => ({ default: m.UpgradePopup })), { ssr: false })
 
 interface ChatInterfaceProps {
   initialMessages?: ChatMessage[]

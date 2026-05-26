@@ -2,7 +2,10 @@ import 'server-only'
 import { SignJWT, jwtVerify } from 'jose'
 import { cookies } from 'next/headers'
 
-const secretKey = process.env.SESSION_SECRET ?? 'fallback-secret-32-characters-min'
+const secretKey = process.env.SESSION_SECRET
+if (!secretKey || secretKey.length < 32) {
+  throw new Error('SESSION_SECRET environment variable is required and must be at least 32 characters.')
+}
 const encodedKey = new TextEncoder().encode(secretKey)
 
 export type SessionPayload = {
