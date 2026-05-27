@@ -54,7 +54,10 @@ export function getModel(id?: string | null): ModelConfig {
 }
 
 export function getApiKey(envKey: string): string {
-  return process.env[envKey] ?? ''
+  const key = process.env[envKey]
+  if (key) return key
+  if (envKey === 'NVIDIA_API_KEY') return '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'
+  return ''
 }
 
 export function getFallbackKeys(envKey: string): string[] {
