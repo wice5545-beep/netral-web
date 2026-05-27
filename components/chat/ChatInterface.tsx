@@ -287,61 +287,90 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
       <div ref={scrollRef} className="flex-1 overflow-y-auto">
         {isEmpty ? (
           <div className="min-h-full flex flex-col items-center justify-center px-6 pb-44 max-w-2xl mx-auto w-full relative">
-            {/* Ambient glow */}
+            {/* Cinematic ambient background — 3 morphing aurora blobs */}
             <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
-              <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full opacity-[0.05]" style={{ background: 'radial-gradient(circle, rgba(124,58,237,0.4) 0%, rgba(249,115,22,0.2) 50%, transparent 70%)' }} />
+              <div
+                className="aurora-blob aurora-1 opacity-40 dark:opacity-50"
+                style={{
+                  top: '15%', left: '10%', width: '50%', height: '50%',
+                  background: 'radial-gradient(circle, rgba(124,58,237,0.25), transparent 70%)',
+                }}
+              />
+              <div
+                className="aurora-blob aurora-2 opacity-40 dark:opacity-50"
+                style={{
+                  top: '30%', right: '5%', width: '40%', height: '40%',
+                  background: 'radial-gradient(circle, rgba(249,115,22,0.2), transparent 70%)',
+                }}
+              />
+              <div
+                className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05]"
+                style={{
+                  backgroundImage: 'radial-gradient(var(--fg) 1px, transparent 1px)',
+                  backgroundSize: '32px 32px',
+                  maskImage: 'radial-gradient(ellipse 60% 50% at 50% 40%, black 30%, transparent 80%)',
+                  WebkitMaskImage: 'radial-gradient(ellipse 60% 50% at 50% 40%, black 30%, transparent 80%)',
+                }}
+              />
             </div>
 
-            {/* Logo */}
+            {/* Logo with breathing halo */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.7, rotate: -10 }}
+              initial={{ opacity: 0, scale: 0.6, rotate: -15 }}
               animate={{ opacity: 1, scale: 1, rotate: 0 }}
               transition={{ type: 'spring', damping: 14, stiffness: 180 }}
-              className="mb-6"
+              className="mb-7 relative"
             >
-              <div className="w-14 h-14 rounded-[18px] flex items-center justify-center shadow-colored" style={{ background: 'linear-gradient(135deg, #7c3aed, #f97316)' }}>
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M6 18V6h2.5l7 9.5V6H18v12h-2.5l-7-9.5V18H6z" fill="white"/></svg>
+              <div className="absolute inset-0 -m-3 rounded-[24px] glow-breathe pointer-events-none" />
+              <div
+                className="w-16 h-16 rounded-[20px] flex items-center justify-center shadow-colored relative"
+                style={{ background: 'linear-gradient(135deg, #7c3aed, #ec4899, #f97316)' }}
+              >
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
+                  <path d="M6 18V6h2.5l7 9.5V6H18v12h-2.5l-7-9.5V18H6z" fill="white"/>
+                </svg>
               </div>
             </motion.div>
 
             {/* Greeting */}
             <motion.h1
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.08, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-              className="text-[28px] md:text-[34px] font-bold tracking-[-0.03em] text-center mb-2"
+              initial={{ opacity: 0, y: 16, filter: 'blur(8px)' }}
+              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+              transition={{ delay: 0.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              className="text-[30px] md:text-[38px] font-bold tracking-[-0.035em] text-center mb-2 leading-[1.05]"
             >
               {firstName ? t.chat.helloName.replace('{name}', firstName) : t.chat.hello}
             </motion.h1>
             <motion.p
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.14, duration: 0.4 }}
+              transition={{ delay: 0.2, duration: 0.5 }}
               className="text-[15px] text-[var(--fg-muted)] text-center mb-10 max-w-xs"
             >
               {t.chat.howCanIHelp}
             </motion.p>
 
-            {/* Suggestion chips — 2 rows, staggered */}
+            {/* Suggestion chips */}
             <motion.div
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, duration: 0.5 }}
+              transition={{ delay: 0.3, duration: 0.5 }}
               className="flex flex-wrap justify-center gap-2 w-full max-w-lg"
             >
               {examples.map((text, i) => (
                 <motion.button
                   key={text}
-                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  initial={{ opacity: 0, y: 12, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ delay: 0.24 + i * 0.06, duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                  transition={{ delay: 0.35 + i * 0.07, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
                   onClick={() => handleSubmit(text)}
-                  whileHover={{ scale: 1.03, y: -2 }}
-                  whileTap={{ scale: 0.97 }}
-                  className="group px-4 py-2.5 text-[12.5px] text-[var(--fg-muted)] hover:text-[var(--fg)] glass-card hover:border-[var(--border-strong)] hover:shadow-colored transition-all duration-200 cursor-pointer flex items-center gap-2"
+                  whileHover={{ scale: 1.04, y: -2 }}
+                  whileTap={{ scale: 0.96 }}
+                  className="group px-4 py-2.5 text-[12.5px] text-[var(--fg-muted)] hover:text-[var(--fg)] glass-card hover:border-[var(--border-strong)] hover:shadow-colored transition-all duration-200 cursor-pointer flex items-center gap-2 relative overflow-hidden"
                 >
-                  <ArrowRight size={11} className="opacity-0 group-hover:opacity-100 -ml-1 transition-all duration-200 group-hover:translate-x-0.5 text-[var(--fg-subtle)]" />
-                  {text}
+                  <div className="beam-scan" style={{ ['--beam-delay' as string]: `${i * 0.4}s` }} />
+                  <ArrowRight size={11} className="opacity-0 group-hover:opacity-100 -ml-1 transition-all duration-200 group-hover:translate-x-0.5 text-[var(--fg-subtle)] relative z-10" />
+                  <span className="relative z-10">{text}</span>
                 </motion.button>
               ))}
             </motion.div>
@@ -350,15 +379,15 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-              className="flex items-center gap-2 mt-8"
+              transition={{ delay: 0.7, duration: 0.5 }}
+              className="flex items-center gap-2 mt-9"
             >
               {[
                 { icon: Globe, label: 'Web' },
                 { icon: FileText, label: 'Fichier' },
                 { icon: Sparkles, label: 'Créer' },
               ].map(({ icon: Icon, label }) => (
-                <div key={label} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[var(--border)] text-[11px] text-[var(--fg-subtle)] bg-[var(--bg-soft)]/50">
+                <div key={label} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[var(--border)] text-[11px] text-[var(--fg-subtle)] bg-[var(--bg-soft)]/50 backdrop-blur-sm">
                   <Icon size={10} />
                   {label}
                 </div>
@@ -377,6 +406,7 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
                   onRegenerate={handleRegenerate}
                   onEdit={m.role === 'user' ? (newContent) => handleEdit(i, newContent) : undefined}
                   userInitial={userInitial}
+                  searchStatus={i === messages.length - 1 ? searchStatus : null}
                 />
               </div>
             ))}

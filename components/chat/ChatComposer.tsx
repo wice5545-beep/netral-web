@@ -111,7 +111,7 @@ export function ChatComposer({
       </AnimatePresence>
 
       <div className={cn(
-        "relative rounded-2xl glass-card transition-all duration-300",
+        "relative rounded-2xl glass-card mega-input transition-all duration-300",
         isFocused ? "border-[var(--border-strong)] shadow-colored" : "hover:border-[var(--border-strong)]"
       )}>
         {replyContext && (
