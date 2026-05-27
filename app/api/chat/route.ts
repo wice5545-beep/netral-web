@@ -100,18 +100,20 @@ export async function POST(req: NextRequest) {
   // Netral Code is paid-only
   if (isVSCode) {
     const { rows: planCheck } = await db.query(`SELECT plan, "planExpiresAt" FROM "User" WHERE id = $1`, [userId])
-    const userPlan = planCheck[0]?.plan || 'free'
+    const vsCodePlan = planCheck[0]?.plan || 'free'
     const expired = planCheck[0]?.planExpiresAt && new Date(planCheck[0].planExpiresAt) < new Date()
-    if (userPlan === 'free' || expired) {
+    if (vsCodePlan === 'free' || expired) {
       return new Response('Netral Code nécessite un abonnement payant (Plus, Pro ou Pro+). Rendez-vous sur netral.app/tarifs', { status: 403 })
     }
   }
 
-  // Rate limit per IP — skip for Plus/Pro/Pro+ plans
-  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
-  const { rows: planRows } = await db.query(`SELECT plan, role FROM "User" WHERE id = $1`, [userId])
-  const userPlan = planRows[0]?.plan || 'free'
-  const userRole = planRows[0]?.role || 'user'
+  // Single DB query for user plan, role, message limits, and expiration
+  const { rows: userRows } = await db.query(
+    `SELECT plan, role, "messagesUsed", "messagesResetAt", "planExpiresAt" FROM "User" WHERE id = $1`, [userId]
+  )
+  const userData = userRows[0]
+  let userPlan = userData?.plan || 'free'
+  const userRole = userData?.role || 'user'
 
   // Block banned users
   if (userRole === 'banned') return new Response('Votre compte a été suspendu.', { status: 403 })
@@ -122,8 +124,17 @@ export async function POST(req: NextRequest) {
     return new Response('Message trop long.', { status: 413 })
   }
 
+  // Check plan expiration and downgrade if needed
+  const now = new Date()
+  if (userData && userData.planExpiresAt && new Date(userData.planExpiresAt) < now && userPlan !== 'free') {
+    userPlan = 'free'
+    await db.query(`UPDATE "User" SET plan = 'free', "planExpiresAt" = NULL WHERE id = $1`, [userId])
+  }
+
   const isPaid = userPlan === 'plus' || userPlan === 'pro' || userPlan === 'pro_plus'
 
+  // Rate limit per IP — skip for Plus/Pro/Pro+ plans
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
   if (!isPaid) {
     const ipRl = rateLimit(`ip:${ip}`, 3, 30_000)
     if (!ipRl.allowed) return new Response('Trop de requêtes depuis cette adresse. Réessayez dans 30 secondes.', { status: 429 })
@@ -136,16 +147,11 @@ export async function POST(req: NextRequest) {
 
   // Plan-based message limit
   try {
-    const { rows: userRows } = await db.query(
-      `SELECT plan, "messagesUsed", "messagesResetAt", "planExpiresAt" FROM "User" WHERE id = $1`, [userId]
-    )
-    const userData = userRows[0]
     if (userData) {
-      const now = new Date()
       const resetAt = new Date(userData.messagesResetAt)
       if (now > resetAt) {
         // Free: reset weekly, Paid: reset every 2 days
-        const isFree = (userData.plan || 'free') === 'free'
+        const isFree = userPlan === 'free'
         const nextReset = isFree
           ? new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
           : new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000)
@@ -153,15 +159,8 @@ export async function POST(req: NextRequest) {
         userData.messagesUsed = 0
       }
 
-      // Check plan expiration
-      let currentPlan = userData.plan || 'free'
-      if (userData.planExpiresAt && new Date(userData.planExpiresAt) < now && currentPlan !== 'free') {
-        currentPlan = 'free'
-        await db.query(`UPDATE "User" SET plan = 'free', "planExpiresAt" = NULL WHERE id = $1`, [userId])
-      }
-
       const { getPlanLimit, getDailyLimit } = await import('@/lib/plans')
-      const limit = getPlanLimit(currentPlan)
+      const limit = getPlanLimit(userPlan)
       if (userData.messagesUsed >= limit) {
         const resetDate = new Date(userData.messagesResetAt)
         const hours = Math.ceil((resetDate.getTime() - Date.now()) / (1000 * 60 * 60))
@@ -169,7 +168,7 @@ export async function POST(req: NextRequest) {
       }
 
       // Daily limit (anti-abuse for free users)
-      const dailyLimit = getDailyLimit(currentPlan)
+      const dailyLimit = getDailyLimit(userPlan)
       const dailyRl = rateLimit(`daily:${userId}`, dailyLimit, 24 * 60 * 60 * 1000)
       if (!dailyRl.allowed) {
         return new Response('Limite journalière atteinte. Revenez demain ou passez à un plan supérieur.', { status: 429 })
@@ -193,16 +192,12 @@ export async function POST(req: NextRequest) {
   const model = getModel(modelId)
 
   // Restrict model access by plan
-  try {
-    const { rows: planRows } = await db.query(`SELECT plan FROM "User" WHERE id = $1`, [userId])
-    const currentUserPlan = planRows[0]?.plan || 'free'
-    if (model.id === 'ntrl-1.2' && currentUserPlan !== 'pro' && currentUserPlan !== 'pro_plus') {
-      return new Response('NTRL 1.2 nécessite un abonnement Pro ou Pro+.', { status: 403 })
-    }
-    if (model.id === 'ntrl-2.0' && currentUserPlan !== 'pro' && currentUserPlan !== 'pro_plus') {
-      return new Response('NTRL 2.0 nécessite un abonnement Pro ou Pro+.', { status: 403 })
-    }
-  } catch {}
+  if (model.id === 'ntrl-1.2' && userPlan !== 'pro' && userPlan !== 'pro_plus') {
+    return new Response('NTRL 1.2 nécessite un abonnement Pro ou Pro+.', { status: 403 })
+  }
+  if (model.id === 'ntrl-2.0' && userPlan !== 'pro' && userPlan !== 'pro_plus') {
+    return new Response('NTRL 2.0 nécessite un abonnement Pro ou Pro+.', { status: 403 })
+  }
 
   // Token budget check
   const tokenCheck = checkTokenBudget(userId, userPlan)
@@ -309,7 +304,7 @@ export async function POST(req: NextRequest) {
 
       if (model.id === 'ntrl-2.0') {
         payload.top_p = 0.95
-        payload.extra_body = { chat_template_kwargs: { enable_thinking: true } }
+        payload.chat_template_kwargs = { enable_thinking: true }
       }
 
       let accumulated = ''
