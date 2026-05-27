@@ -1,0 +1,23 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "Add a fully translated Changelog page at /changelog documenting all major updates including the NTRL 2.0 launch. The page must follow the app's existing i18n pattern with translations for all 16 supported locales (at minimum FR and EN fully, others can use the makeLocale fallback pattern).",
+  "status": "in_progress",
+  "steps": [
+    "1. Create app/changelog/page.tsx: A 'use client' page component following the pattern of app/tarifs/page.tsx and app/fonctionnalites/page.tsx. Include: (a) Top nav bar with Netral logo, language switcher, and start CTA. (b) A back link to /. (c) A header section with title 'Changelog' / 'Journal des mises a jour'. (d) A list of version entries displayed as cards, each with: version number, date, title, and a bullet list of changes. (e) Include entries for: v2.0 (NTRL 2.0 launch - new NVIDIA-powered model, token system, NTRL 1.0 removed), v1.3 (web search, improved reasoning), v1.2 (multimodal support, images), v1.0 (initial launch). (f) Style with glass-card pattern, framer-motion animations, consistent with the rest of the app.",
+    "2. In lib/i18n/translations.ts: Add a 'changelog' key to FR and EN translations with: title, subtitle, and entries array. Each entry has: version, date, title, changes (string array). For other locales that use makeLocale, add a basic changelog entry that falls back to EN.",
+    "3. Add a navigation link to the changelog page. In the landing page footer area (components/landing/LandingPage.tsx or wherever footer links are), add a 'Changelog' link. Also in the sidebar or settings if appropriate - at minimum add it as a link accessible from the landing page footer alongside 'Privacy' and 'Contact'."
+  ],
+  "acceptance_criteria": [
+    "npx next build passes without errors",
+    "app/changelog/page.tsx exists with version entries for v2.0, v1.3, v1.2, v1.0",
+    "Translations for changelog exist in FR and EN at minimum",
+    "The changelog page uses useI18n() and displays content in the user's selected locale",
+    "A navigation link to /changelog exists in the app"
+  ],
+  "verification": [
+    "Run npx next build and confirm it compiles successfully with no TypeScript errors"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

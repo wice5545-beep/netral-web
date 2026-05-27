@@ -358,6 +358,7 @@ export function LandingPage() {
             <Link href="/tarifs" className="hover:text-[var(--fg)] transition-colors">{t.nav.pricing}</Link>
             <Link href="/extensions" className="hover:text-[var(--fg)] transition-colors">VS Code</Link>
             <Link href="/privacy" className="hover:text-[var(--fg)] transition-colors">{t.footer.privacy}</Link>
+            <Link href="/changelog" className="hover:text-[var(--fg)] transition-colors">{t.footer.changelog}</Link>
             <Link href="/terms" className="hover:text-[var(--fg)] transition-colors">CGU</Link>
           </div>
         </div>

@@ -47,7 +47,7 @@ export const translations: Record<Locale, any> = {
       cta: 'Créer un compte gratuit',
       seePricing: 'Voir les tarifs',
     },
-    footer: { privacy: 'Confidentialité', contact: 'Contact' },
+    footer: { privacy: 'Confidentialité', contact: 'Contact', changelog: 'Changelog' },
     chat: {
       hello: 'Bonjour',
       helloName: 'Bonjour, {name}',
@@ -138,6 +138,54 @@ export const translations: Record<Locale, any> = {
         { q: 'Y a-t-il une limite de messages en Pro ?', a: 'Non. Les messages sont illimités en Pro. Utilisez Netral autant que vous le souhaitez.' },
       ],
     },
+    changelog: {
+      back: 'Retour',
+      badge: 'Nouveautes',
+      title: 'Journal des mises a jour',
+      subtitle: 'Toutes les evolutions de Netral, version par version.',
+      entries: [
+        {
+          version: 'v2.0',
+          date: 'Juin 2025',
+          title: 'NTRL 2.0 — Nouveau modele NVIDIA',
+          changes: [
+            'Nouveau modele NTRL 2.0 avec raisonnement profond, propulse par NVIDIA',
+            'Systeme de tokens introduit pour tous les plans',
+            'NTRL 1.0 retire et remplace par NTRL 2.0',
+            'Acces exclusif Pro et Pro+',
+          ],
+        },
+        {
+          version: 'v1.3',
+          date: 'Mars 2025',
+          title: 'Recherche web amelioree',
+          changes: [
+            'Recherche web amelioree avec plus de sources',
+            'Raisonnement ameliore et plus rapide',
+            'Nouvelle architecture de streaming',
+          ],
+        },
+        {
+          version: 'v1.2',
+          date: 'Janvier 2025',
+          title: 'Support multimodal',
+          changes: [
+            'Support multimodal — images et texte',
+            'Integration Google Gemini',
+          ],
+        },
+        {
+          version: 'v1.0',
+          date: 'Novembre 2024',
+          title: 'Lancement initial',
+          changes: [
+            'Recherche web en temps reel',
+            'Conversations naturelles',
+            'Vie privee par defaut',
+          ],
+        },
+      ],
+    },
   },
 
   en: {
@@ -179,7 +227,7 @@ export const translations: Record<Locale, any> = {
       cta: 'Create a free account',
       seePricing: 'See pricing',
     },
-    footer: { privacy: 'Privacy', contact: 'Contact' },
+    footer: { privacy: 'Privacy', contact: 'Contact', changelog: 'Changelog' },
     chat: {
       hello: 'Hello',
       helloName: 'Hello, {name}',
@@ -270,6 +318,54 @@ export const translations: Record<Locale, any> = {
         { q: 'Is there a message limit on Pro?', a: 'No. Messages are unlimited on Pro. Use Netral as much as you want.' },
       ],
     },
+    changelog: {
+      back: 'Back',
+      badge: "What's new",
+      title: 'Changelog',
+      subtitle: 'All Netral updates, version by version.',
+      entries: [
+        {
+          version: 'v2.0',
+          date: 'June 2025',
+          title: 'NTRL 2.0 — New NVIDIA-powered model',
+          changes: [
+            'New NTRL 2.0 model with deep reasoning, powered by NVIDIA',
+            'Token system introduced for all plans',
+            'NTRL 1.0 retired and replaced by NTRL 2.0',
+            'Exclusive access for Pro and Pro+ subscribers',
+          ],
+        },
+        {
+          version: 'v1.3',
+          date: 'March 2025',
+          title: 'Enhanced web search',
+          changes: [
+            'Enhanced web search with more sources',
+            'Improved and faster reasoning',
+            'New streaming architecture',
+          ],
+        },
+        {
+          version: 'v1.2',
+          date: 'January 2025',
+          title: 'Multimodal support',
+          changes: [
+            'Multimodal support — images and text',
+            'Google Gemini integration',
+          ],
+        },
+        {
+          version: 'v1.0',
+          date: 'November 2024',
+          title: 'Initial launch',
+          changes: [
+            'Real-time web search',
+            'Natural conversations',
+            'Privacy by default',
+          ],
+        },
+      ],
+    },
   },
 
   es: {
@@ -279,7 +375,7 @@ export const translations: Record<Locale, any> = {
     stats: { latency: 'Latencia media', uptime: 'Disponibilidad', users: 'Usuarios activos' },
     features: { title: 'Pensado para mentes curiosas', subtitle: 'Una IA que no inventa. Que sabe cuándo buscar. Que cita sus fuentes.', seeAll: 'Ver todas las funcionalidades →', items: [{ title: 'Búsqueda web en tiempo real', desc: 'Fuentes fechadas, clicables, verificables.' }, { title: 'Razonamiento avanzado', desc: 'Resolución paso a paso de problemas complejos.' }, { title: 'Conversaciones naturales', desc: 'Como hablar con un experto de confianza.' }, { title: 'Streaming instantáneo', desc: 'Lee la respuesta mientras se forma.' }, { title: 'Búsqueda semántica', desc: 'Entiende el significado, no solo palabras clave.' }, { title: 'Privado por defecto', desc: 'Cifrado. Borrable. Nunca usado para entrenamiento.' }] },
     pricing: { title1: 'Gratis para empezar.', title2: 'Pro cuando estés listo.', subtitle: '20 mensajes/día gratis. Pasa a Pro por acceso ilimitado a 12€/mes.', cta: 'Crear cuenta gratis', seePricing: 'Ver precios' },
-    footer: { privacy: 'Privacidad', contact: 'Contacto' },
+    footer: { privacy: 'Privacidad', contact: 'Contacto', changelog: 'Changelog' },
     chat: { hello: 'Hola', helloName: 'Hola, {name}', howCanIHelp: '¿Cómo puedo ayudarte hoy?', newConversation: 'Nueva conversación', search: 'Buscar', noConversations: 'Sin conversaciones', noResults: 'Sin resultados', today: 'Hoy', yesterday: 'Ayer', last7days: 'Últimos 7 días', last30days: 'Últimos 30 días', older: 'Más antiguo', settings: 'Ajustes', logout: 'Cerrar sesión', rename: 'Renombrar', remix: 'Remixar', delete: 'Eliminar', deleteConfirm: '¿Eliminar esta conversación?', searching: 'Buscando…', reading: 'Leyendo fuentes…', thinking: 'Pensando…', login: 'Iniciar sesión', loginTitle: 'Bienvenido', loginSubtitle: 'Inicia sesión en tu cuenta', signupTitle: 'Crear cuenta', signupSubtitle: 'Gratis, en menos de un minuto', noAccount: '¿No tienes cuenta?', createOne: 'Crear una', alreadyAccount: '¿Ya registrado?', signIn: 'Iniciar sesión', createAccount: 'Crear mi cuenta' },
     featuresPage: { back: 'Volver', title: 'Funcionalidades', subtitle: 'Todo lo que necesitas para una IA fiable, rápida y respetuosa con tu privacidad.', cta: '¿Listo para probar?', ctaDesc: 'Crea una cuenta en 10 segundos. Gratis, sin tarjeta.', ctaBtn: 'Empezar gratis', items: [{ title: 'Búsqueda web en tiempo real', desc: 'Netral busca en la web mientras responde. Fuentes fechadas, clicables, verificables.', details: ['Fuentes citadas con enlaces', 'Datos actualizados en tiempo real', 'Verificación cruzada automática'] }, { title: 'Razonamiento avanzado', desc: 'Un modelo que piensa paso a paso, capaz de resolver problemas complejos con rigor.', details: ['Cadena de pensamiento estructurada', 'Análisis multi-perspectiva', 'Resolución de problemas complejos'] }, { title: 'Conversaciones naturales', desc: 'Haz preguntas complejas, pide código, debate ideas. Como hablar con un experto.', details: ['Contexto mantenido', 'Reformulación inteligente', 'Adaptación al tono del usuario'] }, { title: 'Streaming ultra-rápido', desc: 'Respuestas en streaming. Lee mientras Netral escribe.', details: ['Latencia < 200ms', 'Streaming token por token', 'Interrumpible en cualquier momento'] }, { title: 'Generación de código', desc: 'Python, TypeScript, Rust, SQL… Código limpio, comentado y funcional.', details: ['Resaltado de sintaxis', 'Explicación línea por línea', 'Detección automática del lenguaje'] }, { title: 'Búsqueda semántica', desc: 'Entiende el significado, no solo palabras clave. Encuentra lo que realmente buscas.', details: ['Comprensión contextual', 'Resultados relevantes', 'Filtrado inteligente'] }, { title: 'Privado por defecto', desc: 'Sesiones cifradas. Datos borrables en cualquier momento.', details: ['Cifrado de extremo a extremo', 'Eliminación instantánea', 'Sin retención de datos'] }, { title: 'Multi-formato', desc: 'Texto, tablas, listas, código, matemáticas. Se adapta al formato más claro.', details: ['Markdown enriquecido', 'Tablas y gráficos', 'Fórmulas LaTeX'] }] },
     pricingPage: { back: 'Volver', title1: 'Precios simples,', title2: 'sin sorpresas.', subtitle: 'Empieza gratis. Pasa a Pro cuando estés listo.', popular: 'Popular', faqTitle: 'Preguntas frecuentes', plans: [{ name: 'Gratis', price: '0€', period: '/mes', desc: 'Para descubrir Netral sin compromiso.', cta: 'Empezar', features: ['20 mensajes por día', 'Búsqueda web básica', 'Historial 7 días', '1 conversación simultánea'] }, { name: 'Pro', price: '12€', period: '/mes', desc: 'Para profesionales y creadores.', cta: 'Pasar a Pro', features: ['Mensajes ilimitados', 'Búsqueda web avanzada', 'Historial ilimitado', 'Conversaciones ilimitadas', 'Modelo prioritario (GPT-4o)', 'Exportar conversaciones', 'Soporte prioritario'] }, { name: 'Equipo', price: '29€', period: '/usuario/mes', desc: 'Para equipos que quieren colaborar.', cta: 'Contactar', features: ['Todo de Pro incluido', 'Espacio de trabajo compartido', 'Gestión de miembros', 'Acceso API', 'SSO & SAML', 'SLA 99.9%', 'Account manager dedicado'] }], faq: [{ q: '¿Puedo cancelar en cualquier momento?', a: 'Sí. Sin compromiso. Cancela en un clic desde los ajustes.' }, { q: '¿Mis datos están seguros?', a: 'Absolutamente. Cifrado de extremo a extremo, sin retención tras eliminación.' }, { q: '¿Hay límite de mensajes en Pro?', a: 'No. Los mensajes son ilimitados en Pro.' }] },
@@ -291,7 +387,7 @@ export const translations: Record<Locale, any> = {
     stats: { latency: 'Durchschnittliche Latenz', uptime: 'Verfügbarkeit', users: 'Aktive Nutzer' },
     features: { title: 'Für neugierige Köpfe gebaut', subtitle: 'Eine KI, die nicht erfindet. Die weiß, wann sie suchen muss. Die ihre Quellen zitiert.', seeAll: 'Alle Funktionen ansehen →', items: [{ title: 'Echtzeit-Websuche', desc: 'Datierte, anklickbare, überprüfbare Quellen.' }, { title: 'Fortgeschrittenes Reasoning', desc: 'Schrittweise Lösung komplexer Probleme.' }, { title: 'Natürliche Gespräche', desc: 'Wie ein Gespräch mit einem vertrauenswürdigen Experten.' }, { title: 'Sofortiges Streaming', desc: 'Lesen Sie die Antwort, während sie entsteht.' }, { title: 'Semantische Suche', desc: 'Versteht Bedeutung, nicht nur Schlüsselwörter.' }, { title: 'Standardmäßig privat', desc: 'Verschlüsselt. Löschbar. Nie für Training verwendet.' }] },
     pricing: { title1: 'Kostenlos starten.', title2: 'Pro wenn Sie bereit sind.', subtitle: '20 Nachrichten/Tag kostenlos. Pro für unbegrenzten Zugang ab 12€/Monat.', cta: 'Kostenloses Konto erstellen', seePricing: 'Preise ansehen' },
-    footer: { privacy: 'Datenschutz', contact: 'Kontakt' },
+    footer: { privacy: 'Datenschutz', contact: 'Kontakt', changelog: 'Changelog' },
     chat: { hello: 'Hallo', helloName: 'Hallo, {name}', howCanIHelp: 'Wie kann ich Ihnen heute helfen?', newConversation: 'Neues Gespräch', search: 'Suchen', noConversations: 'Keine Gespräche', noResults: 'Keine Ergebnisse', today: 'Heute', yesterday: 'Gestern', last7days: 'Letzte 7 Tage', last30days: 'Letzte 30 Tage', older: 'Älter', settings: 'Einstellungen', logout: 'Abmelden', rename: 'Umbenennen', remix: 'Remixen', delete: 'Löschen', deleteConfirm: 'Dieses Gespräch löschen?', searching: 'Suche läuft…', reading: 'Quellen lesen…', thinking: 'Nachdenken…', login: 'Anmelden', loginTitle: 'Willkommen', loginSubtitle: 'Melden Sie sich an', signupTitle: 'Konto erstellen', signupSubtitle: 'Kostenlos, in weniger als einer Minute', noAccount: 'Noch kein Konto?', createOne: 'Erstellen', alreadyAccount: 'Bereits registriert?', signIn: 'Anmelden', createAccount: 'Konto erstellen' },
     featuresPage: { back: 'Zurück', title: 'Funktionen', subtitle: 'Alles was Sie für eine zuverlässige, schnelle und datenschutzfreundliche KI brauchen.', cta: 'Bereit zum Testen?', ctaDesc: 'Erstellen Sie ein Konto in 10 Sekunden. Kostenlos, ohne Kreditkarte.', ctaBtn: 'Kostenlos starten', items: [{ title: 'Echtzeit-Websuche', desc: 'Netral durchsucht das Web während es antwortet. Datierte, überprüfbare Quellen.', details: ['Zitierte Quellen mit Links', 'Echtzeit-aktualisierte Daten', 'Automatische Kreuzverifizierung'] }, { title: 'Fortgeschrittenes Reasoning', desc: 'Ein Modell, das Schritt für Schritt denkt und komplexe Probleme rigoros löst.', details: ['Strukturierte Gedankenkette', 'Multi-Perspektiven-Analyse', 'Komplexe Problemlösung'] }, { title: 'Natürliche Gespräche', desc: 'Stellen Sie komplexe Fragen, fordern Sie Code an, debattieren Sie Ideen.', details: ['Kontext durchgehend beibehalten', 'Intelligente Umformulierung', 'Anpassung an den Nutzerton'] }, { title: 'Ultra-schnelles Streaming', desc: 'Streaming-Antworten. Lesen Sie während Netral schreibt.', details: ['Latenz < 200ms', 'Token-für-Token-Streaming', 'Jederzeit unterbrechbar'] }, { title: 'Code-Generierung', desc: 'Python, TypeScript, Rust, SQL… Sauberer, kommentierter, funktionaler Code.', details: ['Syntax-Highlighting', 'Zeilenweise Erklärung', 'Automatische Spracherkennung'] }, { title: 'Semantische Suche', desc: 'Versteht Bedeutung, nicht nur Schlüsselwörter. Findet was Sie wirklich suchen.', details: ['Kontextuelles Verständnis', 'Relevante Ergebnisse', 'Intelligente Rauschfilterung'] }, { title: 'Standardmäßig privat', desc: 'Verschlüsselte Sitzungen. Daten jederzeit löschbar.', details: ['Ende-zu-Ende-Verschlüsselung', 'Sofortige Löschung', 'Keine Datenspeicherung'] }, { title: 'Multi-Format', desc: 'Text, Tabellen, Listen, Code, Mathe. Passt sich dem klarsten Format an.', details: ['Erweitertes Markdown', 'Tabellen und Diagramme', 'LaTeX-Formeln'] }] },
     pricingPage: { back: 'Zurück', title1: 'Einfache Preise,', title2: 'ohne Überraschungen.', subtitle: 'Kostenlos starten. Pro wenn Sie bereit sind.', popular: 'Beliebt', faqTitle: 'Häufig gestellte Fragen', plans: [{ name: 'Kostenlos', price: '0€', period: '/Monat', desc: 'Netral unverbindlich entdecken.', cta: 'Starten', features: ['20 Nachrichten pro Tag', 'Einfache Websuche', '7-Tage-Verlauf', '1 gleichzeitige Konversation'] }, { name: 'Pro', price: '12€', period: '/Monat', desc: 'Für Profis und Kreative.', cta: 'Zu Pro wechseln', features: ['Unbegrenzte Nachrichten', 'Erweiterte Websuche', 'Unbegrenzter Verlauf', 'Unbegrenzte Konversationen', 'Prioritätsmodell (GPT-4o)', 'Konversationen exportieren', 'Prioritäts-Support'] }, { name: 'Team', price: '29€', period: '/Nutzer/Monat', desc: 'Für Teams die zusammenarbeiten wollen.', cta: 'Kontaktieren', features: ['Alles aus Pro', 'Geteilter Arbeitsbereich', 'Mitgliederverwaltung', 'API-Zugang', 'SSO & SAML', 'SLA 99.9%', 'Dedizierter Account Manager'] }], faq: [{ q: 'Kann ich jederzeit kündigen?', a: 'Ja. Keine Bindung. Kündigen Sie mit einem Klick in den Einstellungen.' }, { q: 'Sind meine Daten sicher?', a: 'Absolut. Ende-zu-Ende-Verschlüsselung, keine Speicherung nach Löschung.' }, { q: 'Gibt es ein Nachrichtenlimit bei Pro?', a: 'Nein. Nachrichten sind bei Pro unbegrenzt.' }] },
@@ -304,7 +400,7 @@ export const translations: Record<Locale, any> = {
     stats: { latency: 'Latenza media', uptime: 'Disponibilità', users: 'Utenti attivi' },
     features: { title: 'Pensato per le menti curiose', subtitle: "Un'IA che non inventa. Che sa quando cercare. Che cita le sue fonti.", seeAll: 'Vedi tutte le funzionalità →', items: [{ title: 'Ricerca web in tempo reale', desc: 'Fonti datate, cliccabili, verificabili.' }, { title: 'Ragionamento avanzato', desc: 'Risoluzione passo dopo passo di problemi complessi.' }, { title: 'Conversazioni naturali', desc: 'Come parlare con un esperto di fiducia.' }, { title: 'Streaming istantaneo', desc: 'Leggi la risposta mentre si forma.' }, { title: 'Ricerca semantica', desc: 'Capisce il significato, non solo le parole chiave.' }, { title: 'Privato per default', desc: "Crittografato. Cancellabile. Mai usato per l'addestramento." }] },
     pricing: { title1: 'Gratis per iniziare.', title2: 'Pro quando sei pronto.', subtitle: '20 messaggi/giorno gratis. Passa a Pro per accesso illimitato a 12€/mese.', cta: 'Crea un account gratis', seePricing: 'Vedi i prezzi' },
-    footer: { privacy: 'Privacy', contact: 'Contatti' },
+    footer: { privacy: 'Privacy', contact: 'Contatti', changelog: 'Changelog' },
     chat: { hello: 'Ciao', helloName: 'Ciao, {name}', howCanIHelp: 'Come posso aiutarti oggi?', newConversation: 'Nuova conversazione', search: 'Cerca', noConversations: 'Nessuna conversazione', noResults: 'Nessun risultato', today: 'Oggi', yesterday: 'Ieri', last7days: 'Ultimi 7 giorni', last30days: 'Ultimi 30 giorni', older: 'Più vecchio', settings: 'Impostazioni', logout: 'Esci', rename: 'Rinomina', remix: 'Remixa', delete: 'Elimina', deleteConfirm: 'Eliminare questa conversazione?', searching: 'Ricerca in corso…', reading: 'Lettura fonti…', thinking: 'Riflessione…', login: 'Accedi', loginTitle: 'Bentornato', loginSubtitle: 'Accedi al tuo account', signupTitle: 'Crea un account', signupSubtitle: 'Gratis, in meno di un minuto', noAccount: 'Non hai un account?', createOne: 'Creane uno', alreadyAccount: 'Già registrato?', signIn: 'Accedi', createAccount: 'Crea il mio account' },
     featuresPage: { back: 'Indietro', title: 'Funzionalità', subtitle: "Tutto ciò di cui hai bisogno per un'IA affidabile, veloce e rispettosa della privacy.", cta: 'Pronto a provare?', ctaDesc: 'Crea un account in 10 secondi. Gratis, senza carta.', ctaBtn: 'Inizia gratis', items: [{ title: 'Ricerca web in tempo reale', desc: 'Netral cerca nel web mentre risponde. Fonti datate, verificabili.', details: ['Fonti citate con link', 'Dati aggiornati in tempo reale', 'Verifica incrociata automatica'] }, { title: 'Ragionamento avanzato', desc: 'Un modello che pensa passo dopo passo, capace di risolvere problemi complessi.', details: ['Catena di pensiero strutturata', 'Analisi multi-prospettiva', 'Risoluzione problemi complessi'] }, { title: 'Conversazioni naturali', desc: 'Fai domande complesse, chiedi codice, dibatti idee. Come parlare con un esperto.', details: ['Contesto mantenuto', 'Riformulazione intelligente', "Adattamento al tono dell'utente"] }, { title: 'Streaming ultra-veloce', desc: 'Risposte in streaming. Leggi mentre Netral scrive.', details: ['Latenza < 200ms', 'Streaming token per token', 'Interrompibile in qualsiasi momento'] }, { title: 'Generazione di codice', desc: 'Python, TypeScript, Rust, SQL… Codice pulito, commentato e funzionale.', details: ['Evidenziazione sintassi', 'Spiegazione riga per riga', 'Rilevamento automatico del linguaggio'] }, { title: 'Ricerca semantica', desc: 'Capisce il significato, non solo parole chiave. Trova ciò che cerchi davvero.', details: ['Comprensione contestuale', 'Risultati pertinenti', 'Filtraggio intelligente'] }, { title: 'Privato per default', desc: 'Sessioni crittografate. Dati cancellabili in qualsiasi momento.', details: ['Crittografia end-to-end', 'Eliminazione istantanea', 'Nessuna conservazione dati'] }, { title: 'Multi-formato', desc: 'Testo, tabelle, liste, codice, matematica. Si adatta al formato più chiaro.', details: ['Markdown arricchito', 'Tabelle e grafici', 'Formule LaTeX'] }] },
     pricingPage: { back: 'Indietro', title1: 'Prezzi semplici,', title2: 'senza sorprese.', subtitle: 'Inizia gratis. Passa a Pro quando sei pronto.', popular: 'Popolare', faqTitle: 'Domande frequenti', plans: [{ name: 'Gratis', price: '0€', period: '/mese', desc: 'Per scoprire Netral senza impegno.', cta: 'Inizia', features: ['20 messaggi al giorno', 'Ricerca web base', 'Cronologia 7 giorni', '1 conversazione simultanea'] }, { name: 'Pro', price: '12€', period: '/mese', desc: 'Per professionisti e creatori.', cta: 'Passa a Pro', features: ['Messaggi illimitati', 'Ricerca web avanzata', 'Cronologia illimitata', 'Conversazioni illimitate', 'Modello prioritario (GPT-4o)', 'Esporta conversazioni', 'Supporto prioritario'] }, { name: 'Team', price: '29€', period: '/utente/mese', desc: 'Per team che vogliono collaborare.', cta: 'Contattaci', features: ['Tutto di Pro incluso', 'Spazio di lavoro condiviso', 'Gestione membri', 'Accesso API', 'SSO & SAML', 'SLA 99.9%', 'Account manager dedicato'] }], faq: [{ q: 'Posso cancellare in qualsiasi momento?', a: 'Sì. Nessun impegno. Cancella con un clic dalle impostazioni.' }, { q: 'I miei dati sono sicuri?', a: 'Assolutamente. Crittografia end-to-end, nessuna conservazione dopo eliminazione.' }, { q: "C'è un limite di messaggi su Pro?", a: 'No. I messaggi sono illimitati su Pro.' }] },
@@ -316,7 +412,7 @@ export const translations: Record<Locale, any> = {
     stats: { latency: 'Latência média', uptime: 'Disponibilidade', users: 'Usuários ativos' },
     features: { title: 'Pensado para mentes curiosas', subtitle: 'Uma IA que não inventa. Que sabe quando pesquisar. Que cita suas fontes.', seeAll: 'Ver todas as funcionalidades →', items: [{ title: 'Pesquisa web em tempo real', desc: 'Fontes datadas, clicáveis, verificáveis.' }, { title: 'Raciocínio avançado', desc: 'Resolução passo a passo de problemas complexos.' }, { title: 'Conversas naturais', desc: 'Como falar com um especialista de confiança.' }, { title: 'Streaming instantâneo', desc: 'Leia a resposta enquanto se forma.' }, { title: 'Pesquisa semântica', desc: 'Entende o significado, não apenas palavras-chave.' }, { title: 'Privado por padrão', desc: 'Criptografado. Apagável. Nunca usado para treinamento.' }] },
     pricing: { title1: 'Grátis para começar.', title2: 'Pro quando estiver pronto.', subtitle: '20 mensagens/dia grátis. Passe para Pro por acesso ilimitado a 12€/mês.', cta: 'Criar conta grátis', seePricing: 'Ver preços' },
-    footer: { privacy: 'Privacidade', contact: 'Contato' },
+    footer: { privacy: 'Privacidade', contact: 'Contato', changelog: 'Changelog' },
     chat: { hello: 'Olá', helloName: 'Olá, {name}', howCanIHelp: 'Como posso ajudar hoje?', newConversation: 'Nova conversa', search: 'Pesquisar', noConversations: 'Sem conversas', noResults: 'Sem resultados', today: 'Hoje', yesterday: 'Ontem', last7days: 'Últimos 7 dias', last30days: 'Últimos 30 dias', older: 'Mais antigo', settings: 'Configurações', logout: 'Sair', rename: 'Renomear', remix: 'Remixar', delete: 'Excluir', deleteConfirm: 'Excluir esta conversa?', searching: 'Pesquisando…', reading: 'Lendo fontes…', thinking: 'Pensando…', login: 'Entrar', loginTitle: 'Bem-vindo', loginSubtitle: 'Entre na sua conta', signupTitle: 'Criar conta', signupSubtitle: 'Grátis, em menos de um minuto', noAccount: 'Não tem conta?', createOne: 'Criar uma', alreadyAccount: 'Já registrado?', signIn: 'Entrar', createAccount: 'Criar minha conta' },
     featuresPage: { back: 'Voltar', title: 'Funcionalidades', subtitle: 'Tudo que você precisa para uma IA confiável, rápida e respeitosa com sua privacidade.', cta: 'Pronto para experimentar?', ctaDesc: 'Crie uma conta em 10 segundos. Grátis, sem cartão.', ctaBtn: 'Começar grátis', items: [{ title: 'Pesquisa web em tempo real', desc: 'Netral pesquisa na web enquanto responde. Fontes datadas, verificáveis.', details: ['Fontes citadas com links', 'Dados atualizados em tempo real', 'Verificação cruzada automática'] }, { title: 'Raciocínio avançado', desc: 'Um modelo que pensa passo a passo, capaz de resolver problemas complexos.', details: ['Cadeia de pensamento estruturada', 'Análise multi-perspectiva', 'Resolução de problemas complexos'] }, { title: 'Conversas naturais', desc: 'Faça perguntas complexas, peça código, debata ideias. Como falar com um especialista.', details: ['Contexto mantido', 'Reformulação inteligente', 'Adaptação ao tom do usuário'] }, { title: 'Streaming ultra-rápido', desc: 'Respostas em streaming. Leia enquanto Netral escreve.', details: ['Latência < 200ms', 'Streaming token por token', 'Interrompível a qualquer momento'] }, { title: 'Geração de código', desc: 'Python, TypeScript, Rust, SQL… Código limpo, comentado e funcional.', details: ['Destaque de sintaxe', 'Explicação linha por linha', 'Detecção automática da linguagem'] }, { title: 'Pesquisa semântica', desc: 'Entende o significado, não apenas palavras-chave. Encontra o que você realmente procura.', details: ['Compreensão contextual', 'Resultados relevantes', 'Filtragem inteligente'] }, { title: 'Privado por padrão', desc: 'Sessões criptografadas. Dados apagáveis a qualquer momento.', details: ['Criptografia ponta a ponta', 'Exclusão instantânea', 'Sem retenção de dados'] }, { title: 'Multi-formato', desc: 'Texto, tabelas, listas, código, matemática. Adapta-se ao formato mais claro.', details: ['Markdown enriquecido', 'Tabelas e gráficos', 'Fórmulas LaTeX'] }] },
     pricingPage: { back: 'Voltar', title1: 'Preços simples,', title2: 'sem surpresas.', subtitle: 'Comece grátis. Passe para Pro quando estiver pronto.', popular: 'Popular', faqTitle: 'Perguntas frequentes', plans: [{ name: 'Grátis', price: '0€', period: '/mês', desc: 'Para descobrir Netral sem compromisso.', cta: 'Começar', features: ['20 mensagens por dia', 'Pesquisa web básica', 'Histórico 7 dias', '1 conversa simultânea'] }, { name: 'Pro', price: '12€', period: '/mês', desc: 'Para profissionais e criadores.', cta: 'Passar para Pro', features: ['Mensagens ilimitadas', 'Pesquisa web avançada', 'Histórico ilimitado', 'Conversas ilimitadas', 'Modelo prioritário (GPT-4o)', 'Exportar conversas', 'Suporte prioritário'] }, { name: 'Equipe', price: '29€', period: '/usuário/mês', desc: 'Para equipes que querem colaborar.', cta: 'Contatar', features: ['Tudo do Pro incluído', 'Espaço de trabalho compartilhado', 'Gestão de membros', 'Acesso API', 'SSO & SAML', 'SLA 99.9%', 'Account manager dedicado'] }], faq: [{ q: 'Posso cancelar a qualquer momento?', a: 'Sim. Sem compromisso. Cancele com um clique nas configurações.' }, { q: 'Meus dados estão seguros?', a: 'Absolutamente. Criptografia ponta a ponta, sem retenção após exclusão.' }, { q: 'Há limite de mensagens no Pro?', a: 'Não. As mensagens são ilimitadas no Pro.' }] },
@@ -329,7 +425,7 @@ export const translations: Record<Locale, any> = {
     stats: { latency: 'متوسط التأخير', uptime: 'التوفر', users: 'المستخدمون النشطون' },
     features: { title: 'مصمم للعقول الفضولية', subtitle: 'ذكاء اصطناعي لا يختلق. يعرف متى يبحث. يستشهد بمصادره.', seeAll: 'عرض جميع المميزات ←', items: [{ title: 'بحث ويب في الوقت الفعلي', desc: 'مصادر مؤرخة، قابلة للنقر، قابلة للتحقق.' }, { title: 'استدلال متقدم', desc: 'حل المشكلات المعقدة خطوة بخطوة.' }, { title: 'محادثات طبيعية', desc: 'كأنك تتحدث مع خبير موثوق.' }, { title: 'بث فوري', desc: 'اقرأ الإجابة أثناء تشكلها.' }, { title: 'بحث دلالي', desc: 'يفهم المعنى، ليس فقط الكلمات المفتاحية.' }, { title: 'خاص افتراضياً', desc: 'مشفر. قابل للمسح. لا يُستخدم للتدريب أبداً.' }] },
     pricing: { title1: 'مجاني للبدء.', title2: 'Pro عندما تكون جاهزاً.', subtitle: '20 رسالة/يوم مجاناً. انتقل إلى Pro للوصول غير المحدود بـ 12€/شهر.', cta: 'إنشاء حساب مجاني', seePricing: 'عرض الأسعار' },
-    footer: { privacy: 'الخصوصية', contact: 'اتصل بنا' },
+    footer: { privacy: 'الخصوصية', contact: 'اتصل بنا', changelog: 'Changelog' },
     chat: { hello: 'مرحباً', helloName: 'مرحباً، {name}', howCanIHelp: 'كيف يمكنني مساعدتك اليوم؟', newConversation: 'محادثة جديدة', search: 'بحث', noConversations: 'لا توجد محادثات', noResults: 'لا توجد نتائج', today: 'اليوم', yesterday: 'أمس', last7days: 'آخر 7 أيام', last30days: 'آخر 30 يوماً', older: 'أقدم', settings: 'الإعدادات', logout: 'تسجيل الخروج', rename: 'إعادة تسمية', remix: 'ريمكس', delete: 'حذف', deleteConfirm: 'حذف هذه المحادثة؟', searching: 'جارٍ البحث…', reading: 'قراءة المصادر…', thinking: 'تفكير…', login: 'تسجيل الدخول', loginTitle: 'مرحباً بعودتك', loginSubtitle: 'سجل دخولك', signupTitle: 'إنشاء حساب', signupSubtitle: 'مجاني، في أقل من دقيقة', noAccount: 'ليس لديك حساب؟', createOne: 'إنشاء واحد', alreadyAccount: 'مسجل بالفعل؟', signIn: 'تسجيل الدخول', createAccount: 'إنشاء حسابي' },
     featuresPage: { back: 'رجوع', title: 'المميزات', subtitle: 'كل ما تحتاجه لذكاء اصطناعي موثوق وسريع ويحترم خصوصيتك.', cta: 'مستعد للتجربة؟', ctaDesc: 'أنشئ حساباً في 10 ثوانٍ. مجاني، بدون بطاقة.', ctaBtn: 'ابدأ مجاناً', items: [{ title: 'بحث ويب في الوقت الفعلي', desc: 'Netral يبحث في الويب أثناء الإجابة. مصادر مؤرخة وقابلة للتحقق.', details: ['مصادر مستشهد بها مع روابط', 'بيانات محدثة في الوقت الفعلي', 'تحقق متبادل تلقائي'] }, { title: 'استدلال متقدم', desc: 'نموذج يفكر خطوة بخطوة، قادر على حل المشكلات المعقدة.', details: ['سلسلة تفكير منظمة', 'تحليل متعدد المنظورات', 'حل المشكلات المعقدة'] }, { title: 'محادثات طبيعية', desc: 'اطرح أسئلة معقدة، اطلب كوداً، ناقش أفكاراً.', details: ['السياق محفوظ طوال المحادثة', 'إعادة صياغة ذكية', 'تكيف مع نبرة المستخدم'] }, { title: 'بث فائق السرعة', desc: 'إجابات متدفقة. اقرأ بينما يكتب Netral.', details: ['تأخير < 200ms', 'بث رمز بعد رمز', 'قابل للمقاطعة في أي وقت'] }, { title: 'توليد الكود', desc: 'Python, TypeScript, Rust, SQL… كود نظيف ومعلق وعملي.', details: ['تلوين بناء الجملة', 'شرح سطر بسطر', 'كشف تلقائي للغة'] }, { title: 'بحث دلالي', desc: 'يفهم المعنى، ليس فقط الكلمات. يجد ما تبحث عنه حقاً.', details: ['فهم سياقي', 'نتائج ذات صلة', 'تصفية ذكية'] }, { title: 'خاص افتراضياً', desc: 'جلسات مشفرة. بيانات قابلة للمسح في أي وقت.', details: ['تشفير من طرف لطرف', 'حذف فوري', 'بدون احتفاظ بالبيانات'] }, { title: 'متعدد الصيغ', desc: 'نص، جداول، قوائم، كود، رياضيات. يتكيف مع أوضح صيغة.', details: ['Markdown غني', 'جداول ورسوم بيانية', 'صيغ LaTeX'] }] },
     pricingPage: { back: 'رجوع', title1: 'أسعار بسيطة،', title2: 'بدون مفاجآت.', subtitle: 'ابدأ مجاناً. انتقل إلى Pro عندما تكون جاهزاً.', popular: 'الأكثر شعبية', faqTitle: 'أسئلة شائعة', plans: [{ name: 'مجاني', price: '0€', period: '/شهر', desc: 'لاكتشاف Netral بدون التزام.', cta: 'ابدأ', features: ['20 رسالة في اليوم', 'بحث ويب أساسي', 'سجل 7 أيام', 'محادثة واحدة متزامنة'] }, { name: 'Pro', price: '12€', period: '/شهر', desc: 'للمحترفين والمبدعين.', cta: 'الانتقال إلى Pro', features: ['رسائل غير محدودة', 'بحث ويب متقدم', 'سجل غير محدود', 'محادثات غير محدودة', 'نموذج أولوية (GPT-4o)', 'تصدير المحادثات', 'دعم أولوية'] }, { name: 'فريق', price: '29€', period: '/مستخدم/شهر', desc: 'للفرق التي تريد التعاون.', cta: 'تواصل معنا', features: ['كل ما في Pro', 'مساحة عمل مشتركة', 'إدارة الأعضاء', 'وصول API', 'SSO & SAML', 'SLA 99.9%', 'مدير حساب مخصص'] }], faq: [{ q: 'هل يمكنني الإلغاء في أي وقت؟', a: 'نعم. بدون التزام. ألغِ اشتراكك بنقرة واحدة من الإعدادات.' }, { q: 'هل بياناتي آمنة؟', a: 'بالتأكيد. تشفير من طرف لطرف، بدون احتفاظ بعد الحذف.' }, { q: 'هل هناك حد للرسائل في Pro؟', a: 'لا. الرسائل غير محدودة في Pro.' }] },
@@ -341,7 +437,7 @@ export const translations: Record<Locale, any> = {
     stats: { latency: '平均延迟', uptime: '可用性', users: '活跃用户' },
     features: { title: '为好奇心而生', subtitle: '不编造的AI。知道何时搜索。引用来源。', seeAll: '查看所有功能 →', items: [{ title: '实时网络搜索', desc: '有日期、可点击、可验证的来源。' }, { title: '高级推理', desc: '逐步解决复杂问题。' }, { title: '自然对话', desc: '像与值得信赖的专家交谈。' }, { title: '即时流式传输', desc: '答案形成时即可阅读。' }, { title: '语义搜索', desc: '理解含义，不仅是关键词。' }, { title: '默认私密', desc: '加密。可删除。从不用于训练。' }] },
     pricing: { title1: '免费开始。', title2: '准备好时升级Pro。', subtitle: '每天20条免费消息。升级Pro享受无限访问，12€/月。', cta: '创建免费账户', seePricing: '查看价格' },
-    footer: { privacy: '隐私', contact: '联系我们' },
+    footer: { privacy: '隐私', contact: '联系我们', changelog: 'Changelog' },
     chat: { hello: '你好', helloName: '你好，{name}', howCanIHelp: '今天我能帮你什么？', newConversation: '新对话', search: '搜索', noConversations: '没有对话', noResults: '没有结果', today: '今天', yesterday: '昨天', last7days: '最近7天', last30days: '最近30天', older: '更早', settings: '设置', logout: '退出', rename: '重命名', remix: '混搭', delete: '删除', deleteConfirm: '删除此对话？', searching: '搜索中…', reading: '阅读来源…', thinking: '思考中…', login: '登录', loginTitle: '欢迎回来', loginSubtitle: '登录您的账户', signupTitle: '创建账户', signupSubtitle: '免费，不到一分钟', noAccount: '没有账户？', createOne: '创建一个', alreadyAccount: '已注册？', signIn: '登录', createAccount: '创建我的账户' },
     featuresPage: { back: '返回', title: '功能', subtitle: '可靠、快速、尊重隐私的AI所需的一切。', cta: '准备好试试了吗？', ctaDesc: '10秒创建账户。免费，无需信用卡。', ctaBtn: '免费开始', items: [{ title: '实时网络搜索', desc: 'Netral在回答时搜索网络。有日期、可验证的来源。', details: ['带链接的引用来源', '实时更新数据', '自动交叉验证'] }, { title: '高级推理', desc: '逐步思考的模型，能够严谨地解决复杂问题。', details: ['结构化思维链', '多角度分析', '复杂问题解决'] }, { title: '自然对话', desc: '提出复杂问题、请求代码、讨论想法。', details: ['全程保持上下文', '智能重新表述', '适应用户语气'] }, { title: '超快流式传输', desc: '流式响应。Netral写的同时你就能读。', details: ['延迟 < 200ms', '逐token流式传输', '随时可中断'] }, { title: '代码生成', desc: 'Python、TypeScript、Rust、SQL…干净、有注释、可运行的代码。', details: ['语法高亮', '逐行解释', '自动语言检测'] }, { title: '语义搜索', desc: '理解含义，不仅是关键词。找到你真正需要的。', details: ['上下文理解', '相关结果', '智能噪音过滤'] }, { title: '默认私密', desc: '加密会话。数据随时可删除。', details: ['端到端加密', '即时删除', '无数据保留'] }, { title: '多格式', desc: '文本、表格、列表、代码、数学。适应最清晰的格式。', details: ['丰富Markdown', '表格和图表', 'LaTeX公式'] }] },
     pricingPage: { back: '返回', title1: '简单定价，', title2: '没有惊喜。', subtitle: '免费开始。准备好时升级Pro。', popular: '热门', faqTitle: '常见问题', plans: [{ name: '免费', price: '€0', period: '/月', desc: '无承诺体验Netral。', cta: '开始', features: ['每天20条消息', '基础网络搜索', '7天历史记录', '1个同时对话'] }, { name: 'Pro', price: '€12', period: '/月', desc: '为专业人士和创作者。', cta: '升级到Pro', features: ['无限消息', '高级网络搜索', '无限历史记录', '无限对话', '优先模型 (GPT-4o)', '导出对话', '优先支持'] }, { name: '团队', price: '€29', period: '/用户/月', desc: '为想要协作的团队。', cta: '联系我们', features: ['包含Pro所有功能', '共享工作空间', '成员管理', 'API访问', 'SSO & SAML', 'SLA 99.9%', '专属客户经理'] }], faq: [{ q: '可以随时取消吗？', a: '是的。无承诺。在设置中一键取消。' }, { q: '我的数据安全吗？', a: '绝对安全。端到端加密，删除后不保留。' }, { q: 'Pro有消息限制吗？', a: '没有。Pro消息无限制。' }] },
@@ -354,7 +450,7 @@ export const translations: Record<Locale, any> = {
     stats: { latency: '平均レイテンシ', uptime: '稼働率', users: 'アクティブユーザー' },
     features: { title: '好奇心旺盛な人のために', subtitle: '作り話をしないAI。いつ検索すべきか知っている。ソースを引用する。', seeAll: 'すべての機能を見る →', items: [{ title: 'リアルタイムウェブ検索', desc: '日付付き、クリック可能、検証可能なソース。' }, { title: '高度な推論', desc: '複雑な問題をステップバイステップで解決。' }, { title: '自然な会話', desc: '信頼できる専門家と話すように。' }, { title: 'インスタントストリーミング', desc: '回答が形成される間に読める。' }, { title: 'セマンティック検索', desc: 'キーワードだけでなく意味を理解。' }, { title: 'デフォルトでプライベート', desc: '暗号化。削除可能。トレーニングに使用されない。' }] },
     pricing: { title1: '無料で開始。', title2: '準備ができたらPro。', subtitle: '1日20メッセージ無料。Proで無制限アクセス、月額12€。', cta: '無料アカウント作成', seePricing: '料金を見る' },
-    footer: { privacy: 'プライバシー', contact: 'お問い合わせ' },
+    footer: { privacy: 'プライバシー', contact: 'お問い合わせ', changelog: 'Changelog' },
     chat: { hello: 'こんにちは', helloName: 'こんにちは、{name}', howCanIHelp: '今日はどのようにお手伝いできますか？', newConversation: '新しい会話', search: '検索', noConversations: '会話なし', noResults: '結果なし', today: '今日', yesterday: '昨日', last7days: '過去7日間', last30days: '過去30日間', older: 'それ以前', settings: '設定', logout: 'ログアウト', rename: '名前変更', remix: 'リミックス', delete: '削除', deleteConfirm: 'この会話を削除しますか？', searching: '検索中…', reading: 'ソース読み込み中…', thinking: '考え中…', login: 'ログイン', loginTitle: 'おかえりなさい', loginSubtitle: 'アカウントにログイン', signupTitle: 'アカウント作成', signupSubtitle: '無料、1分以内', noAccount: 'アカウントがない？', createOne: '作成する', alreadyAccount: '登録済み？', signIn: 'ログイン', createAccount: 'アカウントを作成' },
     featuresPage: { back: '戻る', title: '機能', subtitle: '信頼性が高く、高速で、プライバシーを尊重するAIに必要なすべて。', cta: '試す準備はできましたか？', ctaDesc: '10秒でアカウント作成。無料、カード不要。', ctaBtn: '無料で始める', items: [{ title: 'リアルタイムウェブ検索', desc: 'Netralは回答しながらウェブを検索。日付付き、検証可能なソース。', details: ['リンク付き引用ソース', 'リアルタイム更新データ', '自動クロス検証'] }, { title: '高度な推論', desc: 'ステップバイステップで考え、複雑な問題を厳密に解決するモデル。', details: ['構造化された思考連鎖', '多角的分析', '複雑な問題解決'] }, { title: '自然な会話', desc: '複雑な質問、コードリクエスト、アイデアの議論。', details: ['全体を通じてコンテキスト維持', 'インテリジェントな言い換え', 'ユーザーのトーンに適応'] }, { title: '超高速ストリーミング', desc: 'ストリーミング応答。Netralが書いている間に読める。', details: ['レイテンシ < 200ms', 'トークンごとのストリーミング', 'いつでも中断可能'] }, { title: 'コード生成', desc: 'Python、TypeScript、Rust、SQL…クリーンでコメント付きの機能的なコード。', details: ['シンタックスハイライト', '行ごとの説明', '自動言語検出'] }, { title: 'セマンティック検索', desc: 'キーワードだけでなく意味を理解。本当に必要なものを見つける。', details: ['文脈理解', '関連性の高い結果', 'インテリジェントなノイズフィルタリング'] }, { title: 'デフォルトでプライベート', desc: '暗号化されたセッション。いつでもデータ削除可能。', details: ['エンドツーエンド暗号化', '即時削除', 'データ保持なし'] }, { title: 'マルチフォーマット', desc: 'テキスト、表、リスト、コード、数学。最も明確な形式に適応。', details: ['リッチMarkdown', '表とグラフ', 'LaTeX数式'] }] },
     pricingPage: { back: '戻る', title1: 'シンプルな料金、', title2: '驚きなし。', subtitle: '無料で開始。準備ができたらPro。', popular: '人気', faqTitle: 'よくある質問', plans: [{ name: '無料', price: '€0', period: '/月', desc: 'コミットメントなしでNetralを体験。', cta: '始める', features: ['1日20メッセージ', '基本ウェブ検索', '7日間の履歴', '1つの同時会話'] }, { name: 'Pro', price: '€12', period: '/月', desc: 'プロフェッショナルとクリエイター向け。', cta: 'Proにアップグレード', features: ['無制限メッセージ', '高度なウェブ検索', '無制限の履歴', '無制限の会話', '優先モデル (GPT-4o)', '会話エクスポート', '優先サポート'] }, { name: 'チーム', price: '€29', period: '/ユーザー/月', desc: 'コラボレーションしたいチーム向け。', cta: 'お問い合わせ', features: ['Proのすべて含む', '共有ワークスペース', 'メンバー管理', 'APIアクセス', 'SSO & SAML', 'SLA 99.9%', '専任アカウントマネージャー'] }], faq: [{ q: 'いつでもキャンセルできますか？', a: 'はい。コミットメントなし。設定からワンクリックでキャンセル。' }, { q: 'データは安全ですか？', a: '絶対に。エンドツーエンド暗号化、削除後の保持なし。' }, { q: 'Proにメッセージ制限はありますか？', a: 'いいえ。Proではメッセージ無制限です。' }] },
@@ -366,7 +462,7 @@ export const translations: Record<Locale, any> = {
     stats: { latency: '평균 지연시간', uptime: '가용성', users: '활성 사용자' },
     features: { title: '호기심 많은 사람들을 위해', subtitle: '지어내지 않는 AI. 언제 검색해야 하는지 아는 AI. 출처를 인용하는 AI.', seeAll: '모든 기능 보기 →', items: [{ title: '실시간 웹 검색', desc: '날짜가 있고, 클릭 가능하고, 검증 가능한 소스.' }, { title: '고급 추론', desc: '복잡한 문제를 단계별로 해결.' }, { title: '자연스러운 대화', desc: '신뢰할 수 있는 전문가와 대화하듯이.' }, { title: '즉시 스트리밍', desc: '답변이 형성되는 동안 읽기.' }, { title: '의미 검색', desc: '키워드가 아닌 의미를 이해.' }, { title: '기본 비공개', desc: '암호화. 삭제 가능. 훈련에 사용되지 않음.' }] },
     pricing: { title1: '무료로 시작.', title2: '준비되면 Pro.', subtitle: '하루 20개 무료 메시지. Pro로 무제한 접근, 월 12€.', cta: '무료 계정 만들기', seePricing: '요금 보기' },
-    footer: { privacy: '개인정보', contact: '문의' },
+    footer: { privacy: '개인정보', contact: '문의', changelog: 'Changelog' },
     chat: { hello: '안녕하세요', helloName: '안녕하세요, {name}', howCanIHelp: '오늘 무엇을 도와드릴까요?', newConversation: '새 대화', search: '검색', noConversations: '대화 없음', noResults: '결과 없음', today: '오늘', yesterday: '어제', last7days: '최근 7일', last30days: '최근 30일', older: '이전', settings: '설정', logout: '로그아웃', rename: '이름 변경', remix: '리믹스', delete: '삭제', deleteConfirm: '이 대화를 삭제하시겠습니까?', searching: '검색 중…', reading: '소스 읽는 중…', thinking: '생각 중…', login: '로그인', loginTitle: '환영합니다', loginSubtitle: '계정에 로그인', signupTitle: '계정 만들기', signupSubtitle: '무료, 1분 이내', noAccount: '계정이 없으신가요?', createOne: '만들기', alreadyAccount: '이미 등록하셨나요?', signIn: '로그인', createAccount: '계정 만들기' },
     featuresPage: { back: '뒤로', title: '기능', subtitle: '신뢰할 수 있고, 빠르고, 프라이버시를 존중하는 AI에 필요한 모든 것.', cta: '시도할 준비가 되셨나요?', ctaDesc: '10초 만에 계정 생성. 무료, 카드 불필요.', ctaBtn: '무료로 시작', items: [{ title: '실시간 웹 검색', desc: 'Netral은 답변하면서 웹을 검색합니다. 날짜가 있고 검증 가능한 소스.', details: ['링크가 있는 인용 소스', '실시간 업데이트 데이터', '자동 교차 검증'] }, { title: '고급 추론', desc: '단계별로 생각하고 복잡한 문제를 엄밀하게 해결하는 모델.', details: ['구조화된 사고 체인', '다각적 분석', '복잡한 문제 해결'] }, { title: '자연스러운 대화', desc: '복잡한 질문, 코드 요청, 아이디어 토론.', details: ['전체 대화에서 컨텍스트 유지', '지능적 재구성', '사용자 톤에 적응'] }, { title: '초고속 스트리밍', desc: '스트리밍 응답. Netral이 쓰는 동안 읽기.', details: ['지연시간 < 200ms', '토큰별 스트리밍', '언제든 중단 가능'] }, { title: '코드 생성', desc: 'Python, TypeScript, Rust, SQL… 깨끗하고 주석이 달린 기능적 코드.', details: ['구문 강조', '줄별 설명', '자동 언어 감지'] }, { title: '의미 검색', desc: '키워드가 아닌 의미를 이해. 정말 필요한 것을 찾기.', details: ['문맥 이해', '관련 결과', '지능적 노이즈 필터링'] }, { title: '기본 비공개', desc: '암호화된 세션. 언제든 데이터 삭제 가능.', details: ['종단간 암호화', '즉시 삭제', '데이터 보존 없음'] }, { title: '멀티 포맷', desc: '텍스트, 표, 목록, 코드, 수학. 가장 명확한 형식에 적응.', details: ['리치 Markdown', '표와 차트', 'LaTeX 수식'] }] },
     pricingPage: { back: '뒤로', title1: '간단한 요금,', title2: '놀라움 없이.', subtitle: '무료로 시작. 준비되면 Pro.', popular: '인기', faqTitle: '자주 묻는 질문', plans: [{ name: '무료', price: '€0', period: '/월', desc: '부담 없이 Netral 체험.', cta: '시작', features: ['하루 20개 메시지', '기본 웹 검색', '7일 기록', '1개 동시 대화'] }, { name: 'Pro', price: '€12', period: '/월', desc: '전문가와 크리에이터를 위해.', cta: 'Pro로 업그레이드', features: ['무제한 메시지', '고급 웹 검색', '무제한 기록', '무제한 대화', '우선 모델 (GPT-4o)', '대화 내보내기', '우선 지원'] }, { name: '팀', price: '€29', period: '/사용자/월', desc: '협업하려는 팀을 위해.', cta: '문의하기', features: ['Pro의 모든 것 포함', '공유 워크스페이스', '멤버 관리', 'API 접근', 'SSO & SAML', 'SLA 99.9%', '전담 계정 매니저'] }], faq: [{ q: '언제든 취소할 수 있나요?', a: '네. 약정 없음. 설정에서 한 번의 클릭으로 취소.' }, { q: '내 데이터는 안전한가요?', a: '절대적으로. 종단간 암호화, 삭제 후 보존 없음.' }, { q: 'Pro에 메시지 제한이 있나요?', a: '아니요. Pro에서 메시지는 무제한입니다.' }] },
@@ -402,7 +498,7 @@ translations.ru = makeLocale(
   { features: 'Функции', pricing: 'Цены', login: 'Войти', start: 'Начать' },
   { title1: 'ИИ, который ищет', title2: 'прежде чем ответить.', cta: 'Начать бесплатно', login: 'Войти', note: 'Бесплатно • Без карты • Готово за 10 секунд' },
   { hello: 'Привет', helloName: 'Привет, {name}', howCanIHelp: 'Чем могу помочь сегодня?', loginTitle: 'Добро пожаловать', loginSubtitle: 'Войдите в аккаунт', signupTitle: 'Создать аккаунт', signupSubtitle: 'Бесплатно, менее минуты', signIn: 'Войти', createAccount: 'Создать аккаунт', noAccount: 'Нет аккаунта?', createOne: 'Создать', alreadyAccount: 'Уже зарегистрированы?' },
-  { privacy: 'Конфиденциальность', contact: 'Контакты' },
+  { privacy: 'Конфиденциальность', contact: 'Контакты', changelog: 'Changelog' },
   { back: 'Назад', title1: 'Простые цены,', title2: 'без сюрпризов.', subtitle: 'Начните бесплатно. Перейдите на Pro, когда будете готовы.', popular: 'Популярный', faqTitle: 'Часто задаваемые вопросы' },
   { back: 'Назад', title: 'Функции', subtitle: 'Всё необходимое для надёжного, быстрого и конфиденциального ИИ.', cta: 'Готовы попробовать?', ctaBtn: 'Начать бесплатно' },
 ) as any
@@ -411,7 +507,7 @@ translations.hi = makeLocale(
   { features: 'सुविधाएँ', pricing: 'मूल्य', login: 'लॉगिन', start: 'शुरू करें' },
   { title1: 'AI जो खोजता है', title2: 'जवाब देने से पहले।', cta: 'मुफ्त शुरू करें', login: 'लॉगिन', note: 'मुफ्त • कोई कार्ड नहीं • 10 सेकंड में तैयार' },
   { hello: 'नमस्ते', helloName: 'नमस्ते, {name}', howCanIHelp: 'आज मैं आपकी कैसे मदद कर सकता हूँ?', loginTitle: 'स्वागत है', loginSubtitle: 'अपने खाते में लॉगिन करें', signupTitle: 'खाता बनाएं', signupSubtitle: 'मुफ्त, एक मिनट से कम', signIn: 'लॉगिन', createAccount: 'खाता बनाएं', noAccount: 'खाता नहीं है?', createOne: 'बनाएं', alreadyAccount: 'पहले से पंजीकृत?' },
-  { privacy: 'गोपनीयता', contact: 'संपर्क' },
+  { privacy: 'गोपनीयता', contact: 'संपर्क', changelog: 'Changelog' },
   { back: 'वापस', title1: 'सरल मूल्य,', title2: 'कोई आश्चर्य नहीं।', subtitle: 'मुफ्त शुरू करें। तैयार होने पर Pro में अपग्रेड करें।', popular: 'लोकप्रिय', faqTitle: 'अक्सर पूछे जाने वाले प्रश्न' },
   { back: 'वापस', title: 'सुविधाएँ', subtitle: 'एक विश्वसनीय, तेज़ और गोपनीयता-सम्मानजनक AI के लिए सब कुछ।', cta: 'आज़माने के लिए तैयार?', ctaBtn: 'मुफ्त शुरू करें' },
 ) as any
@@ -420,7 +516,7 @@ translations.tr = makeLocale(
   { features: 'Özellikler', pricing: 'Fiyatlar', login: 'Giriş', start: 'Başla' },
   { title1: 'Cevaplamadan önce', title2: 'arayan yapay zeka.', cta: 'Ücretsiz başla', login: 'Giriş', note: 'Ücretsiz • Kart gerekmez • 10 saniyede hazır' },
   { hello: 'Merhaba', helloName: 'Merhaba, {name}', howCanIHelp: 'Bugün size nasıl yardımcı olabilirim?', loginTitle: 'Hoş geldiniz', loginSubtitle: 'Hesabınıza giriş yapın', signupTitle: 'Hesap oluştur', signupSubtitle: 'Ücretsiz, bir dakikadan az', signIn: 'Giriş yap', createAccount: 'Hesabımı oluştur', noAccount: 'Hesabınız yok mu?', createOne: 'Oluştur', alreadyAccount: 'Zaten kayıtlı mısınız?' },
-  { privacy: 'Gizlilik', contact: 'İletişim' },
+  { privacy: 'Gizlilik', contact: 'İletişim', changelog: 'Changelog' },
   { back: 'Geri', title1: 'Basit fiyatlar,', title2: 'sürpriz yok.', subtitle: 'Ücretsiz başlayın. Hazır olduğunuzda Pro\'ya geçin.', popular: 'Popüler', faqTitle: 'Sık sorulan sorular' },
   { back: 'Geri', title: 'Özellikler', subtitle: 'Güvenilir, hızlı ve gizliliğe saygılı bir AI için ihtiyacınız olan her şey.', cta: 'Denemeye hazır mısınız?', ctaBtn: 'Ücretsiz başla' },
 ) as any
@@ -429,7 +525,7 @@ translations.nl = makeLocale(
   { features: 'Functies', pricing: 'Prijzen', login: 'Inloggen', start: 'Starten' },
   { title1: 'De AI die zoekt', title2: 'voordat hij antwoordt.', cta: 'Gratis beginnen', login: 'Inloggen', note: 'Gratis • Geen creditcard • Klaar in 10 seconden' },
   { hello: 'Hallo', helloName: 'Hallo, {name}', howCanIHelp: 'Hoe kan ik je vandaag helpen?', loginTitle: 'Welkom terug', loginSubtitle: 'Log in op je account', signupTitle: 'Account aanmaken', signupSubtitle: 'Gratis, in minder dan een minuut', signIn: 'Inloggen', createAccount: 'Mijn account aanmaken', noAccount: 'Geen account?', createOne: 'Aanmaken', alreadyAccount: 'Al geregistreerd?' },
-  { privacy: 'Privacy', contact: 'Contact' },
+  { privacy: 'Privacy', contact: 'Contact', changelog: 'Changelog' },
   { back: 'Terug', title1: 'Eenvoudige prijzen,', title2: 'geen verrassingen.', subtitle: 'Begin gratis. Upgrade naar Pro wanneer je klaar bent.', popular: 'Populair', faqTitle: 'Veelgestelde vragen' },
   { back: 'Terug', title: 'Functies', subtitle: 'Alles wat je nodig hebt voor een betrouwbare, snelle en privacyvriendelijke AI.', cta: 'Klaar om te proberen?', ctaBtn: 'Gratis beginnen' },
 ) as any
@@ -438,7 +534,7 @@ translations.pl = makeLocale(
   { features: 'Funkcje', pricing: 'Cennik', login: 'Zaloguj', start: 'Rozpocznij' },
   { title1: 'AI, które szuka', title2: 'zanim odpowie.', cta: 'Zacznij za darmo', login: 'Zaloguj', note: 'Za darmo • Bez karty • Gotowe w 10 sekund' },
   { hello: 'Cześć', helloName: 'Cześć, {name}', howCanIHelp: 'Jak mogę ci dziś pomóc?', loginTitle: 'Witaj ponownie', loginSubtitle: 'Zaloguj się na swoje konto', signupTitle: 'Utwórz konto', signupSubtitle: 'Za darmo, w mniej niż minutę', signIn: 'Zaloguj się', createAccount: 'Utwórz moje konto', noAccount: 'Nie masz konta?', createOne: 'Utwórz', alreadyAccount: 'Już zarejestrowany?' },
-  { privacy: 'Prywatność', contact: 'Kontakt' },
+  { privacy: 'Prywatność', contact: 'Kontakt', changelog: 'Changelog' },
   { back: 'Wstecz', title1: 'Proste ceny,', title2: 'bez niespodzianek.', subtitle: 'Zacznij za darmo. Przejdź na Pro, gdy będziesz gotowy.', popular: 'Popularny', faqTitle: 'Często zadawane pytania' },
   { back: 'Wstecz', title: 'Funkcje', subtitle: 'Wszystko, czego potrzebujesz do niezawodnego, szybkiego i szanującego prywatność AI.', cta: 'Gotowy, żeby spróbować?', ctaBtn: 'Zacznij za darmo' },
 ) as any
@@ -447,7 +543,7 @@ translations.uk = makeLocale(
   { features: 'Функції', pricing: 'Ціни', login: 'Увійти', start: 'Почати' },
   { title1: 'ШІ, що шукає', title2: 'перш ніж відповісти.', cta: 'Почати безкоштовно', login: 'Увійти', note: 'Безкоштовно • Без картки • Готово за 10 секунд' },
   { hello: 'Привіт', helloName: 'Привіт, {name}', howCanIHelp: 'Чим можу допомогти сьогодні?', loginTitle: 'Ласкаво просимо', loginSubtitle: 'Увійдіть до свого акаунту', signupTitle: 'Створити акаунт', signupSubtitle: 'Безкоштовно, менше хвилини', signIn: 'Увійти', createAccount: 'Створити акаунт', noAccount: 'Немає акаунту?', createOne: 'Створити', alreadyAccount: 'Вже зареєстровані?' },
-  { privacy: 'Конфіденційність', contact: 'Контакти' },
+  { privacy: 'Конфіденційність', contact: 'Контакти', changelog: 'Changelog' },
   { back: 'Назад', title1: 'Прості ціни,', title2: 'без сюрпризів.', subtitle: 'Почніть безкоштовно. Перейдіть на Pro, коли будете готові.', popular: 'Популярний', faqTitle: 'Часті запитання' },
   { back: 'Назад', title: 'Функції', subtitle: 'Все необхідне для надійного, швидкого та конфіденційного ШІ.', cta: 'Готові спробувати?', ctaBtn: 'Почати безкоштовно' },
 ) as any
