@@ -3,6 +3,8 @@ import { Inter, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
 import { ThemeProvider } from '@/components/ui/ThemeProvider'
 import { I18nProvider } from '@/lib/i18n'
+import { SkipToContent } from '@/components/ui/SkipToContent'
+import { OfflineIndicator } from '@/components/ui/OfflineIndicator'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -17,10 +19,39 @@ const jetbrainsMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Netral',
-  description: 'Un assistant IA précis qui consulte le web en temps réel.',
+  title: {
+    default: 'Netral — Assistant IA intelligent',
+    template: '%s | Netral',
+  },
+  description: 'Un assistant IA précis qui consulte le web en temps réel. Mémoire contextuelle, recherche web, multi-modèles.',
   icons: { icon: '/logo.png', apple: '/logo.png' },
   robots: { index: true, follow: true },
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://netral.app'),
+  openGraph: {
+    type: 'website',
+    locale: 'fr_FR',
+    siteName: 'Netral',
+    title: 'Netral — Assistant IA intelligent',
+    description: 'Un assistant IA précis qui consulte le web en temps réel. Mémoire contextuelle, recherche web, multi-modèles.',
+    url: '/',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Netral — Assistant IA',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Netral — Assistant IA intelligent',
+    description: 'Un assistant IA précis qui consulte le web en temps réel.',
+    images: ['/og-image.png'],
+  },
+  alternates: {
+    canonical: '/',
+  },
 }
 
 export const viewport: Viewport = {
@@ -43,7 +74,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="h-full bg-[var(--bg)] text-[var(--fg)] antialiased">
-        <ThemeProvider><I18nProvider>{children}</I18nProvider></ThemeProvider>
+        <ThemeProvider>
+          <I18nProvider>
+            <SkipToContent />
+            <OfflineIndicator />
+            <div id="main-content">{children}</div>
+          </I18nProvider>
+        </ThemeProvider>
       </body>
     </html>
   )

@@ -24,8 +24,13 @@ export function ModelSelector() {
     fetch('/api/user').then(r => r.json()).then(d => { if (d.user?.plan) setUserPlan(d.user.plan) }).catch(() => {})
   }, [])
 
-  const canUse12 = userPlan === 'pro' || userPlan === 'pro_plus'
+  const isPro = userPlan === 'pro' || userPlan === 'pro_plus'
   const model = MODELS[currentModel]
+
+  function canUseModel(id: ModelId): boolean {
+    if (id === 'ntrl-2.0' || id === 'ntrl-1.2') return isPro
+    return true
+  }
 
   return (
     <div ref={ref} className="relative">
@@ -53,15 +58,15 @@ export function ModelSelector() {
                 return (
                   <button
                     key={m.id}
-                    onClick={() => { if (m.id === 'ntrl-1.2' && !canUse12) return; setModel(m.id); setOpen(false) }}
+                    onClick={() => { if (!canUseModel(m.id)) return; setModel(m.id); setOpen(false) }}
                     className={`w-full flex items-start gap-2.5 px-2.5 py-2 rounded-md text-left transition-colors ${
                       active ? 'bg-[var(--bg-soft)]' : 'hover:bg-[var(--bg-soft)]'
-                    } ${m.id === 'ntrl-1.2' && !canUse12 ? 'opacity-60' : ''}`}
+                    } ${!canUseModel(m.id) ? 'opacity-60' : ''}`}
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <p className="font-medium text-[13px] text-[var(--fg)]">{m.displayName}</p>
-                        {m.id === 'ntrl-1.2' && !canUse12 && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-[var(--accent-soft)] text-[var(--fg-muted)]">PRO</span>}
+                        {(m.id === 'ntrl-2.0' || m.id === 'ntrl-1.2') && !isPro && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-[var(--accent-soft)] text-[var(--fg-muted)]">PRO</span>}
                         {active && <Check size={12} className="text-[var(--fg)]" />}
                       </div>
                       <p className="text-[11.5px] text-[var(--fg-muted)] mt-0.5">{m.description}</p>

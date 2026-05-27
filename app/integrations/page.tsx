@@ -161,13 +161,32 @@ export default function IntegrationsPage() {
   const [integrations, setIntegrations] = useState<{ service: string; updatedAt: string }[]>([])
   const [loading, setLoading] = useState(true)
   const [disconnecting, setDisconnecting] = useState<string | null>(null)
+  const [successMsg, setSuccessMsg] = useState<string | null>(null)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
+
+  const fetchIntegrations = async () => {
+    try {
+      const r = await fetch('/api/integrations', { credentials: 'include' })
+      const d = await r.json()
+      if (d.integrations) setIntegrations(d.integrations)
+    } catch {}
+    setLoading(false)
+  }
 
   useEffect(() => {
-    fetch('/api/integrations')
-      .then(r => r.json())
-      .then(d => { if (d.integrations) setIntegrations(d.integrations) })
-      .catch(() => {})
-      .finally(() => setLoading(false))
+    // Check URL params for success/error after OAuth redirect
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('success') === 'google') {
+      setSuccessMsg('Services Google connectés avec succès !')
+      // Clean URL without reload
+      window.history.replaceState({}, '', '/integrations')
+    }
+    const err = params.get('error') ?? params.get('integration_error')
+    if (err) {
+      setErrorMsg(`Erreur de connexion : ${err.replace(/_/g, ' ')}`)
+      window.history.replaceState({}, '', '/integrations')
+    }
+    fetchIntegrations()
   }, [])
 
   const isConnected = (service: string) => integrations.some(i => i.service === service)
@@ -176,6 +195,7 @@ export default function IntegrationsPage() {
     setDisconnecting(service)
     await fetch('/api/integrations', {
       method: 'DELETE',
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ service }),
     })
@@ -204,6 +224,20 @@ export default function IntegrationsPage() {
           <ArrowLeft size={14} />
           Retour au chat
         </Link>
+
+        {/* Success / Error banners */}
+        {successMsg && (
+          <div className="mb-6 px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-600 dark:text-emerald-400 text-[13px] font-medium flex items-center gap-2">
+            <Check size={14} />
+            {successMsg}
+          </div>
+        )}
+        {errorMsg && (
+          <div className="mb-6 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/25 text-red-500 text-[13px] font-medium flex items-center gap-2">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            {errorMsg}
+          </div>
+        )}
 
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="text-center mb-12">

@@ -1,7 +1,9 @@
 import { redirect } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import { getSession } from '@/lib/session'
 import { db } from '@/lib/db'
-import { OnboardingWizard } from '@/components/onboarding/OnboardingWizard'
+
+const OnboardingWizard = dynamic(() => import('@/components/onboarding/OnboardingWizard').then(m => ({ default: m.OnboardingWizard })))
 
 export default async function OnboardingPage() {
   const session = await getSession()

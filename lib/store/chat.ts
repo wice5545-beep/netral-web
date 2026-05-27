@@ -55,7 +55,7 @@ export const useChatStore = create<ChatStore>((set) => ({
   conversationId: null,
   messages: [],
   isStreaming: false,
-  currentModel: 'ntrl-1.3',
+  currentModel: 'ntrl-2.0',
 
   conversations: [],
   conversationsLoaded: false,

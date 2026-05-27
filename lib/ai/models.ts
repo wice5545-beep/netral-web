@@ -1,18 +1,30 @@
-export type ModelId = 'ntrl-1.0' | 'ntrl-1.2' | 'ntrl-1.3'
+export type ModelId = 'ntrl-1.0' | 'ntrl-1.2' | 'ntrl-1.3' | 'ntrl-2.0'
 
 export type ModelConfig = {
   id: ModelId
   displayName: string
   description: string
-  provider: 'mistral' | 'groq' | 'google'
+  provider: 'mistral' | 'groq' | 'google' | 'nvidia'
   upstreamModel: string
   apiUrl: string
   envKey: string
   contextLength: number
   multimodal?: boolean
+  thinking?: boolean
 }
 
 export const MODELS: Record<ModelId, ModelConfig> = {
+  'ntrl-2.0': {
+    id: 'ntrl-2.0',
+    displayName: 'NTRL 2.0',
+    description: 'Raisonnement profond avec pensée. Le plus puissant.',
+    provider: 'nvidia',
+    upstreamModel: 'qwen/qwen3.5-122b-a10b',
+    apiUrl: 'https://integrate.api.nvidia.com/v1/chat/completions',
+    envKey: 'NVIDIA_API_KEY',
+    contextLength: 131072,
+    thinking: true,
+  },
   'ntrl-1.3': {
     id: 'ntrl-1.3',
     displayName: 'NTRL 1.3',
@@ -46,7 +58,7 @@ export const MODELS: Record<ModelId, ModelConfig> = {
   },
 }
 
-export const DEFAULT_MODEL: ModelId = 'ntrl-1.3'
+export const DEFAULT_MODEL: ModelId = 'ntrl-2.0'
 
 export function getModel(id?: string | null): ModelConfig {
   if (id && id in MODELS) return MODELS[id as ModelId]
