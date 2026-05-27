@@ -298,13 +298,13 @@ export async function POST(req: NextRequest) {
         model: model.upstreamModel,
         messages: [{ role: 'system', content: finalSystemPrompt }, ...userAndAssistantMsgs.filter((m: any) => typeof m.content === 'string' ? m.content.trim() : true).map((m: any) => ({ role: m.role, content: m.content }))],
         stream: true,
-        temperature: model.id === 'ntrl-2.0' ? 0.60 : 0.7,
-        max_tokens: model.id === 'ntrl-2.0' ? 16384 : 4096,
+        temperature: model.id === 'ntrl-2.0' ? 0.20 : 0.7,
+        max_tokens: model.id === 'ntrl-2.0' ? 1024 : 4096,
       }
 
       if (model.id === 'ntrl-2.0') {
-        payload.top_p = 0.95
-        payload.chat_template_kwargs = { enable_thinking: true }
+        payload.top_p = 1.00
+        payload.chat_template_kwargs = { thinking: true }
       }
 
       let accumulated = ''

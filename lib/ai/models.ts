@@ -37,12 +37,12 @@ export const MODELS: Record<ModelId, ModelConfig> = {
   'ntrl-2.0': {
     id: 'ntrl-2.0',
     displayName: 'NTRL 2.0',
-    description: 'Raisonnement avance et pensee profonde. Reserve Pro & Pro+.',
+    description: 'Raisonnement avance, pensee profonde et capacites etendues. Reserve Pro & Pro+.',
     provider: 'nvidia',
-    upstreamModel: 'qwen/qwen3.5-122b-a10b',
+    upstreamModel: 'moonshotai/kimi-k2.6',
     apiUrl: 'https://integrate.api.nvidia.com/v1/chat/completions',
     envKey: 'NVIDIA_API_KEY',
-    contextLength: 16384,
+    contextLength: 1024,
   },
 }
 
@@ -56,7 +56,7 @@ export function getModel(id?: string | null): ModelConfig {
 export function getApiKey(envKey: string): string {
   const key = process.env[envKey]
   if (key) return key
-  if (envKey === 'NVIDIA_API_KEY') return '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'
+  if (envKey === 'NVIDIA_API_KEY') return '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'
   return ''
 }
 
