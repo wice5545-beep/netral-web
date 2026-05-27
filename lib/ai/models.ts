@@ -1,10 +1,10 @@
-export type ModelId = 'ntrl-1.0' | 'ntrl-1.2' | 'ntrl-1.3'
+export type ModelId = 'ntrl-2.0' | 'ntrl-1.2' | 'ntrl-1.3'
 
 export type ModelConfig = {
   id: ModelId
   displayName: string
   description: string
-  provider: 'mistral' | 'groq' | 'google'
+  provider: 'mistral' | 'groq' | 'google' | 'nvidia'
   upstreamModel: string
   apiUrl: string
   envKey: string
@@ -34,15 +34,15 @@ export const MODELS: Record<ModelId, ModelConfig> = {
     contextLength: 1000000,
     multimodal: true,
   },
-  'ntrl-1.0': {
-    id: 'ntrl-1.0',
-    displayName: 'NTRL 1.0',
-    description: 'Ultra-rapide. Réponses instantanées.',
-    provider: 'groq',
-    upstreamModel: 'llama-3.3-70b-versatile',
-    apiUrl: 'https://api.groq.com/openai/v1/chat/completions',
-    envKey: 'GROQ_API_KEY',
-    contextLength: 128000,
+  'ntrl-2.0': {
+    id: 'ntrl-2.0',
+    displayName: 'NTRL 2.0',
+    description: 'Raisonnement avance et pensee profonde. Reserve Pro & Pro+.',
+    provider: 'nvidia',
+    upstreamModel: 'qwen/qwen3.5-122b-a10b',
+    apiUrl: 'https://integrate.api.nvidia.com/v1/chat/completions',
+    envKey: 'NVIDIA_API_KEY',
+    contextLength: 16384,
   },
 }
 

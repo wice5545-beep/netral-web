@@ -1,0 +1,31 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "Replace NTRL 1.0 with NTRL 2.0 using NVIDIA API (qwen/qwen3.5-122b-a10b), update model access control to restrict NTRL 2.0 to Pro/Pro+ users, implement a hidden token caching system with proper proportioning for paid vs free plans, add the one-time announcement popup for NTRL 2.0, and add NVIDIA_API_KEY to environment config.",
+  "status": "in_progress",
+  "steps": [
+    "1. Update .env.local.example to add NVIDIA_API_KEY entry.",
+    "2. In lib/ai/models.ts: (a) Remove the 'ntrl-1.0' entry entirely. (b) Add a new 'ntrl-2.0' entry with id 'ntrl-2.0', displayName 'NTRL 2.0', description 'Raisonnement avance et pensee profonde. Reserve Pro & Pro+.', provider 'nvidia', upstreamModel 'qwen/qwen3.5-122b-a10b', apiUrl 'https://integrate.api.nvidia.com/v1/chat/completions', envKey 'NVIDIA_API_KEY', contextLength 16384. (c) Update the ModelId type union to replace 'ntrl-1.0' with 'ntrl-2.0'. (d) Keep DEFAULT_MODEL as 'ntrl-1.3'.",
+    "3. In app/api/chat/route.ts: (a) Update the model access restriction block that currently checks for 'ntrl-1.2' to ALSO restrict 'ntrl-2.0' to pro and pro_plus plans. (b) For NTRL 2.0 specifically, override the payload to use temperature 0.60, top_p 0.95, max_tokens 16384, and add extra_body with chat_template_kwargs: {enable_thinking: true}. Make sure to add these extra params in the payload construction for the NVIDIA model.",
+    "4. In lib/plans.ts: Add a 'tokensPerMonth' field to each plan config: free: 500, plus: 50000, pro: 200000, pro_plus: 500000. Add a 'getTokenLimit' export function. Also update the free plan features text to replace 'NTRL 1.0 uniquement' with 'NTRL 1.3 uniquement' since 1.0 no longer exists.",
+    "5. In app/api/chat/route.ts: Implement a token tracking system. After a successful response, estimate tokens used (approximate: input chars/4 + output chars/4). Query the user's 'tokensUsed' (we'll add this concept via the existing messagesUsed field or a new check). Actually, use a simpler approach: add a server-side in-memory token counter (similar to rate-limit.ts pattern) keyed by userId that tracks estimated tokens per billing period. Before sending the request, check if user has token budget remaining based on their plan. If exceeded, return a 429 with a message about token limit. For free users, keep the existing 1 message/day limit (already enforced).",
+    "6. In components/chat/ModelSelector.tsx: (a) Remove references to 'ntrl-1.0'. (b) Add access control for 'ntrl-2.0' similar to existing 'ntrl-1.2' check (requires pro or pro_plus). (c) Show a 'PRO' badge on ntrl-2.0 for non-pro users.",
+    "7. In lib/store/chat.ts: Update the default model from 'ntrl-1.3' to keep it as 'ntrl-1.3' (no change needed since default is already ntrl-1.3, just ensure no reference to ntrl-1.0 remains).",
+    "8. Create a new component components/chat/AnnouncementPopup.tsx: A modal popup announcing NTRL 2.0 replacing NTRL 1.0. Uses localStorage key 'netral-ntrl2-announced' to show only once per user. Styled like UpgradePopup.tsx with framer-motion. Content: title 'NTRL 2.0 est arrive!', description explaining enhanced reasoning capabilities replacing NTRL 1.0, mention it's reserved for Pro/Pro+, with a CTA to see plans and a dismiss button.",
+    "9. In components/chat/ChatInterface.tsx: Import and render the AnnouncementPopup component (it manages its own visibility via localStorage).",
+    "10. Update lib/i18n/translations.ts: For FR and EN locales, add an 'announcement' key with title, description, cta, dismiss texts for the NTRL 2.0 popup. Also update the hero.badge from 'Netral 1.3' to mention NTRL 2.0 where relevant."
+  ],
+  "acceptance_criteria": [
+    "npx next build passes without errors",
+    "lib/ai/models.ts no longer contains ntrl-1.0, contains ntrl-2.0 with NVIDIA API config",
+    "ModelSelector shows ntrl-2.0 with PRO badge for non-pro users",
+    "AnnouncementPopup component exists and uses localStorage to show once",
+    "Token tracking logic exists in the chat API route",
+    "Plans include token limits"
+  ],
+  "verification": [
+    "Run npx next build and confirm it compiles successfully with no TypeScript errors"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

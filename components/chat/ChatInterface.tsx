@@ -9,6 +9,7 @@ import { useI18n } from '@/lib/i18n'
 import { Message } from './Message'
 import { ChatComposer } from './ChatComposer'
 import { UpgradePopup } from './UpgradePopup'
+import { AnnouncementPopup } from './AnnouncementPopup'
 import { Globe, FileText, Sparkles, ArrowUp, ArrowRight } from 'lucide-react'
 
 interface ChatInterfaceProps {
@@ -469,6 +470,7 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
       </div>
 
       <UpgradePopup open={showUpgrade} onClose={() => setShowUpgrade(false)} message={upgradeMsg} />
+      <AnnouncementPopup />
 
       {/* Text selection popup */}
       <AnimatePresence>

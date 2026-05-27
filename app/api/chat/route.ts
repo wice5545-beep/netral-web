@@ -7,9 +7,41 @@ import { buildSystemPrompt } from '@/lib/ai/prompt'
 import { webSearch, readPage, needsWebSearch, type SearchResult } from '@/lib/ai/websearch'
 import { rateLimit } from '@/lib/rate-limit'
 import { verifyApiToken } from '@/lib/api-token'
+import { getTokenLimit } from '@/lib/plans'
 
 export const runtime = 'nodejs'
 export const maxDuration = 90
+
+// In-memory token tracking per user per billing period
+type TokenBucket = { tokensUsed: number; resetAt: number }
+const tokenBuckets = new Map<string, TokenBucket>()
+
+function checkTokenBudget(userId: string, plan: string): { allowed: boolean; remaining: number } {
+  const limit = getTokenLimit(plan)
+  const now = Date.now()
+  const bucket = tokenBuckets.get(userId)
+
+  if (!bucket || bucket.resetAt < now) {
+    // Reset every 30 days
+    const resetAt = now + 30 * 24 * 60 * 60 * 1000
+    tokenBuckets.set(userId, { tokensUsed: 0, resetAt })
+    return { allowed: true, remaining: limit }
+  }
+
+  const remaining = limit - bucket.tokensUsed
+  return { allowed: remaining > 0, remaining }
+}
+
+function recordTokenUsage(userId: string, tokens: number) {
+  const bucket = tokenBuckets.get(userId)
+  if (bucket) {
+    bucket.tokensUsed += tokens
+  }
+}
+
+function estimateTokens(text: string): number {
+  return Math.ceil(text.length / 4)
+}
 
 const ChatRequestSchema = z.object({
   messages: z.array(z.object({
@@ -163,11 +195,20 @@ export async function POST(req: NextRequest) {
   // Restrict model access by plan
   try {
     const { rows: planRows } = await db.query(`SELECT plan FROM "User" WHERE id = $1`, [userId])
-    const userPlan = planRows[0]?.plan || 'free'
-    if (model.id === 'ntrl-1.2' && userPlan !== 'pro' && userPlan !== 'pro_plus') {
+    const currentUserPlan = planRows[0]?.plan || 'free'
+    if (model.id === 'ntrl-1.2' && currentUserPlan !== 'pro' && currentUserPlan !== 'pro_plus') {
       return new Response('NTRL 1.2 nécessite un abonnement Pro ou Pro+.', { status: 403 })
     }
+    if (model.id === 'ntrl-2.0' && currentUserPlan !== 'pro' && currentUserPlan !== 'pro_plus') {
+      return new Response('NTRL 2.0 nécessite un abonnement Pro ou Pro+.', { status: 403 })
+    }
   } catch {}
+
+  // Token budget check
+  const tokenCheck = checkTokenBudget(userId, userPlan)
+  if (!tokenCheck.allowed) {
+    return new Response('Limite de tokens atteinte pour cette période. Passez à un plan supérieur pour plus de tokens.', { status: 429 })
+  }
 
   const primaryKey = getApiKey(model.envKey)
   const fallbackKeys = getFallbackKeys(model.envKey)
@@ -258,12 +299,17 @@ export async function POST(req: NextRequest) {
       const finalSystemPrompt = clientSystemMsgs ? systemPrompt + '\n\n' + clientSystemMsgs : systemPrompt
       const userAndAssistantMsgs = messages.filter((m: any) => m.role !== 'system')
 
-      const payload = {
+      const payload: Record<string, unknown> = {
         model: model.upstreamModel,
         messages: [{ role: 'system', content: finalSystemPrompt }, ...userAndAssistantMsgs.filter((m: any) => typeof m.content === 'string' ? m.content.trim() : true).map((m: any) => ({ role: m.role, content: m.content }))],
         stream: true,
-        temperature: 0.7,
-        max_tokens: 4096,
+        temperature: model.id === 'ntrl-2.0' ? 0.60 : 0.7,
+        max_tokens: model.id === 'ntrl-2.0' ? 16384 : 4096,
+      }
+
+      if (model.id === 'ntrl-2.0') {
+        payload.top_p = 0.95
+        payload.extra_body = { chat_template_kwargs: { enable_thinking: true } }
       }
 
       let accumulated = ''
@@ -321,6 +367,13 @@ export async function POST(req: NextRequest) {
       } catch (err) {
         send({ type: 'error', message: String(err) })
       } finally {
+        // Record estimated token usage
+        if (accumulated) {
+          const inputText = userAndAssistantMsgs.map((m: any) => typeof m.content === 'string' ? m.content : '').join('')
+          const estimatedTokensUsed = estimateTokens(inputText) + estimateTokens(accumulated)
+          recordTokenUsage(userId, estimatedTokensUsed)
+        }
+
         // Only save to DB for web users
         if (!isVSCode && assistantMessageId && accumulated) {
           try {

@@ -15,7 +15,7 @@ const PLANS = [
     price: '0',
     badge: null,
     accent: false,
-    features: ['1 message/jour', 'NTRL 1.0 uniquement', 'Historique 7 jours'],
+    features: ['1 message/jour', 'NTRL 1.3 uniquement', 'Historique 7 jours'],
   },
   {
     id: 'plus',
@@ -23,7 +23,7 @@ const PLANS = [
     price: '5',
     badge: null,
     accent: false,
-    features: ['150 messages/mois', 'NTRL 1.0 & 1.3', 'Recherche web', 'Historique illimité'],
+    features: ['150 messages/mois', 'NTRL 1.3 & 1.2', 'Recherche web', 'Historique illimité'],
   },
   {
     id: 'pro',

@@ -11,7 +11,7 @@ export const translations: Record<Locale, any> = {
   fr: {
     nav: { features: 'Fonctionnalités', pricing: 'Tarifs', login: 'Se connecter', start: 'Commencer' },
     hero: {
-      badge: 'Netral 1.3 — Recherche web améliorée',
+      badge: 'NTRL 2.0 — Raisonnement avance',
       title1: "L'IA qui cherche",
       title2: 'avant de répondre.',
       subtitle: 'Posez une question. Netral consulte le web, analyse les sources, et vous donne une réponse précise avec citations vérifiables.',
@@ -81,6 +81,12 @@ export const translations: Record<Locale, any> = {
       signIn: 'Se connecter',
       createAccount: 'Créer mon compte',
     },
+    announcement: {
+      title: 'NTRL 2.0 est arrive !',
+      description: 'NTRL 2.0 remplace NTRL 1.0 avec des capacites de raisonnement avancees et une pensee profonde. Reserve aux abonnes Pro et Pro+.',
+      cta: 'Voir les plans',
+      dismiss: 'Compris',
+    },
     vscodeAuth: {
       title: 'Netral Code',
       subtitle: 'Connectez votre IDE à Netral',
@@ -137,7 +143,7 @@ export const translations: Record<Locale, any> = {
   en: {
     nav: { features: 'Features', pricing: 'Pricing', login: 'Sign in', start: 'Get started' },
     hero: {
-      badge: 'Netral 1.3 — Improved web search',
+      badge: 'NTRL 2.0 — Advanced reasoning',
       title1: 'The AI that searches',
       title2: 'before answering.',
       subtitle: 'Ask a question. Netral searches the web, analyzes sources, and gives you a precise answer with verifiable citations.',
@@ -206,6 +212,12 @@ export const translations: Record<Locale, any> = {
       alreadyAccount: 'Already registered?',
       signIn: 'Sign in',
       createAccount: 'Create my account',
+    },
+    announcement: {
+      title: 'NTRL 2.0 is here!',
+      description: 'NTRL 2.0 replaces NTRL 1.0 with advanced reasoning capabilities and deep thinking. Reserved for Pro and Pro+ subscribers.',
+      cta: 'See plans',
+      dismiss: 'Got it',
     },
     vscodeAuth: {
       title: 'Netral Code',
