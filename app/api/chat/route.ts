@@ -164,6 +164,9 @@ export async function POST(req: NextRequest) {
   try {
     const { rows: planRows } = await db.query(`SELECT plan FROM "User" WHERE id = $1`, [userId])
     const userPlan = planRows[0]?.plan || 'free'
+    if (model.id === 'ntrl-2.0' && userPlan !== 'pro' && userPlan !== 'pro_plus') {
+      return new Response('NTRL 2.0 nécessite un abonnement Pro ou Pro+.', { status: 403 })
+    }
     if (model.id === 'ntrl-1.2' && userPlan !== 'pro' && userPlan !== 'pro_plus') {
       return new Response('NTRL 1.2 nécessite un abonnement Pro ou Pro+.', { status: 403 })
     }
@@ -258,12 +261,18 @@ export async function POST(req: NextRequest) {
       const finalSystemPrompt = clientSystemMsgs ? systemPrompt + '\n\n' + clientSystemMsgs : systemPrompt
       const userAndAssistantMsgs = messages.filter((m: any) => m.role !== 'system')
 
-      const payload = {
+      const payload: Record<string, any> = {
         model: model.upstreamModel,
         messages: [{ role: 'system', content: finalSystemPrompt }, ...userAndAssistantMsgs.filter((m: any) => typeof m.content === 'string' ? m.content.trim() : true).map((m: any) => ({ role: m.role, content: m.content }))],
         stream: true,
-        temperature: 0.7,
-        max_tokens: 4096,
+        temperature: 0.6,
+        top_p: 0.95,
+        max_tokens: model.thinking ? 16384 : 4096,
+      }
+
+      // NVIDIA NIM / Qwen thinking mode
+      if (model.thinking) {
+        payload.chat_template_kwargs = { enable_thinking: true }
       }
 
       let accumulated = ''
