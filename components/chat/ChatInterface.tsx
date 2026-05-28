@@ -36,7 +36,7 @@ function friendlyError(msg: string): string {
 export function ChatInterface({ initialMessages = [], conversationId: initialConversationId, userInitial, userName }: ChatInterfaceProps) {
   const { t } = useI18n()
   const router = useRouter()
-  const { messages, setMessages, appendMessage, updateLastMessage, setStreaming, isStreaming, currentModel, conversationId, setConversationId, upsertConversation } = useChatStore()
+  const { messages, setMessages, appendMessage, updateLastMessage, setStreaming, isStreaming, currentModel, conversationId, setConversationId, upsertConversation, currentRequestId, setCurrentRequestId } = useChatStore()
   const [input, setInput] = useState('')
   const [webSearchEnabled, setWebSearchEnabled] = useState(false)
   const [searchStatus, setSearchStatus] = useState<SearchStatus>(null)
@@ -116,6 +116,13 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
     const text = (overrideText ?? input).trim()
     if ((!text && !attachments?.length) || isStreaming) return
 
+    // Anti-double-request guard
+    if (currentRequestId && isStreaming) return
+
+    // Generate and track request ID
+    const requestId = crypto.randomUUID()
+    setCurrentRequestId(requestId)
+
     // Prepend reply context if present
     const fullText = replyContext ? `> ${replyContext}\n\n${text}` : text
     setReplyContext(null)
@@ -131,6 +138,12 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
 
     const abort = new AbortController()
     abortRef.current = abort
+
+    // Timeout: abort if no first chunk within 30s
+    let receivedFirstChunk = false
+    const timeoutId = setTimeout(() => {
+      if (!receivedFirstChunk) abort.abort()
+    }, 30000)
 
     try {
       const history = [...messages, userMessage].map((m) => ({ role: m.role, content: m.content }))
@@ -204,6 +217,10 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
               setIntegrationStatus(parsed.summary || `Lecture ${parsed.services?.join(', ')}...`)
               setTimeout(() => setIntegrationStatus(null), 4000)
             } else if (parsed.type === 'chunk') {
+              if (!receivedFirstChunk) {
+                receivedFirstChunk = true
+                clearTimeout(timeoutId)
+              }
               setSearchStatus(null)
               chunkBuffer += parsed.text
               if (!flushScheduled) {
@@ -234,8 +251,10 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
       const message = err instanceof Error ? err.message : 'Erreur inconnue'
       if (message !== 'AbortError' && !(err instanceof DOMException)) updateLastMessage(`\n\n${friendlyError(message)}`)
     } finally {
+      clearTimeout(timeoutId)
       setStreaming(false)
       setSearchStatus(null)
+      setCurrentRequestId(null)
       const last = useChatStore.getState().messages
       if (last.length > 0) {
         const lastMsg = last[last.length - 1]

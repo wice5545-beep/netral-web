@@ -4,12 +4,13 @@ export type ModelConfig = {
   id: ModelId
   displayName: string
   description: string
-  provider: 'mistral' | 'groq' | 'google' | 'nvidia'
+  provider: 'mistral' | 'groq' | 'google' | 'nvidia' | 'cerebras'
   upstreamModel: string
   apiUrl: string
   envKey: string
   contextLength: number
   multimodal?: boolean
+  defaultParams?: { temperature?: number; max_tokens?: number; top_p?: number }
 }
 
 export const MODELS: Record<ModelId, ModelConfig> = {
@@ -37,12 +38,12 @@ export const MODELS: Record<ModelId, ModelConfig> = {
   'ntrl-2.0': {
     id: 'ntrl-2.0',
     displayName: 'NTRL 2.0',
-    description: 'Raisonnement avance, pensee profonde et capacites etendues. Reserve Pro & Pro+.',
-    provider: 'nvidia',
-    upstreamModel: 'moonshotai/kimi-k2.6',
-    apiUrl: 'https://integrate.api.nvidia.com/v1/chat/completions',
-    envKey: 'NVIDIA_API_KEY',
-    contextLength: 1024,
+    description: 'Ultra rapide, intelligent, polyvalent. Reserve Pro & Pro+.',
+    provider: 'cerebras',
+    upstreamModel: 'qwen-3-32b',
+    apiUrl: 'https://api.cerebras.ai/v1/chat/completions',
+    envKey: 'CEREBRAS_API_KEY',
+    contextLength: 32768,
   },
 }
 
@@ -56,7 +57,6 @@ export function getModel(id?: string | null): ModelConfig {
 export function getApiKey(envKey: string): string {
   const key = process.env[envKey]
   if (key) return key
-  if (envKey === 'NVIDIA_API_KEY') return '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'
   return ''
 }
 

@@ -8,6 +8,7 @@ import { webSearch, readPage, needsWebSearch, type SearchResult } from '@/lib/ai
 import { rateLimit } from '@/lib/rate-limit'
 import { verifyApiToken } from '@/lib/api-token'
 import { getTokenLimit } from '@/lib/plans'
+import { getProviderAdapter } from '@/lib/ai/providers'
 
 export const runtime = 'nodejs'
 export const maxDuration = 90
@@ -294,30 +295,47 @@ export async function POST(req: NextRequest) {
       const finalSystemPrompt = clientSystemMsgs ? systemPrompt + '\n\n' + clientSystemMsgs : systemPrompt
       const userAndAssistantMsgs = messages.filter((m: any) => m.role !== 'system')
 
-      const payload: Record<string, unknown> = {
+      const adapter = getProviderAdapter(model.provider)
+      const temperature = model.defaultParams?.temperature ?? 0.7
+      const max_tokens = model.defaultParams?.max_tokens ?? 2048
+
+      const payload = adapter.buildPayload({
         model: model.upstreamModel,
         messages: [{ role: 'system', content: finalSystemPrompt }, ...userAndAssistantMsgs.filter((m: any) => typeof m.content === 'string' ? m.content.trim() : true).map((m: any) => ({ role: m.role, content: m.content }))],
         stream: true,
-        temperature: model.id === 'ntrl-2.0' ? 0.20 : 0.7,
-        max_tokens: model.id === 'ntrl-2.0' ? 1024 : 4096,
-      }
-
-      if (model.id === 'ntrl-2.0') {
-        payload.top_p = 1.00
-        payload.chat_template_kwargs = { thinking: true }
-      }
+        temperature,
+        max_tokens,
+      })
 
       let accumulated = ''
       try {
         let upstream: Response | null = null
+        const MAX_RETRIES = 2
+        const RETRY_DELAY = 500
+        const RETRYABLE_STATUSES = [429, 500, 502, 503]
+
         for (const key of allKeys) {
-          upstream = await fetch(model.apiUrl, {
-            method: 'POST',
-            headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-          })
-          if (upstream.ok) break
-          if (upstream.status === 429 || upstream.status === 401) continue
+          const headers = adapter.buildHeaders(key)
+          let retries = 0
+
+          while (retries <= MAX_RETRIES) {
+            upstream = await fetch(model.apiUrl, {
+              method: 'POST',
+              headers,
+              body: JSON.stringify(payload),
+              signal: AbortSignal.timeout(30000),
+            })
+            if (upstream.ok) break
+            if (RETRYABLE_STATUSES.includes(upstream.status) && retries < MAX_RETRIES) {
+              retries++
+              await new Promise(r => setTimeout(r, RETRY_DELAY))
+              continue
+            }
+            break
+          }
+
+          if (upstream?.ok) break
+          if (upstream?.status === 401) continue
           break
         }
 
@@ -348,7 +366,7 @@ export async function POST(req: NextRequest) {
             const data = trimmed.slice(5).trim()
             if (data === '[DONE]') { send({ type: 'done' }); continue }
             try {
-              const delta = JSON.parse(data).choices?.[0]?.delta?.content
+              const delta = adapter.parseChunk(data)
               if (delta) { accumulated += delta; send({ type: 'chunk', text: delta }) }
             } catch {}
           }

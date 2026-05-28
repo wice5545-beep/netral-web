@@ -25,6 +25,7 @@ interface ChatStore {
   messages: ChatMessage[]
   isStreaming: boolean
   currentModel: ModelId
+  currentRequestId: string | null
 
   // history
   conversations: ConversationSummary[]
@@ -40,6 +41,7 @@ interface ChatStore {
   updateLastMessage: (text: string) => void
   setStreaming: (streaming: boolean) => void
   setModel: (model: ModelId) => void
+  setCurrentRequestId: (id: string | null) => void
 
   setConversations: (conversations: ConversationSummary[]) => void
   upsertConversation: (conversation: ConversationSummary) => void
@@ -56,6 +58,7 @@ export const useChatStore = create<ChatStore>((set) => ({
   messages: [],
   isStreaming: false,
   currentModel: 'ntrl-1.3',
+  currentRequestId: null,
 
   conversations: [],
   conversationsLoaded: false,
@@ -77,6 +80,7 @@ export const useChatStore = create<ChatStore>((set) => ({
     }),
   setStreaming: (isStreaming) => set({ isStreaming }),
   setModel: (currentModel) => set({ currentModel }),
+  setCurrentRequestId: (currentRequestId) => set({ currentRequestId }),
 
   setConversations: (conversations) =>
     set({ conversations, conversationsLoaded: true }),
