@@ -312,7 +312,8 @@ export async function POST(req: NextRequest) {
         let upstream: Response | null = null
         const MAX_RETRIES = 2
         const RETRY_DELAY = 500
-        const RETRYABLE_STATUSES = [429, 500, 502, 503]
+        // Only retry on server errors; 429 should rotate to next key immediately
+        const RETRYABLE_STATUSES = [500, 502, 503]
 
         for (const key of allKeys) {
           const headers = adapter.buildHeaders(key)
@@ -326,6 +327,8 @@ export async function POST(req: NextRequest) {
               signal: AbortSignal.timeout(30000),
             })
             if (upstream.ok) break
+            // On 429, skip retries for this key and try next key
+            if (upstream.status === 429) break
             if (RETRYABLE_STATUSES.includes(upstream.status) && retries < MAX_RETRIES) {
               retries++
               await new Promise(r => setTimeout(r, RETRY_DELAY))
@@ -335,8 +338,10 @@ export async function POST(req: NextRequest) {
           }
 
           if (upstream?.ok) break
-          if (upstream?.status === 401) continue
-          break
+          // On 401 or 429, try next key
+          if (upstream?.status === 401 || upstream?.status === 429) continue
+          // On other non-OK statuses after exhausting retries, try next key
+          continue
         }
 
         if (!upstream || !upstream.ok || !upstream.body) {
@@ -398,7 +403,7 @@ export async function POST(req: NextRequest) {
                 try {
                   const titleRes = await fetch(model.apiUrl, {
                     method: 'POST',
-                    headers: { Authorization: `Bearer ${allKeys[0]}`, 'Content-Type': 'application/json' },
+                    headers: adapter.buildHeaders(allKeys[0]),
                     body: JSON.stringify({
                       model: model.upstreamModel,
                       messages: [

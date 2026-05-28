@@ -139,11 +139,11 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
     const abort = new AbortController()
     abortRef.current = abort
 
-    // Timeout: abort if no first chunk within 30s
+    // Timeout: abort if no first chunk within 35s (slightly longer than server's 30s timeout to avoid race)
     let receivedFirstChunk = false
     const timeoutId = setTimeout(() => {
       if (!receivedFirstChunk) abort.abort()
-    }, 30000)
+    }, 35000)
 
     try {
       const history = [...messages, userMessage].map((m) => ({ role: m.role, content: m.content }))

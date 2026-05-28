@@ -55,42 +55,9 @@ const openaiCompatibleAdapter: ProviderAdapter = {
   },
 }
 
-/**
- * Cerebras adapter - OpenAI-compatible format
- */
-const cerebrasAdapter: ProviderAdapter = {
-  buildHeaders(apiKey: string) {
-    return {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    }
-  },
-  buildPayload(options: PayloadOptions) {
-    const payload: Record<string, unknown> = {
-      model: options.model,
-      messages: options.messages,
-      stream: options.stream,
-      temperature: options.temperature,
-      max_tokens: options.max_tokens,
-    }
-    if (options.top_p !== undefined) {
-      payload.top_p = options.top_p
-    }
-    return payload
-  },
-  parseChunk(data: string): string | null {
-    if (data === '[DONE]') return null
-    try {
-      const parsed = JSON.parse(data)
-      return parsed.choices?.[0]?.delta?.content ?? null
-    } catch {
-      return null
-    }
-  },
-}
-
+// Cerebras uses OpenAI-compatible format, so it maps to the generic adapter
 const adapterMap: Record<string, ProviderAdapter> = {
-  cerebras: cerebrasAdapter,
+  cerebras: openaiCompatibleAdapter,
   mistral: openaiCompatibleAdapter,
   google: openaiCompatibleAdapter,
   groq: openaiCompatibleAdapter,
