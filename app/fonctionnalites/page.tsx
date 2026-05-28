@@ -2,10 +2,10 @@
 
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { ArrowLeft } from 'lucide-react'
-import { NetralLogo } from '@/components/ui/NetralLogo'
+import { ArrowLeft, ArrowRight } from 'lucide-react'
 import { useI18n } from '@/lib/i18n'
-import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher'
+import { MarketingNav } from '@/components/landing/MarketingNav'
+import { AuroraBackground } from '@/components/landing/AuroraBackground'
 import { EarthIcon } from '@/components/ui/earth'
 import { BrainIcon } from '@/components/ui/brain'
 import { MessageSquareIcon } from '@/components/ui/message-square'
@@ -16,78 +16,177 @@ import { LockIcon } from '@/components/ui/lock'
 import { EyeIcon } from '@/components/ui/eye'
 import { AutoAnimate } from '@/components/ui/AutoAnimate'
 
-const featureIcons = [EarthIcon, BrainIcon, MessageSquareIcon, ZapIcon, TerminalIcon, SearchIcon, LockIcon, EyeIcon]
+const featureIcons = [
+  EarthIcon,
+  BrainIcon,
+  MessageSquareIcon,
+  ZapIcon,
+  TerminalIcon,
+  SearchIcon,
+  LockIcon,
+  EyeIcon,
+]
 
-const container = { hidden: {}, show: { transition: { staggerChildren: 0.06 } } }
-const item = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] as const } } }
+const featureAccents = [
+  'from-blue-500/15 to-cyan-500/5',
+  'from-violet-500/15 to-purple-500/5',
+  'from-emerald-500/15 to-teal-500/5',
+  'from-amber-500/15 to-orange-500/5',
+  'from-rose-500/15 to-pink-500/5',
+  'from-indigo-500/15 to-blue-500/5',
+  'from-slate-500/15 to-gray-500/5',
+  'from-fuchsia-500/15 to-pink-500/5',
+]
+
+const container = { hidden: {}, show: { transition: { staggerChildren: 0.07 } } }
+const item = {
+  hidden: { opacity: 0, y: 28 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.16, 1, 0.3, 1] as const } },
+}
 
 export default function FonctionnalitesPage() {
   const { t } = useI18n()
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] text-[var(--fg)]">
-      <nav className="fixed top-4 left-1/2 -translate-x-1/2 z-50 nav-pill px-2 py-1.5">
-        <div className="flex items-center gap-1">
-          <Link href="/" className="flex items-center gap-2 px-3 py-1.5">
-            <NetralLogo size={20} />
-            <span className="font-semibold text-[14px]">Netral</span>
-          </Link>
-          <div className="flex items-center gap-1.5 ml-2">
-            <LanguageSwitcher />
-            <Link href="/register">
-              <button className="h-8 px-3.5 text-[13px] font-medium rounded-full bg-[var(--accent)] text-[var(--bg)] hover:bg-[var(--accent-hover)] transition-colors">{t.nav.start}</button>
-            </Link>
-          </div>
-        </div>
-      </nav>
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--fg)] overflow-x-hidden noise-soft">
+      <MarketingNav />
 
-      <section className="max-w-4xl mx-auto px-6 pt-24 pb-12">
-        <Link href="/" className="inline-flex items-center gap-1.5 text-[13px] text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors mb-8">
+      {/* HERO */}
+      <section className="relative max-w-4xl mx-auto px-6 pt-32 md:pt-40 pb-12">
+        <AuroraBackground intensity="subtle" />
+
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1.5 text-[13px] text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors mb-10"
+        >
           <ArrowLeft size={14} />
-          {t.featuresPage.back}
+          {t.featuresPage?.back ?? 'Retour'}
         </Link>
-        <motion.h1 initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }} className="text-[36px] md:text-[48px] font-semibold tracking-[-0.025em] leading-[1.1] mb-4">
-          {t.featuresPage.title}
+
+        <motion.h1
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          className="text-[44px] md:text-[64px] font-bold tracking-[-0.045em] leading-[1.0] mb-5"
+        >
+          {t.featuresPage?.title ?? 'Toutes les fonctionnalites'}
         </motion.h1>
-        <motion.p initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.4 }} className="text-[17px] text-[var(--fg-muted)] max-w-xl leading-relaxed">
-          {t.featuresPage.subtitle}
+        <motion.p
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15, duration: 0.5 }}
+          className="text-[17px] text-[var(--fg-muted)] max-w-xl leading-[1.55]"
+        >
+          {t.featuresPage?.subtitle ?? "Une boite a outils complete pour penser, creer et executer."}
         </motion.p>
       </section>
 
-      <section className="max-w-5xl mx-auto px-6 pb-24">
-        <motion.div variants={container} initial="hidden" animate="show" className="grid md:grid-cols-2 gap-4">
-          {t.featuresPage.items.map((f: { title: string; desc: string; details: string[] }, i: number) => {
-            const Icon = featureIcons[i]
-            return (
-              <motion.div key={i} variants={item} className="group p-6 rounded-2xl glass-card hover:shadow-colored transition-all duration-300 hover:-translate-y-1">
-                <div className="w-11 h-11 rounded-xl bg-[var(--bg-soft)] border border-[var(--border)] flex items-center justify-center mb-4 group-hover:scale-110 group-hover:shadow-colored transition-all duration-300">
-                  <AutoAnimate icon={Icon} size={20} className="text-[var(--fg)]" interval={4000 + i * 600} />
-                </div>
-                <h3 className="text-[16px] font-semibold mb-2">{f.title}</h3>
-                <p className="text-[14px] text-[var(--fg-muted)] leading-relaxed mb-4">{f.desc}</p>
-                <ul className="space-y-1.5">
-                  {f.details.map((d: string, j: number) => (
-                    <li key={j} className="flex items-center gap-2 text-[13px] text-[var(--fg-subtle)]">
-                      <span className="w-1 h-1 rounded-full bg-[var(--fg-subtle)]" />
-                      {d}
-                    </li>
-                  ))}
-                </ul>
-              </motion.div>
-            )
-          })}
+      {/* FEATURES GRID */}
+      <section className="max-w-6xl mx-auto px-6 pb-24">
+        <motion.div
+          variants={container}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, margin: '-50px' }}
+          className="grid md:grid-cols-2 gap-5"
+        >
+          {(t.featuresPage?.items ?? []).map(
+            (
+              f: { title: string; desc: string; details: string[] },
+              i: number
+            ) => {
+              const Icon = featureIcons[i % featureIcons.length]
+              const accent = featureAccents[i % featureAccents.length]
+              return (
+                <motion.div
+                  key={i}
+                  variants={item}
+                  className={`magnetic-card group relative p-6 md:p-7 rounded-2xl border border-[var(--border)] bg-gradient-to-br ${accent} bg-[var(--bg-elevated)] overflow-hidden`}
+                >
+                  <div className="beam-scan" style={{ ['--beam-delay' as string]: `${i * 0.5}s` }} />
+
+                  <div className="relative z-10 flex items-start gap-4 mb-4">
+                    <div className="w-12 h-12 rounded-xl bg-[var(--bg-soft)] border border-[var(--border)] flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:border-[var(--border-strong)] transition-all duration-300 shadow-sm">
+                      <AutoAnimate
+                        icon={Icon}
+                        size={22}
+                        className="text-[var(--fg)]"
+                        interval={4500 + i * 600}
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-[17px] font-semibold mb-1.5 tracking-[-0.005em]">{f.title}</h3>
+                      <p className="text-[14px] text-[var(--fg-muted)] leading-[1.55]">{f.desc}</p>
+                    </div>
+                  </div>
+
+                  <ul className="relative z-10 space-y-2 pl-16">
+                    {f.details.map((d: string, j: number) => (
+                      <motion.li
+                        key={j}
+                        initial={{ opacity: 0, x: -6 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 0.2 + j * 0.05, duration: 0.4 }}
+                        className="flex items-center gap-2 text-[13px] text-[var(--fg-subtle)]"
+                      >
+                        <span className="w-1 h-1 rounded-full bg-[var(--fg-faint)]" />
+                        {d}
+                      </motion.li>
+                    ))}
+                  </ul>
+                </motion.div>
+              )
+            }
+          )}
         </motion.div>
       </section>
 
-      <section className="border-t border-[var(--border)] py-20">
-        <div className="max-w-2xl mx-auto px-6 text-center">
-          <h2 className="text-[28px] font-semibold tracking-[-0.02em] mb-4">{t.featuresPage.cta}</h2>
-          <p className="text-[15px] text-[var(--fg-muted)] mb-8">{t.featuresPage.ctaDesc}</p>
-          <Link href="/register">
-            <button className="h-11 px-6 text-[15px] font-medium rounded-[10px] bg-[var(--accent)] text-[var(--bg)] hover:bg-[var(--accent-hover)] transition-all">{t.featuresPage.ctaBtn}</button>
-          </Link>
+      {/* CTA */}
+      <section className="relative border-t border-[var(--border)] py-24 overflow-hidden">
+        <AuroraBackground intensity="subtle" showGrid={false} />
+        <div className="max-w-2xl mx-auto px-6 text-center relative">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <h2 className="text-[34px] md:text-[44px] font-bold tracking-[-0.035em] mb-4">
+              {t.featuresPage?.cta ?? 'Pret a commencer ?'}
+            </h2>
+            <p className="text-[15.5px] text-[var(--fg-muted)] mb-8 max-w-md mx-auto">
+              {t.featuresPage?.ctaDesc ??
+                "Rejoignez les milliers d'utilisateurs qui pensent mieux avec Netral."}
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <Link href="/register">
+                <button
+                  className="group inline-flex items-center gap-2.5 px-7 text-[15px] font-semibold rounded-full bg-[var(--accent)] text-[var(--bg)] hover:bg-[var(--accent-hover)] transition-all hover:scale-[1.04] active:scale-[0.98] shadow-md hover:shadow-xl"
+                  style={{ height: 50 }}
+                >
+                  {t.featuresPage?.ctaBtn ?? 'Essayer gratuitement'}
+                  <ArrowRight size={15} className="group-hover:translate-x-1 transition-transform" />
+                </button>
+              </Link>
+              <Link href="/tarifs">
+                <button
+                  className="px-7 text-[15px] font-medium rounded-full border border-[var(--border)] hover:bg-[var(--bg-soft)] hover:border-[var(--border-strong)] transition-all"
+                  style={{ height: 50 }}
+                >
+                  Voir les tarifs
+                </button>
+              </Link>
+            </div>
+          </motion.div>
         </div>
       </section>
+
+      <footer className="border-t border-[var(--border)] py-8">
+        <div className="max-w-6xl mx-auto px-6 text-center text-[12.5px] text-[var(--fg-muted)]">
+          © {new Date().getFullYear()} Netral
+        </div>
+      </footer>
     </div>
   )
 }
