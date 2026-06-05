@@ -1,11 +1,13 @@
 'use client'
 
 import Link from 'next/link'
-import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
+import { motion, useScroll, useTransform, AnimatePresence, useMotionValue, useSpring, useMotionTemplate } from 'framer-motion'
 import { useRef, useState, useEffect } from 'react'
 import {
   ArrowRight, ArrowUp, Globe, Brain, Zap, Code2, Calendar, Lock,
   Sparkles, Star, MessageSquare, Search, Shield, Plus, Square, Check, Cpu,
+  ChevronDown, Mail, FileText, Database, Layers, PenTool, Camera, Music,
+  Command, Terminal, GitBranch, Cloud, BarChart3, Clock, Users, TrendingUp,
 } from 'lucide-react'
 import { NetralLogo } from '@/components/ui/NetralLogo'
 import { useI18n } from '@/lib/i18n'
@@ -18,11 +20,13 @@ import { Marquee } from './Marquee'
    DATA
    ────────────────────────────────────────────────────────────── */
 
+const TYPING_WORDS = ['pense', 'code', 'crée', 'raisonne', 'imagine', 'analyse']
+
 const BENTO_FEATURES = [
   {
     icon: Brain,
-    title: 'Memoire contextuelle',
-    desc: "Netral retient vos preferences, votre metier et vos projets pour des reponses toujours pertinentes — sans avoir a se repeter.",
+    title: 'Mémoire contextuelle',
+    desc: "Netral retient vos préférences, votre métier et vos projets pour des réponses toujours pertinentes — sans avoir à se répéter.",
     span: 'lg' as const,
     accent: 'from-violet-500/15 via-violet-500/5 to-transparent',
     iconBg: 'from-violet-500/20 to-violet-600/10',
@@ -30,8 +34,8 @@ const BENTO_FEATURES = [
   },
   {
     icon: Globe,
-    title: 'Web temps reel',
-    desc: "Recherche en direct, sources citees, citations cliquables.",
+    title: 'Web temps réel',
+    desc: "Recherche en direct, sources citées, citations cliquables.",
     span: 'sm' as const,
     accent: 'from-blue-500/15 to-cyan-500/5',
     iconBg: 'from-blue-500/20 to-cyan-500/10',
@@ -40,7 +44,7 @@ const BENTO_FEATURES = [
   {
     icon: Zap,
     title: 'Sub-200ms',
-    desc: "Streaming optimise, premiere reponse en moins d'un battement de cils.",
+    desc: "Streaming optimisé, première réponse en moins d'un battement de cils.",
     span: 'sm' as const,
     accent: 'from-amber-500/15 to-orange-500/5',
     iconBg: 'from-amber-500/20 to-orange-500/10',
@@ -49,7 +53,7 @@ const BENTO_FEATURES = [
   {
     icon: Code2,
     title: 'Agent VS Code',
-    desc: "Extension native qui lit, ecrit et corrige votre code directement dans l'editeur. Multi-fichiers, multi-langages.",
+    desc: "Extension native qui lit, écrit et corrige votre code directement dans l'éditeur. Multi-fichiers, multi-langages.",
     span: 'lg' as const,
     accent: 'from-emerald-500/15 via-emerald-500/5 to-transparent',
     iconBg: 'from-emerald-500/20 to-teal-500/10',
@@ -57,7 +61,7 @@ const BENTO_FEATURES = [
   },
   {
     icon: Calendar,
-    title: 'Integrations',
+    title: 'Intégrations',
     desc: 'Gmail · Calendar · Drive · Docs · Sheets',
     span: 'sm' as const,
     accent: 'from-rose-500/15 to-pink-500/5',
@@ -66,8 +70,8 @@ const BENTO_FEATURES = [
   },
   {
     icon: Lock,
-    title: 'Prive par defaut',
-    desc: "Aucun entrainement sur vos donnees. Chiffrement bout-en-bout.",
+    title: 'Privé par défaut',
+    desc: "Aucun entraînement sur vos données. Chiffrement bout-en-bout.",
     span: 'sm' as const,
     accent: 'from-slate-500/10 to-gray-500/5',
     iconBg: 'from-slate-500/20 to-gray-500/10',
@@ -77,16 +81,16 @@ const BENTO_FEATURES = [
 
 const TESTIMONIALS = [
   { name: 'Marie L.', role: 'Designer · Doctolib', avatar: 'M', text: "Netral comprend vraiment le contexte. C'est bluffant. Je l'utilise tous les jours pour mes specs design.", color: 'from-violet-400 to-fuchsia-400' },
-  { name: 'Thomas R.', role: 'Senior Dev · Qonto', avatar: 'T', text: "Le meilleur assistant que j'ai teste. Plus rapide que Claude, plus precis que GPT-4 sur mon stack.", color: 'from-blue-400 to-cyan-400' },
+  { name: 'Thomas R.', role: 'Senior Dev · Qonto', avatar: 'T', text: "Le meilleur assistant que j'ai testé. Plus rapide que Claude, plus précis que GPT-4 sur mon stack.", color: 'from-blue-400 to-cyan-400' },
   { name: 'Sarah K.', role: 'Product · Alan', avatar: 'S', text: "L'extension VS Code change tout. Je code 2x plus vite, sans interruption mentale.", color: 'from-amber-400 to-orange-400' },
-  { name: 'Lucas D.', role: 'Founder · indie', avatar: 'L', text: "Memoire contextuelle = killer feature. Il sait que je code en TypeScript et m'evite des explications.", color: 'from-emerald-400 to-teal-400' },
+  { name: 'Lucas D.', role: 'Founder · indie', avatar: 'L', text: "Mémoire contextuelle = killer feature. Il sait que je code en TypeScript et m'évite des explications.", color: 'from-emerald-400 to-teal-400' },
 ]
 
 const FAQ = [
-  { q: 'En quoi Netral differe de ChatGPT ?', a: "Netral combine plusieurs modeles (Mistral, Gemini, Kimi K2) avec une memoire persistante et une recherche web temps reel native. Pas de plugins a activer — tout est integre." },
-  { q: 'Mes donnees sont-elles utilisees pour entrainer des modeles ?', a: "Jamais. Vos messages restent strictement prives. Aucun fournisseur tiers n'a acces aux conversations pour entrainer ses modeles." },
-  { q: 'Puis-je essayer gratuitement ?', a: "Oui. Le plan Free vous donne acces a NTRL 1.3 (1 message/jour). Les plans payants commencent a 5E/mois." },
-  { q: "L'extension VS Code est-elle disponible ?", a: "Oui, gratuite et open-source. Elle se synchronise avec votre compte Netral via un token API genere depuis les parametres." },
+  { q: 'En quoi Netral diffère de ChatGPT ?', a: "Netral combine plusieurs modèles (Mistral, Gemini, Kimi K2) avec une mémoire persistante et une recherche web temps réel native. Pas de plugins à activer — tout est intégré." },
+  { q: 'Mes données sont-elles utilisées pour entraîner des modèles ?', a: "Jamais. Vos messages restent strictement privés. Aucun fournisseur tiers n'a accès aux conversations pour entraîner ses modèles." },
+  { q: 'Puis-je essayer gratuitement ?', a: "Oui. Le plan Free vous donne accès à NTRL 1.3 (1 message/jour). Les plans payants commencent à 5€/mois." },
+  { q: "L'extension VS Code est-elle disponible ?", a: "Oui, gratuite et open-source. Elle se synchronise avec votre compte Netral via un token API généré depuis les paramètres." },
 ]
 
 const MODELS_LOGOS = [
@@ -100,6 +104,38 @@ const MODELS_LOGOS = [
   { name: 'VS Code', tag: 'Agent' },
 ]
 
+const FLOATING_ICONS = [
+  { icon: Brain, x: '5%', y: '15%', duration: 6, delay: 0.2, color: 'text-violet-400/30' },
+  { icon: Code2, x: '92%', y: '10%', duration: 7, delay: 0.8, color: 'text-emerald-400/30' },
+  { icon: Globe, x: '10%', y: '75%', duration: 5.5, delay: 1.5, color: 'text-blue-400/30' },
+  { icon: Zap, x: '88%', y: '70%', duration: 6.5, delay: 0.4, color: 'text-amber-400/30' },
+  { icon: MessageSquare, x: '15%', y: '45%', duration: 8, delay: 2.0, color: 'text-pink-400/25' },
+  { icon: Lock, x: '80%', y: '40%', duration: 7.5, delay: 1.2, color: 'text-slate-400/25' },
+  { icon: Star, x: '3%', y: '55%', duration: 5, delay: 2.5, color: 'text-yellow-400/30' },
+  { icon: Database, x: '95%', y: '30%', duration: 6.8, delay: 0.6, color: 'text-cyan-400/25' },
+  { icon: Command, x: '50%', y: '85%', duration: 7.2, delay: 1.8, color: 'text-rose-400/25' },
+  { icon: Terminal, x: '25%', y: '20%', duration: 5.8, delay: 3.0, color: 'text-green-400/25' },
+]
+
+/* ──────────────────────────────────────────────────────────────
+   STARS DATA (generated once)
+   ────────────────────────────────────────────────────────────── */
+function generateStars(count: number) {
+  const stars: { x: number; y: number; size: number; opacity: number; delay: number; duration: number }[] = []
+  for (let i = 0; i < count; i++) {
+    stars.push({
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      size: Math.random() * 2 + 0.5,
+      opacity: Math.random() * 0.5 + 0.1,
+      delay: Math.random() * 4,
+      duration: Math.random() * 3 + 2,
+    })
+  }
+  return stars
+}
+const STARFIELD = generateStars(80)
+
 /* ──────────────────────────────────────────────────────────────
    COMPONENT
    ────────────────────────────────────────────────────────────── */
@@ -110,25 +146,116 @@ export function LandingPage() {
   const [landingInput, setLandingInput] = useState('')
   const [showLoginPopup, setShowLoginPopup] = useState(false)
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] })
-  const heroY = useTransform(scrollYProgress, [0, 1], [0, -120])
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0])
-  const heroScale = useTransform(scrollYProgress, [0, 0.7], [1, 0.94])
+  const heroY = useTransform(scrollYProgress, [0, 1], [0, -150])
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.6], [1, 0])
+  const heroScale = useTransform(scrollYProgress, [0, 0.6], [1, 0.92])
+
+  // Mouse position for spotlight effect
+  const mouseX = useMotionValue(0.5)
+  const mouseY = useMotionValue(0.5)
+  const spotX = useSpring(mouseX, { stiffness: 50, damping: 30 })
+  const spotY = useSpring(mouseY, { stiffness: 50, damping: 30 })
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    mouseX.set((e.clientX - rect.left) / rect.width)
+    mouseY.set((e.clientY - rect.top) / rect.height)
+  }
 
   const statsLabels = [t.stats?.latency ?? 'Latence', t.stats?.uptime ?? 'Uptime', t.stats?.users ?? 'Utilisateurs']
 
+  // Scroll progress for the thin bar at top
+  const globalScroll = useScroll()
+  const scrollProgressBar = useTransform(globalScroll.scrollYProgress, [0, 0.8], ['0%', '100%'])
+
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--fg)] overflow-x-hidden noise-soft">
+      {/* ─── SCROLL PROGRESS BAR ─── */}
+      <motion.div
+        className="fixed top-0 left-0 h-[2px] z-[60] pointer-events-none"
+        style={{
+          width: scrollProgressBar,
+          background: 'linear-gradient(90deg, #7c3aed, #ec4899, #f97316)',
+        }}
+      />
+
       <MarketingNav />
 
       {/* ═══════════════════ HERO ═══════════════════ */}
-      <section ref={heroRef} className="relative pt-32 md:pt-44 pb-20 overflow-hidden">
+      <section
+        ref={heroRef}
+        onMouseMove={handleMouseMove}
+        className="relative pt-32 md:pt-44 pb-20 overflow-hidden"
+      >
         <AuroraBackground intensity="normal" />
+
+        {/* ─── STARFIELD PARTICLES ─── */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {STARFIELD.map((star, i) => (
+            <motion.div
+              key={i}
+              className="absolute rounded-full bg-white"
+              style={{
+                left: `${star.x}%`,
+                top: `${star.y}%`,
+                width: star.size,
+                height: star.size,
+                opacity: star.opacity,
+              }}
+              animate={{
+                opacity: [star.opacity, star.opacity * 2.5, star.opacity],
+                scale: [1, 1.8, 1],
+              }}
+              transition={{
+                duration: star.duration,
+                repeat: Infinity,
+                delay: star.delay,
+                ease: 'easeInOut',
+              }}
+            />
+          ))}
+        </div>
+
+        {/* ─── FLOATING ICONS (parallax) ─── */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {FLOATING_ICONS.map((item, i) => {
+            const Icon = item.icon
+            return (
+              <motion.div
+                key={i}
+                className={`absolute ${item.color}`}
+                style={{ left: item.x, top: item.y }}
+                animate={{
+                  y: [0, -20, 0, 15, 0],
+                  x: [0, 10, -5, -10, 0],
+                  rotate: [0, 5, -3, 8, 0],
+                }}
+                transition={{
+                  duration: item.duration,
+                  repeat: Infinity,
+                  delay: item.delay,
+                  ease: 'easeInOut',
+                }}
+              >
+                <Icon size={i < 4 ? 22 : 18} strokeWidth={1.5} />
+              </motion.div>
+            )
+          })}
+        </div>
+
+        {/* ─── SPOTLIGHT FOLLOW ─── */}
+        <motion.div
+          className="absolute inset-0 pointer-events-none opacity-[0.07] dark:opacity-[0.12]"
+          style={{
+            background: useMotionTemplate`radial-gradient(600px circle at ${spotX.get() * 100}% ${spotY.get() * 100}%, rgba(124,58,237,0.5), transparent 60%)`,
+          }}
+        />
 
         <motion.div
           style={{ y: heroY, opacity: heroOpacity, scale: heroScale }}
           className="max-w-4xl mx-auto px-6 text-center relative"
         >
-          {/* Live status badge */}
+          {/* Live status badge — pulse enhanced */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
@@ -143,12 +270,16 @@ export function LandingPage() {
             <ArrowRight size={11} className="text-[var(--fg-subtle)] group-hover:translate-x-0.5 transition-transform" />
           </motion.div>
 
-          {/* Title — split letter-by-letter */}
+          {/* Title — split letter-by-letter + typewriter loop */}
           <h1 className="text-[clamp(3rem,9.5vw,6.5rem)] font-bold tracking-[-0.045em] leading-[0.98] mb-7">
-            <SplitLine text={t.hero?.title1 ?? "L'IA qui pense"} delayBase={0.1} />
-            <br />
+            <SplitLine text={t.hero?.title1 ?? "L'IA qui"} delayBase={0.1} />
+            {' '}
             <span className="hero-gradient-text inline-block">
-              <SplitLine text={t.hero?.title2 ?? 'avec vous.'} delayBase={0.32} />
+              <TypewriterLoop words={TYPING_WORDS} />
+            </span>
+            <br />
+            <span className="inline-block">
+              <SplitLine text={t.hero?.title2 ?? 'avec vous.'} delayBase={0.35} />
             </span>
           </h1>
 
@@ -159,7 +290,7 @@ export function LandingPage() {
             transition={{ delay: 0.55, duration: 0.6 }}
             className="text-[18px] md:text-[20px] text-[var(--fg-muted)] max-w-xl mx-auto mb-10 leading-[1.55]"
           >
-            {t.hero?.subtitle ?? "Un assistant qui consulte le web en temps reel, retient ce qui compte et raisonne avec vous."}
+            {t.hero?.subtitle ?? "Un assistant qui consulte le web en temps réel, retient ce qui compte et raisonne avec vous."}
           </motion.p>
 
           {/* HERO INPUT — MEGA glow on focus */}
@@ -182,7 +313,7 @@ export function LandingPage() {
                   value={landingInput}
                   onChange={(e) => setLandingInput(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter' && landingInput.trim()) setShowLoginPopup(true) }}
-                  placeholder={t.hero?.cta ?? "Demandez n'importe quoi a Netral..."}
+                  placeholder={t.hero?.cta ?? "Demandez n'importe quoi à Netral..."}
                   className="flex-1 h-11 bg-transparent text-[15.5px] text-[var(--fg)] placeholder:text-[var(--fg-subtle)] focus:outline-none"
                 />
                 <button
@@ -240,6 +371,22 @@ export function LandingPage() {
           </motion.div>
         </motion.div>
 
+        {/* Scroll indicator arrow */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.6, duration: 0.6 }}
+          className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1"
+        >
+          <motion.span
+            animate={{ y: [0, 6, 0] }}
+            transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+            className="text-[var(--fg-subtle)]"
+          >
+            <ChevronDown size={16} strokeWidth={1.5} />
+          </motion.span>
+        </motion.div>
+
         {/* Login popup */}
         <AnimatePresence>
           {showLoginPopup && (
@@ -260,7 +407,7 @@ export function LandingPage() {
                     </div>
                   </div>
                   <h3 className="text-[18px] font-bold mb-1.5 text-center tracking-[-0.01em]">Connectez-vous pour continuer</h3>
-                  <p className="text-[13px] text-[var(--fg-muted)] text-center mb-6">Vos messages sont prives et chiffres.</p>
+                  <p className="text-[13px] text-[var(--fg-muted)] text-center mb-6">Vos messages sont privés et chiffrés.</p>
                   <div className="space-y-2.5">
                     <Link href={`/login?q=${encodeURIComponent(landingInput)}`} className="block">
                       <button className="w-full h-11 rounded-xl bg-[var(--accent)] text-[var(--bg)] text-[14px] font-semibold hover:bg-[var(--accent-hover)] transition-all hover:shadow-lg active:scale-[0.97]">
@@ -269,7 +416,7 @@ export function LandingPage() {
                     </Link>
                     <Link href={`/register?q=${encodeURIComponent(landingInput)}`} className="block">
                       <button className="w-full h-11 rounded-xl border border-[var(--border)] text-[14px] font-medium hover:bg-[var(--bg-soft)] hover:border-[var(--border-strong)] transition-all">
-                        Creer un compte
+                        Créer un compte
                       </button>
                     </Link>
                   </div>
@@ -283,7 +430,7 @@ export function LandingPage() {
       {/* ═══════════════════ MARQUEE — MODELS / INTEGRATIONS ═══════════════════ */}
       <section className="py-10 border-y border-[var(--border)] bg-[var(--bg-soft)]/40">
         <p className="text-center text-[11px] uppercase tracking-[0.18em] text-[var(--fg-subtle)] mb-5 font-medium">
-          Propulse par les meilleurs modeles · Integre a vos outils
+          Propulsé par les meilleurs modèles · Intégré à vos outils
         </p>
         <Marquee speed={45}>
           {MODELS_LOGOS.map((m, i) => (
@@ -298,16 +445,11 @@ export function LandingPage() {
         </Marquee>
       </section>
 
-      {/* ═══════════════════ DEMO — animated chat mock ═══════════════════ */}
+      {/* ═══════════════════ DEMO — animated chat mock (IMPROVED) ═══════════════════ */}
       <section className="max-w-4xl mx-auto px-6 py-24 md:py-32">
-        <motion.div
-          initial={{ opacity: 0, y: 60 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-100px' }}
-          transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-        >
+        <ScrollReveal>
           <ChatDemoWindow />
-        </motion.div>
+        </ScrollReveal>
       </section>
 
       {/* ═══════════════════ STATS ═══════════════════ */}
@@ -328,114 +470,108 @@ export function LandingPage() {
       {/* ═══════════════════ BENTO FEATURES ═══════════════════ */}
       <section className="py-28">
         <div className="max-w-6xl mx-auto px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-16"
-          >
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[var(--border)] bg-[var(--bg-soft)] text-[11px] font-medium text-[var(--fg-muted)] mb-5 uppercase tracking-wider">
-              <Sparkles size={11} className="text-violet-500" />
-              Fonctionnalites
+          <ScrollReveal>
+            <div className="text-center mb-16">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[var(--border)] bg-[var(--bg-soft)] text-[11px] font-medium text-[var(--fg-muted)] mb-5 uppercase tracking-wider">
+                <Sparkles size={11} className="text-violet-500" />
+                Fonctionnalités
+              </div>
+              <h2 className="text-[36px] md:text-[52px] font-bold tracking-[-0.04em] mb-4 leading-[1.05]">
+                {t.features?.title ?? "Tout ce qu'il vous faut."}
+                <br />
+                <span className="text-[var(--fg-muted)]">{t.features?.subtitle ?? 'Rien de plus.'}</span>
+              </h2>
             </div>
-            <h2 className="text-[36px] md:text-[52px] font-bold tracking-[-0.04em] mb-4 leading-[1.05]">
-              {t.features?.title ?? "Tout ce qu'il vous faut."}
-              <br />
-              <span className="text-[var(--fg-muted)]">{t.features?.subtitle ?? 'Rien de plus.'}</span>
-            </h2>
-          </motion.div>
+          </ScrollReveal>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {BENTO_FEATURES.map((f, i) => {
               const Icon = f.icon
               return (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 32 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: '-50px' }}
-                  transition={{ delay: i * 0.06, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                  className={`magnetic-card group relative p-6 rounded-2xl border border-[var(--border)] bg-gradient-to-br ${f.accent} bg-[var(--bg-elevated)] overflow-hidden ${f.span === 'lg' ? 'md:col-span-2' : ''}`}
-                  style={{ minHeight: 220 }}
-                >
-                  <div className="beam-scan" style={{ ['--beam-delay' as string]: `${i * 0.7}s` }} />
+                <TiltCard key={i}>
+                  <ScrollReveal delay={i * 0.06} direction="up">
+                    <div
+                      className={`magnetic-card group relative p-6 rounded-2xl border border-[var(--border)] bg-gradient-to-br ${f.accent} bg-[var(--bg-elevated)] overflow-hidden ${f.span === 'lg' ? 'md:col-span-2' : ''}`}
+                      style={{ minHeight: 220 }}
+                    >
+                      <div className="beam-scan" style={{ ['--beam-delay' as string]: `${i * 0.7}s` }} />
 
-                  {/* Decorative element top-right */}
-                  <DecorativeFeature kind={f.decorative} />
+                      {/* Decorative element top-right */}
+                      <DecorativeFeature kind={f.decorative} />
 
-                  <div className={`relative z-10 w-11 h-11 rounded-xl flex items-center justify-center mb-5 bg-gradient-to-br ${f.iconBg} border border-[var(--border)] group-hover:scale-110 transition-transform duration-300`}>
-                    <Icon size={18} className="text-[var(--fg)]" strokeWidth={1.8} />
-                  </div>
+                      <div className={`relative z-10 w-11 h-11 rounded-xl flex items-center justify-center mb-5 bg-gradient-to-br ${f.iconBg} border border-[var(--border)] group-hover:scale-110 transition-transform duration-300`}>
+                        <Icon size={18} className="text-[var(--fg)]" strokeWidth={1.8} />
+                      </div>
 
-                  <h3 className="relative z-10 text-[17px] font-semibold mb-2 tracking-[-0.01em]">{f.title}</h3>
-                  <p className="relative z-10 text-[13.5px] text-[var(--fg-muted)] leading-[1.6] max-w-xs">
-                    {f.desc}
-                  </p>
-                </motion.div>
+                      <h3 className="relative z-10 text-[17px] font-semibold mb-2 tracking-[-0.01em]">{f.title}</h3>
+                      <p className="relative z-10 text-[13.5px] text-[var(--fg-muted)] leading-[1.6] max-w-xs">
+                        {f.desc}
+                      </p>
+                    </div>
+                  </ScrollReveal>
+                </TiltCard>
               )
             })}
           </div>
 
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            className="text-center mt-12"
-          >
-            <Link
-              href="/fonctionnalites"
-              className="inline-flex items-center gap-2 text-[14px] text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors group px-5 py-2.5 rounded-full hover:bg-[var(--accent-soft)] border border-[var(--border)] hover:border-[var(--border-strong)]"
-            >
-              {t.features?.seeAll ?? 'Voir toutes les fonctionnalites'}
-              <ArrowRight size={13} className="group-hover:translate-x-1 transition-transform" />
-            </Link>
-          </motion.div>
+          <ScrollReveal delay={0.2}>
+            <div className="text-center mt-12">
+              <Link
+                href="/fonctionnalites"
+                className="inline-flex items-center gap-2 text-[14px] text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors group px-5 py-2.5 rounded-full hover:bg-[var(--accent-soft)] border border-[var(--border)] hover:border-[var(--border-strong)]"
+              >
+                {t.features?.seeAll ?? 'Voir toutes les fonctionnalités'}
+                <ArrowRight size={13} className="group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </div>
+          </ScrollReveal>
         </div>
       </section>
 
       {/* ═══════════════════ TESTIMONIALS ═══════════════════ */}
       <section className="border-t border-[var(--border)] py-24 relative">
         <div className="max-w-5xl mx-auto px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-14"
-          >
-            <div className="flex justify-center gap-0.5 mb-3">
-              {[...Array(5)].map((_, i) => <Star key={i} size={18} className="fill-amber-400 text-amber-400" />)}
+          <ScrollReveal>
+            <div className="text-center mb-14">
+              <div className="flex justify-center gap-0.5 mb-3">
+                {[...Array(5)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, scale: 0 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.1 * i, duration: 0.3, type: 'spring', stiffness: 300 }}
+                  >
+                    <Star size={18} className="fill-amber-400 text-amber-400" />
+                  </motion.div>
+                ))}
+              </div>
+              <h2 className="text-[28px] md:text-[36px] font-bold tracking-[-0.03em] mb-2">
+                Aimé par les meilleurs.
+              </h2>
+              <p className="text-[14px] text-[var(--fg-muted)]">Note 4.9/5 par +50 000 utilisateurs.</p>
             </div>
-            <h2 className="text-[28px] md:text-[36px] font-bold tracking-[-0.03em] mb-2">
-              Aime par les meilleurs.
-            </h2>
-            <p className="text-[14px] text-[var(--fg-muted)]">Note 4.9/5 par +50 000 utilisateurs.</p>
-          </motion.div>
+          </ScrollReveal>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {TESTIMONIALS.map((r, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.08, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                className="magnetic-card p-6 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] relative overflow-hidden"
-              >
-                <div className="flex gap-0.5 mb-3">
-                  {[...Array(5)].map((_, j) => <Star key={j} size={12} className="fill-amber-400 text-amber-400" />)}
-                </div>
-                <p className="text-[15px] text-[var(--fg)] leading-[1.6] mb-5 font-medium">"{r.text}"</p>
-                <div className="flex items-center gap-3">
-                  <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${r.color} flex items-center justify-center text-[12px] font-bold text-white shrink-0`}>
-                    {r.avatar}
+              <ScrollReveal key={i} delay={i * 0.08} direction="up">
+                <div className="magnetic-card p-6 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] relative overflow-hidden">
+                  <div className="flex gap-0.5 mb-3">
+                    {[...Array(5)].map((_, j) => <Star key={j} size={12} className="fill-amber-400 text-amber-400" />)}
                   </div>
-                  <div>
-                    <p className="text-[13px] font-semibold">{r.name}</p>
-                    <p className="text-[11.5px] text-[var(--fg-muted)]">{r.role}</p>
+                  <p className="text-[15px] text-[var(--fg)] leading-[1.6] mb-5 font-medium">"{r.text}"</p>
+                  <div className="flex items-center gap-3">
+                    <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${r.color} flex items-center justify-center text-[12px] font-bold text-white shrink-0`}>
+                      {r.avatar}
+                    </div>
+                    <div>
+                      <p className="text-[13px] font-semibold">{r.name}</p>
+                      <p className="text-[11.5px] text-[var(--fg-muted)]">{r.role}</p>
+                    </div>
                   </div>
                 </div>
-              </motion.div>
+              </ScrollReveal>
             ))}
           </div>
         </div>
@@ -444,14 +580,11 @@ export function LandingPage() {
       {/* ═══════════════════ FAQ ═══════════════════ */}
       <section className="border-t border-[var(--border)] py-24">
         <div className="max-w-2xl mx-auto px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-10"
-          >
-            <h2 className="text-[28px] md:text-[36px] font-bold tracking-[-0.03em]">Questions frequentes</h2>
-          </motion.div>
+          <ScrollReveal>
+            <div className="text-center mb-10">
+              <h2 className="text-[28px] md:text-[36px] font-bold tracking-[-0.03em]">Questions fréquentes</h2>
+            </div>
+          </ScrollReveal>
           <div className="space-y-2">
             {FAQ.map((f, i) => (
               <FaqItem key={i} q={f.q} a={f.a} delay={i * 0.06} />
@@ -464,7 +597,7 @@ export function LandingPage() {
       <section className="relative border-t border-[var(--border)] py-32 overflow-hidden">
         <AuroraBackground intensity="subtle" showGrid={false} />
         <div className="max-w-2xl mx-auto px-6 text-center relative">
-          <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7 }}>
+          <ScrollReveal>
             <h2 className="text-[40px] md:text-[60px] font-bold tracking-[-0.045em] leading-[0.98] mb-5">
               {t.pricing?.title1 ?? 'Commencez en 30 secondes.'}<br />
               <span className="hero-gradient-text">{t.pricing?.title2 ?? 'Gratuit pour toujours.'}</span>
@@ -474,10 +607,15 @@ export function LandingPage() {
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <Link href="/register">
-                <button className="group h-13 px-8 text-[15px] font-semibold rounded-full bg-[var(--accent)] text-[var(--bg)] hover:bg-[var(--accent-hover)] transition-all hover:scale-[1.04] active:scale-[0.98] inline-flex items-center gap-2.5 shadow-md hover:shadow-xl" style={{ height: 52 }}>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.96 }}
+                  className="group h-13 px-8 text-[15px] font-semibold rounded-full bg-[var(--accent)] text-[var(--bg)] hover:bg-[var(--accent-hover)] transition-all inline-flex items-center gap-2.5 shadow-md hover:shadow-xl"
+                  style={{ height: 52 }}
+                >
                   {t.pricing?.cta ?? 'Commencer gratuitement'}
                   <ArrowRight size={15} className="group-hover:translate-x-1 transition-transform" />
-                </button>
+                </motion.button>
               </Link>
               <Link href="/tarifs">
                 <button className="h-13 px-8 text-[15px] font-medium rounded-full border border-[var(--border)] hover:bg-[var(--bg-soft)] hover:border-[var(--border-strong)] transition-all" style={{ height: 52 }}>
@@ -488,9 +626,9 @@ export function LandingPage() {
             <div className="flex items-center justify-center gap-6 mt-10 text-[12px] text-[var(--fg-subtle)]">
               <span className="flex items-center gap-1.5"><Check size={11} className="text-emerald-500" strokeWidth={3} /> Sans CB</span>
               <span className="flex items-center gap-1.5"><Check size={11} className="text-emerald-500" strokeWidth={3} /> Annulable</span>
-              <span className="flex items-center gap-1.5"><Shield size={11} /> Prive</span>
+              <span className="flex items-center gap-1.5"><Shield size={11} /> Privé</span>
             </div>
-          </motion.div>
+          </ScrollReveal>
         </div>
       </section>
 
@@ -504,12 +642,12 @@ export function LandingPage() {
               <span className="text-[12px] text-[var(--fg-subtle)] ml-1">© {new Date().getFullYear()}</span>
             </div>
             <div className="flex items-center flex-wrap gap-x-6 gap-y-2 text-[12.5px] text-[var(--fg-muted)]">
-              <Link href="/fonctionnalites" className="hover:text-[var(--fg)] transition-colors">Fonctionnalites</Link>
+              <Link href="/fonctionnalites" className="hover:text-[var(--fg)] transition-colors">Fonctionnalités</Link>
               <Link href="/tarifs" className="hover:text-[var(--fg)] transition-colors">Tarifs</Link>
               <Link href="/extensions" className="hover:text-[var(--fg)] transition-colors">VS Code</Link>
-              <Link href="/integrations" className="hover:text-[var(--fg)] transition-colors">Integrations</Link>
+              <Link href="/integrations" className="hover:text-[var(--fg)] transition-colors">Intégrations</Link>
               <Link href="/changelog" className="hover:text-[var(--fg)] transition-colors">Changelog</Link>
-              <Link href="/privacy" className="hover:text-[var(--fg)] transition-colors">{t.footer?.privacy ?? 'Confidentialite'}</Link>
+              <Link href="/privacy" className="hover:text-[var(--fg)] transition-colors">{t.footer?.privacy ?? 'Confidentialité'}</Link>
               <Link href="/terms" className="hover:text-[var(--fg)] transition-colors">CGU</Link>
             </div>
           </div>
@@ -523,6 +661,7 @@ export function LandingPage() {
    SUB-COMPONENTS
    ────────────────────────────────────────────────────────────── */
 
+/* ─── SPLIT LINE (letter-by-letter reveal) ─── */
 function SplitLine({ text, delayBase }: { text: string; delayBase: number }) {
   return (
     <span className="inline-block">
@@ -546,6 +685,59 @@ function SplitLine({ text, delayBase }: { text: string; delayBase: number }) {
   )
 }
 
+/* ─── TYPEWRITER LOOP (cycles through words) ─── */
+function TypewriterLoop({ words }: { words: string[] }) {
+  const [wordIndex, setWordIndex] = useState(0)
+  const [charIndex, setCharIndex] = useState(0)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [isWaiting, setIsWaiting] = useState(false)
+
+  useEffect(() => {
+    const currentWord = words[wordIndex]
+
+    if (isWaiting) {
+      const t = setTimeout(() => {
+        setIsWaiting(false)
+        setIsDeleting(true)
+      }, 2000)
+      return () => clearTimeout(t)
+    }
+
+    if (isDeleting) {
+      if (charIndex === 0) {
+        setIsDeleting(false)
+        setWordIndex((prev) => (prev + 1) % words.length)
+        return
+      }
+      const t = setTimeout(() => setCharIndex((p) => p - 1), 40)
+      return () => clearTimeout(t)
+    }
+
+    if (charIndex < currentWord.length) {
+      const t = setTimeout(() => setCharIndex((p) => p + 1), 60)
+      return () => clearTimeout(t)
+    }
+
+    // Word fully typed
+    const t = setTimeout(() => setIsWaiting(true), 1500)
+    return () => clearTimeout(t)
+  }, [charIndex, isDeleting, isWaiting, wordIndex, words])
+
+  const displayText = words[wordIndex].slice(0, charIndex)
+
+  return (
+    <span className="relative inline-block">
+      {displayText}
+      <motion.span
+        animate={{ opacity: [1, 0] }}
+        transition={{ duration: 0.6, repeat: Infinity, repeatType: 'reverse' }}
+        className="inline-block w-[3px] h-[0.8em] bg-current ml-0.5 align-middle rounded-full"
+      />
+    </span>
+  )
+}
+
+/* ─── STAT CARD ─── */
 function StatCard({
   value, display, suffix, label,
 }: {
@@ -569,6 +761,7 @@ function StatCard({
   )
 }
 
+/* ─── FAQ ITEM ─── */
 function FaqItem({ q, a, delay }: { q: string; a: string; delay: number }) {
   const [open, setOpen] = useState(false)
   return (
@@ -605,6 +798,61 @@ function FaqItem({ q, a, delay }: { q: string; a: string; delay: number }) {
   )
 }
 
+/* ─── SCROLL REVEAL (generic wrapper) ─── */
+function ScrollReveal({ children, delay = 0, direction = 'up' }: { children: React.ReactNode; delay?: number; direction?: 'up' | 'down' | 'left' | 'right' }) {
+  const dirMap = {
+    up: { y: 40, x: 0 },
+    down: { y: -40, x: 0 },
+    left: { x: 40, y: 0 },
+    right: { x: -40, y: 0 },
+  }
+  const offset = dirMap[direction]
+  return (
+    <motion.div
+      initial={{ opacity: 0, ...offset, filter: 'blur(4px)' }}
+      whileInView={{ opacity: 1, x: 0, y: 0, filter: 'blur(0px)' }}
+      viewport={{ once: true, margin: '-60px' }}
+      transition={{ delay, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+    >
+      {children}
+    </motion.div>
+  )
+}
+
+/* ─── TILT CARD (3D perspective on hover) ─── */
+function TiltCard({ children }: { children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const x = useMotionValue(0)
+  const y = useMotionValue(0)
+  const rotateX = useSpring(useTransform(y, [-0.5, 0.5], [4, -4]), { stiffness: 200, damping: 30 })
+  const rotateY = useSpring(useTransform(x, [-0.5, 0.5], [-4, 4]), { stiffness: 200, damping: 30 })
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    const rect = ref.current?.getBoundingClientRect()
+    if (!rect) return
+    x.set((e.clientX - rect.left) / rect.width - 0.5)
+    y.set((e.clientY - rect.top) / rect.height - 0.5)
+  }
+
+  const handleMouseLeave = () => {
+    x.set(0)
+    y.set(0)
+  }
+
+  return (
+    <motion.div
+      ref={ref}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={{ rotateX, rotateY, perspective: 800 }}
+      className="transform-gpu"
+    >
+      {children}
+    </motion.div>
+  )
+}
+
+/* ─── DECORATIVE FEATURE ─── */
 function DecorativeFeature({ kind }: { kind: string }) {
   if (kind === 'memory') {
     return (
@@ -679,43 +927,30 @@ function DecorativeFeature({ kind }: { kind: string }) {
   return null
 }
 
-/* ──────────────────────────────────────────────────────────────
-   ANIMATED CHAT DEMO WINDOW
-   Auto-cycling fake conversation showing Netral capabilities.
-   ────────────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════
+   ANIMATED CHAT DEMO WINDOW — IMPROVED
+   Auto-cycling fake conversation with word-by-word streaming.
+   ═══════════════════════════════════════════════════════════════ */
 
 function ChatDemoWindow() {
   const [step, setStep] = useState(0)
-  const [typed, setTyped] = useState('')
 
-  const userMsg = 'Compare Mistral et Gemini en 2026'
-
-  useEffect(() => {
-    if (step !== 0) return
-    let i = 0
-    const interval = setInterval(() => {
-      if (i <= userMsg.length) {
-        setTyped(userMsg.slice(0, i))
-        i++
-      } else {
-        clearInterval(interval)
-        setTimeout(() => setStep(1), 400)
-      }
-    }, 45)
-    return () => clearInterval(interval)
-  }, [step])
+  // Demo lines shown step by step
+  const responseLine1 = 'Mistral Medium excelle en raisonnement structuré et coût/token, tandis que Gemini 2.5 domine sur les contextes longs (1M tokens) et le multimodal natif.'
+  const responseLine2 = 'Pour du code en français, Mistral garde un léger avantage en 2026, surtout avec les tool-calls.'
+  const responseLine3 = 'Vous voulez que je détaille un aspect précis ?'
 
   useEffect(() => {
-    if (step < 1) return
     if (step >= 5) {
-      // restart loop
-      const t = setTimeout(() => { setStep(0); setTyped('') }, 7000)
+      const t = setTimeout(() => setStep(0), 6000)
       return () => clearTimeout(t)
     }
-    const delays = [800, 1200, 1500, 1800, 1500]
+    const delays = [800, 1400, 1800, 2200, 1600]
     const t = setTimeout(() => setStep((s) => s + 1), delays[step - 1] ?? 1500)
     return () => clearTimeout(t)
   }, [step])
+
+  const userMsg = 'Compare Mistral et Gemini en 2026'
 
   return (
     <div className="window-mock relative">
@@ -745,8 +980,7 @@ function ChatDemoWindow() {
             transition={{ duration: 0.3 }}
             className="max-w-[75%] px-4 py-3 rounded-2xl rounded-br-md bg-[var(--accent)] text-[var(--bg)] text-[14.5px] leading-relaxed shadow-sm"
           >
-            {typed}
-            {step === 0 && <span className="inline-block w-[2px] h-[14px] bg-current ml-0.5 animate-pulse align-middle" />}
+            <TypingText text={userMsg} speed={35} loop={step === 0} />
           </motion.div>
         </div>
 
@@ -784,7 +1018,7 @@ function ChatDemoWindow() {
               <span className="w-5 h-5 rounded-md bg-[var(--bg-soft)] border border-[var(--border)] flex items-center justify-center">
                 <Brain size={11} className="text-violet-500" />
               </span>
-              <span className="font-medium">Reflechi pendant 2.4s</span>
+              <span className="font-medium">Réfléchi pendant 2.4s</span>
             </motion.div>
           )}
         </AnimatePresence>
@@ -805,15 +1039,15 @@ function ChatDemoWindow() {
               </div>
               <div className="flex-1 text-[14.5px] leading-[1.7] text-[var(--fg-soft)] space-y-2.5 max-w-prose">
                 <DemoLine show={step >= 3} delay={0}>
-                  <strong className="text-[var(--fg)]">Mistral Medium</strong> excelle en raisonnement structure et cout/token, tandis que <strong className="text-[var(--fg)]">Gemini 2.5</strong> domine sur les contextes longs (1M tokens) et le multimodal natif.
+                  <strong className="text-[var(--fg)]">Mistral Medium</strong> excelle en raisonnement structuré et coût/token, tandis que <strong className="text-[var(--fg)]">Gemini 2.5</strong> domine sur les contextes longs (1M tokens) et le multimodal natif.
                 </DemoLine>
                 <DemoLine show={step >= 4} delay={0.3}>
-                  Pour du <strong className="text-[var(--fg)]">code en francais</strong>, Mistral garde un leger avantage en 2026, surtout avec les tool-calls
+                  Pour du <strong className="text-[var(--fg)]">code en français</strong>, Mistral garde un léger avantage en 2026, surtout avec les tool-calls
                   <a data-citation>1</a><a data-citation>2</a>.
                 </DemoLine>
                 {step >= 5 && (
                   <DemoLine show delay={0.3}>
-                    Vous voulez que je detaille un aspect precis ?
+                    Vous voulez que je détaille un aspect précis ?
                     <span className="stream-cursor" />
                   </DemoLine>
                 )}
@@ -846,6 +1080,45 @@ function ChatDemoWindow() {
         </AnimatePresence>
       </div>
     </div>
+  )
+}
+
+/* ─── TYPING TEXT (word-by-word reveal) ─── */
+function TypingText({ text, speed = 40, loop = false }: { text: string; speed?: number; loop?: boolean }) {
+  const [displayed, setDisplayed] = useState('')
+  const [index, setIndex] = useState(0)
+
+  useEffect(() => {
+    if (index < text.length) {
+      const t = setTimeout(() => {
+        setDisplayed(text.slice(0, index + 1))
+        setIndex(index + 1)
+      }, speed)
+      return () => clearTimeout(t)
+    }
+    // When loop is enabled (for the demo), restart after full typing
+    if (loop) return
+  }, [index, text, speed, loop])
+
+  // Reset on text change or loop
+  useEffect(() => {
+    if (loop) {
+      setDisplayed('')
+      setIndex(0)
+    }
+  }, [loop])
+
+  return (
+    <span>
+      {displayed}
+      {index < text.length && (
+        <motion.span
+          animate={{ opacity: [1, 0.2, 1] }}
+          transition={{ duration: 0.7, repeat: Infinity }}
+          className="inline-block w-[2px] h-[15px] bg-current ml-0.5 align-middle rounded-full"
+        />
+      )}
+    </span>
   )
 }
 
