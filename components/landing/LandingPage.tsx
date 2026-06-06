@@ -929,28 +929,75 @@ function DecorativeFeature({ kind }: { kind: string }) {
 
 /* ═══════════════════════════════════════════════════════════════
    ANIMATED CHAT DEMO WINDOW — IMPROVED
-   Auto-cycling fake conversation with word-by-word streaming.
+   Realistic coding assistant conversation with streaming,
+   web search, reasoning, code blocks and citations.
    ═══════════════════════════════════════════════════════════════ */
 
+const DEMO_CYCLES: {
+  user: string
+  searchLabel: string
+  reasoningTime: string
+  lines: { text: string; citations?: number[] }[]
+  code?: { lang: string; content: string }
+  sources: string[]
+}[] = [
+  {
+    user: 'Optimise ce composant React qui lag quand je tape dans l\'input',
+    searchLabel: 'Recherche React useMemo useCallback optimization...',
+    reasoningTime: '1.8s',
+    lines: [
+      { text: "Le lag vient probablement d'un re-render de toute la liste à chaque frappe. Voici les optimisations clés :", citations: [] },
+      { text: "• <strong>useMemo</strong> sur la liste filtrée pour éviter de la recalculer à chaque render", citations: [1] },
+      { text: "• <strong>useCallback</strong> sur le handler onChange pour stabiliser la référence", citations: [1] },
+      { text: "• Extraire l'input dans un composant séparé pour isoler son state", citations: [2] },
+    ],
+    code: {
+      lang: 'tsx',
+      content: '// 1. Extraire l\'input dans son propre composant\nconst SearchInput = React.memo(({ onSearch }) => {\n  const [value, setValue] = useState("");\n  const handleChange = (e) => {\n    setValue(e.target.value);\n    onSearch(e.target.value);\n  };\n  return <input value={value} onChange={handleChange} />;\n});\n\n// 2. Memoizer la liste filtrée dans le parent\nconst filtered = useMemo(() =>\n  items.filter(i => i.name.includes(query)),\n  [items, query]\n);',
+    },
+    sources: ['react.dev', 'kentcdodds.com'],
+  },
+  {
+    user: 'Génère une API route Next.js avec validation Zod',
+    searchLabel: 'Recherche Next.js App Router Zod validation...',
+    reasoningTime: '2.1s',
+    lines: [
+      { text: 'Dans l\'App Router Next.js, les <strong>Route Handlers</strong> remplacent les API Routes classiques. Voici le pattern avec Zod :', citations: [] },
+      { text: '• Définir un schéma Zod pour valider le body entrant', citations: [1] },
+      { text: '• Utiliser <code>safeParse</code> pour une validation sans throw', citations: [1] },
+      { text: '• Retourner les erreurs formatées avec le bon status code', citations: [2] },
+    ],
+    code: {
+      lang: 'typescript',
+      content: 'import { NextRequest, NextResponse } from "next/server";\nimport { z } from "zod";\n\nconst schema = z.object({\n  email: z.string().email(),\n  name: z.string().min(2).max(100),\n});\n\nexport async function POST(req: NextRequest) {\n  const body = await req.json();\n  const parsed = schema.safeParse(body);\n  if (!parsed.success) {\n    return NextResponse.json(\n      { error: parsed.error.flatten() },\n      { status: 400 }\n    );\n  }\n  // ...logique métier\n  return NextResponse.json({ ok: true });\n}',
+    },
+    sources: ['nextjs.org', 'zod.dev'],
+  },
+]
+
 function ChatDemoWindow() {
+  const [cycleIndex, setCycleIndex] = useState(0)
   const [step, setStep] = useState(0)
 
-  // Demo lines shown step by step
-  const responseLine1 = 'Mistral Medium excelle en raisonnement structuré et coût/token, tandis que Gemini 2.5 domine sur les contextes longs (1M tokens) et le multimodal natif.'
-  const responseLine2 = 'Pour du code en français, Mistral garde un léger avantage en 2026, surtout avec les tool-calls.'
-  const responseLine3 = 'Vous voulez que je détaille un aspect précis ?'
+  const cycle = DEMO_CYCLES[cycleIndex]
+  const maxSteps = 5 + (cycle.code ? 1 : 0)
+
+  // Reset when cycle changes
+  useEffect(() => {
+    setStep(0)
+  }, [cycleIndex])
 
   useEffect(() => {
-    if (step >= 5) {
-      const t = setTimeout(() => setStep(0), 6000)
+    if (step >= maxSteps) {
+      const t = setTimeout(() => {
+        setCycleIndex((prev) => (prev + 1) % DEMO_CYCLES.length)
+      }, 7000)
       return () => clearTimeout(t)
     }
-    const delays = [800, 1400, 1800, 2200, 1600]
-    const t = setTimeout(() => setStep((s) => s + 1), delays[step - 1] ?? 1500)
+    const delays = [700, 1200, 1400, 1800, 1600, 2000]
+    const t = setTimeout(() => setStep((s) => s + 1), delays[step] ?? 1500)
     return () => clearTimeout(t)
-  }, [step])
-
-  const userMsg = 'Compare Mistral et Gemini en 2026'
+  }, [step, maxSteps])
 
   return (
     <div className="window-mock relative">
@@ -971,23 +1018,29 @@ function ChatDemoWindow() {
       </div>
 
       {/* Chat content */}
-      <div className="p-6 md:p-10 space-y-5 min-h-[440px]">
+      <div className="p-6 md:p-10 space-y-4 min-h-[500px]">
         {/* User message */}
-        <div className="flex justify-end">
-          <motion.div
-            initial={{ opacity: 0, y: 8, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.3 }}
-            className="max-w-[75%] px-4 py-3 rounded-2xl rounded-br-md bg-[var(--accent)] text-[var(--bg)] text-[14.5px] leading-relaxed shadow-sm"
-          >
-            <TypingText text={userMsg} speed={35} loop={step === 0} />
-          </motion.div>
-        </div>
+        <AnimatePresence>
+          {step >= 1 && (
+            <motion.div
+              key="user-msg"
+              initial={{ opacity: 0, y: 8, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.3 }}
+              className="flex justify-end"
+            >
+              <div className="max-w-[80%] px-4 py-3 rounded-2xl rounded-br-md bg-[var(--accent)] text-[var(--bg)] text-[14px] leading-relaxed shadow-sm">
+                {cycle.user}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Status pill — searching */}
         <AnimatePresence>
-          {step >= 1 && step <= 2 && (
+          {step >= 2 && step <= 3 && (
             <motion.div
+              key="searching"
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
@@ -1000,16 +1053,17 @@ function ChatDemoWindow() {
                 </span>
               </div>
               <span className="streaming-shimmer font-medium">
-                {step === 1 ? 'Recherche sur le web...' : 'Lecture de 4 sources...'}
+                {step === 2 ? cycle.searchLabel : 'Analyse des résultats...'}
               </span>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Reasoning collapsed */}
+        {/* Reasoning */}
         <AnimatePresence>
           {step >= 3 && (
             <motion.div
+              key="reasoning"
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
@@ -1018,56 +1072,78 @@ function ChatDemoWindow() {
               <span className="w-5 h-5 rounded-md bg-[var(--bg-soft)] border border-[var(--border)] flex items-center justify-center">
                 <Brain size={11} className="text-violet-500" />
               </span>
-              <span className="font-medium">Réfléchi pendant 2.4s</span>
+              <span className="font-medium">Réfléchi pendant {cycle.reasoningTime}</span>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Assistant response */}
-        <AnimatePresence>
-          {step >= 3 && (
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
-              className="flex gap-3"
-            >
-              <div className="shrink-0 mt-0.5">
+        {/* Assistant response with streaming blocks */}
+        <div className="flex gap-3">
+          <AnimatePresence>
+            {step >= 4 && (
+              <motion.div
+                key="avatar"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3 }}
+                className="shrink-0 mt-0.5"
+              >
                 <div className="w-7 h-7 rounded-lg glass-card flex items-center justify-center">
                   <NetralLogo size={16} />
                 </div>
-              </div>
-              <div className="flex-1 text-[14.5px] leading-[1.7] text-[var(--fg-soft)] space-y-2.5 max-w-prose">
-                <DemoLine show={step >= 3} delay={0}>
-                  <strong className="text-[var(--fg)]">Mistral Medium</strong> excelle en raisonnement structuré et coût/token, tandis que <strong className="text-[var(--fg)]">Gemini 2.5</strong> domine sur les contextes longs (1M tokens) et le multimodal natif.
-                </DemoLine>
-                <DemoLine show={step >= 4} delay={0.3}>
-                  Pour du <strong className="text-[var(--fg)]">code en français</strong>, Mistral garde un léger avantage en 2026, surtout avec les tool-calls
-                  <a data-citation>1</a><a data-citation>2</a>.
-                </DemoLine>
-                {step >= 5 && (
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <AnimatePresence>
+            {step >= 4 && (
+              <motion.div
+                key="response"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+                className="flex-1 text-[14px] leading-[1.7] text-[var(--fg-soft)] space-y-2 max-w-prose"
+              >
+                {cycle.lines.map((line, i) => (
+                  <DemoLine key={i} show={step >= 4 + Math.floor(i / 2)} delay={i * 0.2}>
+                    <span dangerouslySetInnerHTML={{ __html: line.text }} />
+                    {line.citations?.map((n) => (
+                      <a key={n} data-citation>{n}</a>
+                    ))}
+                  </DemoLine>
+                ))}
+
+                {/* Code block */}
+                {step >= 5 && cycle.code && (
                   <DemoLine show delay={0.3}>
-                    Vous voulez que je détaille un aspect précis ?
-                    <span className="stream-cursor" />
+                    <StreamingCodeBlock code={cycle.code.content} lang={cycle.code.lang} />
                   </DemoLine>
                 )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
-        {/* Sources pills */}
+                {/* Typing indicator at end */}
+                {step >= 5 && (
+                  <span className="stream-cursor !mt-1" />
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Sources */}
         <AnimatePresence>
           {step >= 5 && (
             <motion.div
+              key="sources"
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.2 }}
+              transition={{ duration: 0.4, delay: 0.3 }}
               className="ml-10 pt-3 border-t border-[var(--border)]"
             >
-              <p className="text-[10px] font-medium text-[var(--fg-muted)] uppercase tracking-wider mb-2">Sources (2)</p>
+              <p className="text-[10px] font-medium text-[var(--fg-muted)] uppercase tracking-wider mb-2">
+                Sources ({cycle.sources.length})
+              </p>
               <div className="flex flex-wrap gap-1.5">
-                {['mistral.ai', 'deepmind.google'].map((d, i) => (
+                {cycle.sources.map((d, i) => (
                   <span key={d} className="flex items-center gap-1.5 px-2.5 py-1 rounded-md glass-card text-[11px] text-[var(--fg-muted)]">
                     <span className="w-3 h-3 rounded-sm bg-gradient-to-br from-violet-400 to-orange-400" />
                     {d}
@@ -1079,6 +1155,48 @@ function ChatDemoWindow() {
           )}
         </AnimatePresence>
       </div>
+    </div>
+  )
+}
+
+/* ─── STREAMING CODE BLOCK (char-by-char reveal) ─── */
+function StreamingCodeBlock({ code, lang }: { code: string; lang: string }) {
+  const [displayed, setDisplayed] = useState('')
+  const [done, setDone] = useState(false)
+
+  useEffect(() => {
+    setDisplayed('')
+    setDone(false)
+  }, [code])
+
+  useEffect(() => {
+    if (displayed.length < code.length) {
+      // Type character by character, with variable speed to simulate streaming
+      const speed = displayed.length < 50 ? 15 : 8
+      const t = setTimeout(() => {
+        setDisplayed(code.slice(0, displayed.length + 1))
+      }, speed)
+      return () => clearTimeout(t)
+    } else {
+      setDone(true)
+    }
+  }, [displayed, code])
+
+  return (
+    <div className="relative my-3 rounded-lg overflow-hidden border border-[var(--border)] bg-[#0d1117] group">
+      <div className="flex items-center justify-between px-3 py-1.5 bg-[var(--bg-soft)]/40 border-b border-[var(--border)]">
+        <span className="text-[10.5px] font-mono text-[var(--fg-muted)] uppercase tracking-wider">{lang}</span>
+      </div>
+      <pre className="px-3.5 py-3 text-[12.5px] font-mono text-[#c9d1d9] leading-[1.7] overflow-x-auto max-h-[200px]">
+        <code>{displayed}</code>
+        {!done && (
+          <motion.span
+            animate={{ opacity: [1, 0.2, 1] }}
+            transition={{ duration: 0.7, repeat: Infinity }}
+            className="inline-block w-[8px] h-[14px] bg-[var(--accent)] ml-0.5 align-middle rounded-sm"
+          />
+        )}
+      </pre>
     </div>
   )
 }
