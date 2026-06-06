@@ -8,6 +8,7 @@ import { Markdown } from './Markdown'
 import { ThinkingIndicator } from './ThinkingIndicator'
 import { ReasoningBlock, splitReasoning } from './ReasoningBlock'
 import { NetralLogo } from '@/components/ui/NetralLogo'
+import { GeneratedImage } from './GeneratedImage'
 import type { SearchStatus } from './ChatInterface'
 
 interface MessageProps {
@@ -19,6 +20,36 @@ interface MessageProps {
   onEdit?: (newContent: string) => void
   userInitial?: string
   searchStatus?: SearchStatus
+}
+
+type ContentSegment = 
+  | { type: 'text'; content: string }
+  | { type: 'image'; imageId: string }
+
+function parseImagesWithContent(content: string): { segments: ContentSegment[]; cleanText: string } {
+  const imageRegex = /\[IMAGE:([a-zA-Z0-9_-]+)\]/g
+  const segments: ContentSegment[] = []
+  let lastIndex = 0
+  let match
+  const textParts: string[] = []
+
+  while ((match = imageRegex.exec(content)) !== null) {
+    const before = content.slice(lastIndex, match.index)
+    if (before.trim()) {
+      segments.push({ type: 'text', content: before })
+      textParts.push(before)
+    }
+    segments.push({ type: 'image', imageId: match[1] })
+    lastIndex = match.index + match[0].length
+  }
+
+  const after = content.slice(lastIndex)
+  if (after.trim()) {
+    segments.push({ type: 'text', content: after })
+    textParts.push(after)
+  }
+
+  return { segments, cleanText: textParts.join('\n').trim() }
 }
 
 function extractSources(content: string): { title: string; url: string; domain: string }[] {
@@ -97,7 +128,7 @@ export const Message = memo(function Message({
   }
 
   // ━━ ASSISTANT ━━
-  // Parse reasoning + answer split (for <think>/<reasoning> tagged streams)
+  // Parse reasoning + answer split (for thinking/<reasoning> tagged streams)
   const { reasoning, answer, isReasoningOpen } = useMemo(
     () => splitReasoning(content),
     [content]
@@ -112,6 +143,14 @@ export const Message = memo(function Message({
     () => (sources.length > 0 ? contentWithoutSources(answer) : answer),
     [answer, sources]
   )
+
+  // Parse image markers from content
+  const { segments, cleanText } = useMemo(
+    () => parseImagesWithContent(displayContent),
+    [displayContent]
+  )
+
+  const hasImages = segments.some(s => s.type === 'image')
 
   return (
     <div className="flex gap-3.5 mb-9 group">
@@ -139,7 +178,16 @@ export const Message = memo(function Message({
             {/* Answer */}
             {(answer.length > 0 || !isReasoningOpen) && (
               <div className="prose-chat">
-                <Markdown content={displayContent} />
+                {hasImages ? (
+                  segments.map((seg, i) => {
+                    if (seg.type === 'image') {
+                      return <GeneratedImage key={`img-${i}`} imageId={seg.imageId} />
+                    }
+                    return <Markdown key={`txt-${i}`} content={seg.content} />
+                  })
+                ) : (
+                  <Markdown content={cleanText || displayContent} />
+                )}
                 {isStreaming && answer.length > 0 && <span className="stream-cursor" />}
               </div>
             )}
@@ -210,27 +258,27 @@ export const Message = memo(function Message({
                       </motion.span>
                     )}
                   </AnimatePresence>
-                  {copied ? 'Copie' : 'Copier'}
+                  {copied ? 'Copié' : 'Copier'}
                 </ActionBtn>
 
                 {isLast && onRegenerate && (
                   <ActionBtn onClick={onRegenerate}>
                     <RotateCw size={11} />
-                    Regenerer
+                    Régénérer
                   </ActionBtn>
                 )}
 
                 <ActionBtn
                   onClick={() => setFeedback(feedback === 'up' ? null : 'up')}
                   active={feedback === 'up'}
-                  ariaLabel="Bonne reponse"
+                  ariaLabel="Bonne réponse"
                 >
                   <ThumbsUp size={11} />
                 </ActionBtn>
                 <ActionBtn
                   onClick={() => setFeedback(feedback === 'down' ? null : 'down')}
                   active={feedback === 'down'}
-                  ariaLabel="Mauvaise reponse"
+                  ariaLabel="Mauvaise réponse"
                 >
                   <ThumbsDown size={11} />
                 </ActionBtn>

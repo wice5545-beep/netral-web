@@ -87,16 +87,16 @@ const TESTIMONIALS = [
 ]
 
 const FAQ = [
-  { q: 'En quoi Netral diffère de ChatGPT ?', a: "Netral combine plusieurs modèles (Mistral, Gemini, Kimi K2) avec une mémoire persistante et une recherche web temps réel native. Pas de plugins à activer — tout est intégré." },
+  { q: 'En quoi Netral diffère de ChatGPT ?', a: "Netral combine plusieurs modèles (Mistral, Gemini) avec une mémoire persistante et une recherche web temps réel native. Pas de plugins à activer — tout est intégré." },
   { q: 'Mes données sont-elles utilisées pour entraîner des modèles ?', a: "Jamais. Vos messages restent strictement privés. Aucun fournisseur tiers n'a accès aux conversations pour entraîner ses modèles." },
   { q: 'Puis-je essayer gratuitement ?', a: "Oui. Le plan Free vous donne accès à NTRL 1.3 (1 message/jour). Les plans payants commencent à 5€/mois." },
   { q: "L'extension VS Code est-elle disponible ?", a: "Oui, gratuite et open-source. Elle se synchronise avec votre compte Netral via un token API généré depuis les paramètres." },
 ]
 
 const MODELS_LOGOS = [
-  { name: 'Mistral', tag: 'NTRL 1.3' },
+  { name: 'Mistral Large', tag: 'NTRL 2.0' },
   { name: 'Gemini 2.5', tag: 'NTRL 1.2' },
-  { name: 'Kimi K2', tag: 'NTRL 2.0' },
+  { name: 'Mistral', tag: 'NTRL 1.3' },
   { name: 'Web Search', tag: 'Live' },
   { name: 'Gmail', tag: 'API' },
   { name: 'Calendar', tag: 'API' },
@@ -118,7 +118,7 @@ const FLOATING_ICONS = [
 ]
 
 /* ──────────────────────────────────────────────────────────────
-   STARS DATA (generated once)
+   STARS DATA
    ────────────────────────────────────────────────────────────── */
 function generateStars(count: number) {
   const stars: { x: number; y: number; size: number; opacity: number; delay: number; duration: number }[] = []
@@ -134,11 +134,21 @@ function generateStars(count: number) {
   }
   return stars
 }
-const STARFIELD = generateStars(80)
+const STARFIELD = generateStars(120)
 
 /* ──────────────────────────────────────────────────────────────
-   COMPONENT
+   ORB DATA — animated background orbs
    ────────────────────────────────────────────────────────────── */
+const ORBS = [
+  { color: '#7c3aed', size: 600, x: '20%', y: '30%', duration: 20, delay: 0, blur: 120 },
+  { color: '#ec4899', size: 500, x: '80%', y: '60%', duration: 25, delay: -5, blur: 100 },
+  { color: '#3b82f6', size: 450, x: '50%', y: '20%', duration: 22, delay: -10, blur: 110 },
+  { color: '#f59e0b', size: 350, x: '10%', y: '80%', duration: 18, delay: -15, blur: 90 },
+]
+
+/* ═══════════════════════════════════════════════════════════════
+   COMPONENT
+   ═══════════════════════════════════════════════════════════════ */
 
 export function LandingPage() {
   const { t } = useI18n()
@@ -150,32 +160,64 @@ export function LandingPage() {
   const heroOpacity = useTransform(scrollYProgress, [0, 0.6], [1, 0])
   const heroScale = useTransform(scrollYProgress, [0, 0.6], [1, 0.92])
 
-  // Mouse position for spotlight effect
+  // Mouse position for spotlight
   const mouseX = useMotionValue(0.5)
   const mouseY = useMotionValue(0.5)
   const spotX = useSpring(mouseX, { stiffness: 50, damping: 30 })
   const spotY = useSpring(mouseY, { stiffness: 50, damping: 30 })
 
+  // Custom cursor
+  const cursorX = useSpring(mouseX, { stiffness: 150, damping: 20 })
+  const cursorY = useSpring(mouseY, { stiffness: 150, damping: 20 })
+  const [isHovering, setIsHovering] = useState(false)
+  const [cursorVisible, setCursorVisible] = useState(false)
+
   const handleMouseMove = (e: React.MouseEvent) => {
     const rect = e.currentTarget.getBoundingClientRect()
     mouseX.set((e.clientX - rect.left) / rect.width)
     mouseY.set((e.clientY - rect.top) / rect.height)
+    if (!cursorVisible) setCursorVisible(true)
   }
 
   const statsLabels = [t.stats?.latency ?? 'Latence', t.stats?.uptime ?? 'Uptime', t.stats?.users ?? 'Utilisateurs']
 
-  // Scroll progress for the thin bar at top
   const globalScroll = useScroll()
   const scrollProgressBar = useTransform(globalScroll.scrollYProgress, [0, 0.8], ['0%', '100%'])
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] text-[var(--fg)] overflow-x-hidden noise-soft">
+    <div
+      className="min-h-screen bg-[var(--bg)] text-[var(--fg)] overflow-x-hidden noise-soft"
+      onMouseMove={handleMouseMove}
+    >
+      {/* ─── CUSTOM CURSOR (desktop only) ─── */}
+      <motion.div
+        className="fixed pointer-events-none z-[9999] hidden md:block"
+        style={{
+          left: useMotionTemplate`calc(${cursorX.get() * 100}% + 0px)`,
+          top: useMotionTemplate`calc(${cursorY.get() * 100}% + 0px)`,
+          x: '-50%',
+          y: '-50%',
+        }}
+        animate={{
+          scale: isHovering ? 2.5 : 1,
+          opacity: cursorVisible ? 1 : 0,
+          borderColor: isHovering ? 'rgba(124,58,237,0.5)' : 'rgba(124,58,237,0.2)',
+        }}
+        transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+      >
+        <div
+          className={`rounded-full border transition-all duration-300 ${isHovering ? 'w-6 h-6 border-2 bg-violet-500/10' : 'w-8 h-8 border'}`}
+          style={{ borderColor: 'inherit' }}
+        />
+      </motion.div>
+
       {/* ─── SCROLL PROGRESS BAR ─── */}
       <motion.div
-        className="fixed top-0 left-0 h-[2px] z-[60] pointer-events-none"
+        className="fixed top-0 left-0 h-[2.5px] z-[60] pointer-events-none rounded-r-full"
         style={{
           width: scrollProgressBar,
           background: 'linear-gradient(90deg, #7c3aed, #ec4899, #f97316)',
+          boxShadow: '0 0 12px rgba(124,58,237,0.4)',
         }}
       />
 
@@ -184,12 +226,41 @@ export function LandingPage() {
       {/* ═══════════════════ HERO ═══════════════════ */}
       <section
         ref={heroRef}
-        onMouseMove={handleMouseMove}
-        className="relative pt-32 md:pt-44 pb-20 overflow-hidden"
+        className="relative pt-32 md:pt-44 pb-24 overflow-hidden"
       >
-        <AuroraBackground intensity="normal" />
+        <AuroraBackground intensity="strong" />
 
-        {/* ─── STARFIELD PARTICLES ─── */}
+        {/* ─── ANIMATED ORBS ─── */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {ORBS.map((orb, i) => (
+            <motion.div
+              key={i}
+              className="absolute rounded-full"
+              style={{
+                left: orb.x,
+                top: orb.y,
+                width: orb.size,
+                height: orb.size,
+                background: `radial-gradient(circle, ${orb.color} 0%, transparent 70%)`,
+                filter: `blur(${orb.blur}px)`,
+                opacity: 0.15,
+              }}
+              animate={{
+                x: [0, 40, -30, 20, 0],
+                y: [0, -30, 20, -15, 0],
+                scale: [1, 1.1, 0.9, 1.05, 1],
+              }}
+              transition={{
+                duration: orb.duration,
+                delay: orb.delay,
+                repeat: Infinity,
+                ease: 'easeInOut',
+              }}
+            />
+          ))}
+        </div>
+
+        {/* ─── STARFIELD ─── */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           {STARFIELD.map((star, i) => (
             <motion.div
@@ -203,8 +274,8 @@ export function LandingPage() {
                 opacity: star.opacity,
               }}
               animate={{
-                opacity: [star.opacity, star.opacity * 2.5, star.opacity],
-                scale: [1, 1.8, 1],
+                opacity: [star.opacity, star.opacity * 3, star.opacity],
+                scale: [1, 2, 1],
               }}
               transition={{
                 duration: star.duration,
@@ -216,7 +287,7 @@ export function LandingPage() {
           ))}
         </div>
 
-        {/* ─── FLOATING ICONS (parallax) ─── */}
+        {/* ─── FLOATING ICONS ─── */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           {FLOATING_ICONS.map((item, i) => {
             const Icon = item.icon
@@ -226,9 +297,10 @@ export function LandingPage() {
                 className={`absolute ${item.color}`}
                 style={{ left: item.x, top: item.y }}
                 animate={{
-                  y: [0, -20, 0, 15, 0],
-                  x: [0, 10, -5, -10, 0],
-                  rotate: [0, 5, -3, 8, 0],
+                  y: [0, -25, 0, 20, 0],
+                  x: [0, 12, -8, -12, 0],
+                  rotate: [0, 8, -5, 10, 0],
+                  opacity: [0.3, 0.6, 0.3, 0.5, 0.3],
                 }}
                 transition={{
                   duration: item.duration,
@@ -243,11 +315,20 @@ export function LandingPage() {
           })}
         </div>
 
-        {/* ─── SPOTLIGHT FOLLOW ─── */}
+        {/* ─── SPOTLIGHT ─── */}
         <motion.div
-          className="absolute inset-0 pointer-events-none opacity-[0.07] dark:opacity-[0.12]"
+          className="absolute inset-0 pointer-events-none opacity-[0.06] dark:opacity-[0.1]"
           style={{
-            background: useMotionTemplate`radial-gradient(600px circle at ${spotX.get() * 100}% ${spotY.get() * 100}%, rgba(124,58,237,0.5), transparent 60%)`,
+            background: useMotionTemplate`radial-gradient(700px circle at ${spotX.get() * 100}% ${spotY.get() * 100}%, rgba(124,58,237,0.6), rgba(236,72,153,0.2), transparent 60%)`,
+          }}
+        />
+
+        {/* ─── GRID MESH PATTERN ─── */}
+        <div
+          className="absolute inset-0 pointer-events-none opacity-[0.03] dark:opacity-[0.05]"
+          style={{
+            backgroundImage: 'radial-gradient(circle, var(--border) 1px, transparent 1px)',
+            backgroundSize: '48px 48px',
           }}
         />
 
@@ -255,23 +336,23 @@ export function LandingPage() {
           style={{ y: heroY, opacity: heroOpacity, scale: heroScale }}
           className="max-w-4xl mx-auto px-6 text-center relative"
         >
-          {/* Live status badge — pulse enhanced */}
+          {/* Live badge */}
           <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full glass-card text-[12px] text-[var(--fg-muted)] mb-7 group cursor-default"
+            initial={{ opacity: 0, y: 20, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+            className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full glass-card text-[12.5px] text-[var(--fg-muted)] mb-8 group cursor-default hover-lift"
           >
-            <span className="relative flex h-1.5 w-1.5">
+            <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-60 animate-ping" />
-              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
             </span>
-            <span className="tracking-wide">{t.hero?.badge ?? 'Maintenant disponible — NTRL 2.0'}</span>
-            <ArrowRight size={11} className="text-[var(--fg-subtle)] group-hover:translate-x-0.5 transition-transform" />
+            <span className="tracking-wide font-medium">{t.hero?.badge ?? 'NTRL 2.0 — Disponible maintenant'}</span>
+            <ArrowRight size={11} className="text-[var(--fg-subtle)] group-hover:translate-x-0.5 transition-transform opacity-60 group-hover:opacity-100" />
           </motion.div>
 
-          {/* Title — split letter-by-letter + typewriter loop */}
-          <h1 className="text-[clamp(3rem,9.5vw,6.5rem)] font-bold tracking-[-0.045em] leading-[0.98] mb-7">
+          {/* Title */}
+          <h1 className="text-[clamp(3.5rem,10vw,7rem)] font-bold tracking-[-0.05em] leading-[0.95] mb-8">
             <SplitLine text={t.hero?.title1 ?? "L'IA qui"} delayBase={0.1} />
             {' '}
             <span className="hero-gradient-text inline-block">
@@ -285,54 +366,58 @@ export function LandingPage() {
 
           {/* Subtitle */}
           <motion.p
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.55, duration: 0.6 }}
-            className="text-[18px] md:text-[20px] text-[var(--fg-muted)] max-w-xl mx-auto mb-10 leading-[1.55]"
+            transition={{ delay: 0.6, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+            className="text-[19px] md:text-[22px] text-[var(--fg-muted)] max-w-xl mx-auto mb-12 leading-[1.6]"
           >
             {t.hero?.subtitle ?? "Un assistant qui consulte le web en temps réel, retient ce qui compte et raisonne avec vous."}
           </motion.p>
 
-          {/* HERO INPUT — MEGA glow on focus */}
+          {/* HERO INPUT */}
           <motion.div
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7, duration: 0.6 }}
-            className="w-full max-w-2xl mx-auto mb-7"
+            transition={{ delay: 0.8, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+            className="w-full max-w-2xl mx-auto mb-8"
           >
-            <div className="mega-input glass-card overflow-hidden">
-              <div className="flex items-center gap-2 px-2 py-2 relative">
+            <div
+              className="mega-input glass-card overflow-hidden glow-accent"
+              onMouseEnter={() => setIsHovering(true)}
+              onMouseLeave={() => setIsHovering(false)}
+            >
+              <div className="flex items-center gap-2 px-2.5 py-2.5 relative">
                 <button
                   onClick={() => landingInput.trim() && setShowLoginPopup(true)}
-                  className="shrink-0 h-9 w-9 rounded-xl flex items-center justify-center text-[var(--fg-muted)] hover:text-[var(--fg)] hover:bg-[var(--accent-soft)] transition-all"
+                  className="shrink-0 h-10 w-10 rounded-xl flex items-center justify-center text-[var(--fg-muted)] hover:text-[var(--fg)] hover:bg-[var(--accent-soft)] transition-all"
                   aria-label="Ajouter"
                 >
-                  <Plus size={16} />
+                  <Plus size={17} />
                 </button>
                 <input
                   value={landingInput}
                   onChange={(e) => setLandingInput(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter' && landingInput.trim()) setShowLoginPopup(true) }}
                   placeholder={t.hero?.cta ?? "Demandez n'importe quoi à Netral..."}
-                  className="flex-1 h-11 bg-transparent text-[15.5px] text-[var(--fg)] placeholder:text-[var(--fg-subtle)] focus:outline-none"
+                  className="flex-1 h-12 bg-transparent text-[16px] text-[var(--fg)] placeholder:text-[var(--fg-subtle)] focus:outline-none"
                 />
                 <button
                   onClick={() => landingInput.trim() && setShowLoginPopup(true)}
-                  className="shrink-0 h-9 w-9 rounded-xl bg-[var(--accent)] text-[var(--bg)] flex items-center justify-center hover:scale-[1.06] active:scale-95 transition-all shadow-sm"
+                  className="shrink-0 h-10 w-10 rounded-xl bg-[var(--accent)] text-[var(--bg)] flex items-center justify-center hover:scale-[1.08] active:scale-95 transition-all shadow-lg hover:shadow-xl"
                   aria-label="Envoyer"
                 >
-                  <ArrowUp size={15} strokeWidth={2.5} />
+                  <ArrowUp size={16} strokeWidth={2.5} />
                 </button>
               </div>
-              <div className="flex items-center justify-between border-t border-[var(--glass-border)] px-3 py-2 text-[11px] text-[var(--fg-subtle)]">
-                <div className="flex items-center gap-1.5">
+              <div className="flex items-center justify-between border-t border-[var(--glass-border)] px-4 py-2.5 text-[11.5px] text-[var(--fg-subtle)]">
+                <div className="flex items-center gap-2">
                   <Cpu size={10} />
-                  <span>NTRL 1.3</span>
+                  <span className="font-medium">NTRL 1.3</span>
                   <span className="opacity-40">·</span>
                   <Globe size={10} />
                   <span>Web</span>
                 </div>
-                <span className="hidden sm:flex items-center gap-1">
+                <span className="hidden sm:flex items-center gap-1.5">
                   <span className="kbd text-[9px]">↵</span>
                   pour envoyer
                 </span>
@@ -340,84 +425,113 @@ export function LandingPage() {
             </div>
           </motion.div>
 
-          {/* Social proof avatars + stars */}
+          {/* AI Thinking Preview */}
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.0, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+            className="w-full max-w-xl mx-auto mb-8"
+          >
+            <AIThinkingPreview />
+          </motion.div>
+
+          {/* Social proof */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 1, duration: 0.5 }}
-            className="flex items-center justify-center gap-3 flex-wrap"
+            transition={{ delay: 1.1, duration: 0.6 }}
+            className="flex items-center justify-center gap-4 flex-wrap"
           >
             <div className="flex -space-x-2">
               {['M', 'T', 'S', 'A', 'L'].map((l, i) => (
-                <div
+                <motion.div
                   key={i}
-                  className="w-7 h-7 rounded-full border-2 border-[var(--bg)] flex items-center justify-center text-[10px] font-bold text-white"
+                  initial={{ opacity: 0, scale: 0 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 1.2 + i * 0.08, type: 'spring', stiffness: 300 }}
+                  className="w-8 h-8 rounded-full border-2 border-[var(--bg)] flex items-center justify-center text-[10px] font-bold text-white"
                   style={{
                     background: `linear-gradient(135deg, hsl(${260 + i * 15}, 80%, 60%), hsl(${20 + i * 10}, 85%, 55%))`,
                     zIndex: 5 - i,
                   }}
                 >
                   {l}
-                </div>
+                </motion.div>
               ))}
             </div>
-            <div className="flex items-center gap-1.5 text-[12px] text-[var(--fg-muted)]">
+            <div className="flex items-center gap-1.5 text-[12.5px] text-[var(--fg-muted)]">
               <div className="flex gap-0.5">
-                {[...Array(5)].map((_, i) => <Star key={i} size={10} className="fill-amber-400 text-amber-400" />)}
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} size={10} className="fill-amber-400 text-amber-400" />
+                ))}
               </div>
-              <span className="font-medium">4.9/5</span>
+              <span className="font-semibold">4.9/5</span>
               <span className="text-[var(--fg-subtle)]">— +50 000 utilisateurs</span>
             </div>
           </motion.div>
         </motion.div>
 
-        {/* Scroll indicator arrow */}
+        {/* Scroll indicator */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 1.6, duration: 0.6 }}
-          className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1"
+          transition={{ delay: 1.8, duration: 0.6 }}
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
         >
           <motion.span
-            animate={{ y: [0, 6, 0] }}
-            transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+            animate={{ y: [0, 8, 0], opacity: [0.4, 1, 0.4] }}
+            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
             className="text-[var(--fg-subtle)]"
           >
-            <ChevronDown size={16} strokeWidth={1.5} />
+            <ChevronDown size={18} strokeWidth={1.5} />
           </motion.span>
+          <span className="text-[10px] text-[var(--fg-subtle)] uppercase tracking-[0.2em] font-medium">Défiler</span>
         </motion.div>
 
         {/* Login popup */}
         <AnimatePresence>
           {showLoginPopup && (
             <>
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowLoginPopup(false)} className="fixed inset-0 bg-black/60 backdrop-blur-md z-50" />
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} onClick={() => setShowLoginPopup(false)} className="fixed inset-0 bg-black/60 backdrop-blur-md z-50" />
               <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
                 <motion.div
-                  initial={{ opacity: 0, scale: 0.92, y: 20 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.92, y: 20 }}
-                  transition={{ type: 'spring', damping: 22, stiffness: 280 }}
-                  className="glass-card p-7 w-full max-w-sm pointer-events-auto shadow-colored relative overflow-hidden"
+                  initial={{ opacity: 0, scale: 0.9, y: 30, filter: 'blur(8px)' }}
+                  animate={{ opacity: 1, scale: 1, y: 0, filter: 'blur(0px)' }}
+                  exit={{ opacity: 0, scale: 0.9, y: 30, filter: 'blur(8px)' }}
+                  transition={{ type: 'spring', damping: 22, stiffness: 300 }}
+                  className="glass-card p-8 w-full max-w-sm pointer-events-auto shadow-colored relative overflow-hidden"
                 >
                   <div className="beam-scan" style={{ ['--beam-delay' as string]: '0.3s' }} />
-                  <div className="flex justify-center mb-4 relative">
-                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg,#7c3aed,#f97316)' }}>
-                      <NetralLogo size={28} />
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.1, type: 'spring', stiffness: 300 }}
+                    className="flex justify-center mb-5 relative"
+                  >
+                    <div className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg,#7c3aed,#f97316)' }}>
+                      <NetralLogo size={32} />
                     </div>
-                  </div>
-                  <h3 className="text-[18px] font-bold mb-1.5 text-center tracking-[-0.01em]">Connectez-vous pour continuer</h3>
-                  <p className="text-[13px] text-[var(--fg-muted)] text-center mb-6">Vos messages sont privés et chiffrés.</p>
-                  <div className="space-y-2.5">
+                  </motion.div>
+                  <h3 className="text-[20px] font-bold mb-2 text-center tracking-[-0.02em]">Connectez-vous pour continuer</h3>
+                  <p className="text-[13.5px] text-[var(--fg-muted)] text-center mb-7">Vos messages sont privés et chiffrés.</p>
+                  <div className="space-y-3">
                     <Link href={`/login?q=${encodeURIComponent(landingInput)}`} className="block">
-                      <button className="w-full h-11 rounded-xl bg-[var(--accent)] text-[var(--bg)] text-[14px] font-semibold hover:bg-[var(--accent-hover)] transition-all hover:shadow-lg active:scale-[0.97]">
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.97 }}
+                        className="w-full h-12 rounded-xl bg-[var(--accent)] text-[var(--bg)] text-[14px] font-semibold transition-all shadow-md hover:shadow-lg"
+                      >
                         Se connecter
-                      </button>
+                      </motion.button>
                     </Link>
                     <Link href={`/register?q=${encodeURIComponent(landingInput)}`} className="block">
-                      <button className="w-full h-11 rounded-xl border border-[var(--border)] text-[14px] font-medium hover:bg-[var(--bg-soft)] hover:border-[var(--border-strong)] transition-all">
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.97 }}
+                        className="w-full h-12 rounded-xl border border-[var(--border)] bg-[var(--bg-soft)]/50 text-[14px] font-medium hover:bg-[var(--bg-soft)] hover:border-[var(--border-strong)] transition-all"
+                      >
                         Créer un compte
-                      </button>
+                      </motion.button>
                     </Link>
                   </div>
                 </motion.div>
@@ -427,40 +541,51 @@ export function LandingPage() {
         </AnimatePresence>
       </section>
 
-      {/* ═══════════════════ MARQUEE — MODELS / INTEGRATIONS ═══════════════════ */}
-      <section className="py-10 border-y border-[var(--border)] bg-[var(--bg-soft)]/40">
-        <p className="text-center text-[11px] uppercase tracking-[0.18em] text-[var(--fg-subtle)] mb-5 font-medium">
+      {/* ═══════════════════ MARQUEE ═══════════════════ */}
+      <section className="py-12 border-y border-[var(--border)] bg-[var(--bg-soft)]/30 relative overflow-hidden">
+        <p className="text-center text-[11px] uppercase tracking-[0.2em] text-[var(--fg-subtle)] mb-6 font-semibold">
           Propulsé par les meilleurs modèles · Intégré à vos outils
         </p>
         <Marquee speed={45}>
           {MODELS_LOGOS.map((m, i) => (
-            <div
+            <motion.div
               key={`${m.name}-${i}`}
-              className="flex items-center gap-2.5 px-5 py-2 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] text-[13px] text-[var(--fg-muted)] hover:text-[var(--fg)] hover:border-[var(--border-strong)] transition-colors"
+              whileHover={{ scale: 1.05, y: -2 }}
+              className="flex items-center gap-2.5 px-5 py-2.5 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] text-[13px] text-[var(--fg-muted)] hover:text-[var(--fg)] hover:border-[var(--border-strong)] hover:shadow-sm transition-all cursor-default"
             >
               <span className="font-semibold text-[var(--fg)]">{m.name}</span>
-              <span className="text-[10px] font-mono text-[var(--fg-subtle)] uppercase tracking-wider">{m.tag}</span>
-            </div>
+              <span className="text-[10px] font-mono text-[var(--fg-subtle)] uppercase tracking-wider bg-[var(--accent-soft)] px-1.5 py-0.5 rounded">{m.tag}</span>
+            </motion.div>
           ))}
         </Marquee>
       </section>
 
-      {/* ═══════════════════ DEMO — animated chat mock (IMPROVED) ═══════════════════ */}
-      <section className="max-w-4xl mx-auto px-6 py-24 md:py-32">
-        <ScrollReveal>
+      {/* ═══════════════════ DEMO CHAT WINDOW ═══════════════════ */}
+      <section className="max-w-4xl mx-auto px-6 py-28 md:py-36">
+        <ScrollReveal direction="up">
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[var(--border)] bg-[var(--bg-soft)] text-[11px] font-medium text-[var(--fg-muted)] mb-5 uppercase tracking-wider">
+              <Terminal size={12} className="text-violet-500" />
+              Démo interactive
+            </div>
+            <h2 className="text-[28px] md:text-[38px] font-bold tracking-[-0.03em] mb-3">Voyez Netral en action</h2>
+            <p className="text-[15px] text-[var(--fg-muted)] max-w-md mx-auto">Recherche web, code, analyse — tout en un seul assistant.</p>
+          </div>
           <ChatDemoWindow />
         </ScrollReveal>
       </section>
 
       {/* ═══════════════════ STATS ═══════════════════ */}
-      <section className="border-y border-[var(--border)] py-20 relative overflow-hidden">
-        <div className="absolute inset-0 -z-10 opacity-30">
-          <div
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] h-[60%] rounded-full"
-            style={{ background: 'radial-gradient(circle, rgba(124,58,237,0.1), transparent 70%)' }}
+      <section className="border-y border-[var(--border)] py-24 relative overflow-hidden">
+        <div className="absolute inset-0 -z-10">
+          <motion.div
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70%] h-[70%] rounded-full"
+            style={{ background: 'radial-gradient(circle, rgba(124,58,237,0.08), rgba(236,72,153,0.04), transparent 70%)' }}
+            animate={{ scale: [1, 1.1, 1], rotate: [0, 5, 0] }}
+            transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
           />
         </div>
-        <div className="max-w-4xl mx-auto px-6 grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <div className="max-w-4xl mx-auto px-6 grid grid-cols-1 sm:grid-cols-3 gap-8">
           <StatCard display="< 200ms" label={statsLabels[0]} />
           <StatCard display="99.9%" label={statsLabels[1]} />
           <StatCard value={50000} suffix="+" label={statsLabels[2]} />
@@ -468,15 +593,15 @@ export function LandingPage() {
       </section>
 
       {/* ═══════════════════ BENTO FEATURES ═══════════════════ */}
-      <section className="py-28">
+      <section className="py-32">
         <div className="max-w-6xl mx-auto px-6">
-          <ScrollReveal>
+          <ScrollReveal direction="up">
             <div className="text-center mb-16">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[var(--border)] bg-[var(--bg-soft)] text-[11px] font-medium text-[var(--fg-muted)] mb-5 uppercase tracking-wider">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[var(--border)] bg-[var(--bg-soft)] text-[11px] font-medium text-[var(--fg-muted)] mb-5 uppercase tracking-wider">
                 <Sparkles size={11} className="text-violet-500" />
                 Fonctionnalités
               </div>
-              <h2 className="text-[36px] md:text-[52px] font-bold tracking-[-0.04em] mb-4 leading-[1.05]">
+              <h2 className="text-[40px] md:text-[56px] font-bold tracking-[-0.045em] mb-5 leading-[1.05]">
                 {t.features?.title ?? "Tout ce qu'il vous faut."}
                 <br />
                 <span className="text-[var(--fg-muted)]">{t.features?.subtitle ?? 'Rien de plus.'}</span>
@@ -491,20 +616,16 @@ export function LandingPage() {
                 <TiltCard key={i}>
                   <ScrollReveal delay={i * 0.06} direction="up">
                     <div
-                      className={`magnetic-card group relative p-6 rounded-2xl border border-[var(--border)] bg-gradient-to-br ${f.accent} bg-[var(--bg-elevated)] overflow-hidden ${f.span === 'lg' ? 'md:col-span-2' : ''}`}
-                      style={{ minHeight: 220 }}
+                      className={`magnetic-card group relative p-7 rounded-2xl border border-[var(--border)] bg-gradient-to-br ${f.accent} bg-[var(--bg-elevated)] overflow-hidden ${f.span === 'lg' ? 'md:col-span-2' : ''}`}
+                      style={{ minHeight: 240 }}
                     >
                       <div className="beam-scan" style={{ ['--beam-delay' as string]: `${i * 0.7}s` }} />
-
-                      {/* Decorative element top-right */}
                       <DecorativeFeature kind={f.decorative} />
-
-                      <div className={`relative z-10 w-11 h-11 rounded-xl flex items-center justify-center mb-5 bg-gradient-to-br ${f.iconBg} border border-[var(--border)] group-hover:scale-110 transition-transform duration-300`}>
-                        <Icon size={18} className="text-[var(--fg)]" strokeWidth={1.8} />
+                      <div className={`relative z-10 w-12 h-12 rounded-xl flex items-center justify-center mb-5 bg-gradient-to-br ${f.iconBg} border border-[var(--border)] group-hover:scale-110 group-hover:rotate-3 transition-all duration-400`}>
+                        <Icon size={20} className="text-[var(--fg)]" strokeWidth={1.8} />
                       </div>
-
-                      <h3 className="relative z-10 text-[17px] font-semibold mb-2 tracking-[-0.01em]">{f.title}</h3>
-                      <p className="relative z-10 text-[13.5px] text-[var(--fg-muted)] leading-[1.6] max-w-xs">
+                      <h3 className="relative z-10 text-[18px] font-semibold mb-2.5 tracking-[-0.01em]">{f.title}</h3>
+                      <p className="relative z-10 text-[14px] text-[var(--fg-muted)] leading-[1.65] max-w-xs">
                         {f.desc}
                       </p>
                     </div>
@@ -514,14 +635,14 @@ export function LandingPage() {
             })}
           </div>
 
-          <ScrollReveal delay={0.2}>
-            <div className="text-center mt-12">
+          <ScrollReveal delay={0.2} direction="up">
+            <div className="text-center mt-14">
               <Link
                 href="/fonctionnalites"
-                className="inline-flex items-center gap-2 text-[14px] text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors group px-5 py-2.5 rounded-full hover:bg-[var(--accent-soft)] border border-[var(--border)] hover:border-[var(--border-strong)]"
+                className="inline-flex items-center gap-2 text-[14px] text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors group px-6 py-3 rounded-full hover:bg-[var(--accent-soft)] border border-[var(--border)] hover:border-[var(--border-strong)]"
               >
                 {t.features?.seeAll ?? 'Voir toutes les fonctionnalités'}
-                <ArrowRight size={13} className="group-hover:translate-x-1 transition-transform" />
+                <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
           </ScrollReveal>
@@ -529,40 +650,40 @@ export function LandingPage() {
       </section>
 
       {/* ═══════════════════ TESTIMONIALS ═══════════════════ */}
-      <section className="border-t border-[var(--border)] py-24 relative">
+      <section className="border-t border-[var(--border)] py-28 relative">
         <div className="max-w-5xl mx-auto px-6">
-          <ScrollReveal>
-            <div className="text-center mb-14">
-              <div className="flex justify-center gap-0.5 mb-3">
+          <ScrollReveal direction="up">
+            <div className="text-center mb-16">
+              <div className="flex justify-center gap-0.5 mb-4">
                 {[...Array(5)].map((_, i) => (
                   <motion.div
                     key={i}
-                    initial={{ opacity: 0, scale: 0 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
+                    initial={{ opacity: 0, scale: 0, rotate: -30 }}
+                    whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
                     viewport={{ once: true }}
-                    transition={{ delay: 0.1 * i, duration: 0.3, type: 'spring', stiffness: 300 }}
+                    transition={{ delay: 0.1 * i, duration: 0.4, type: 'spring', stiffness: 300 }}
                   >
-                    <Star size={18} className="fill-amber-400 text-amber-400" />
+                    <Star size={20} className="fill-amber-400 text-amber-400" />
                   </motion.div>
                 ))}
               </div>
-              <h2 className="text-[28px] md:text-[36px] font-bold tracking-[-0.03em] mb-2">
+              <h2 className="text-[32px] md:text-[42px] font-bold tracking-[-0.035em] mb-3">
                 Aimé par les meilleurs.
               </h2>
-              <p className="text-[14px] text-[var(--fg-muted)]">Note 4.9/5 par +50 000 utilisateurs.</p>
+              <p className="text-[15px] text-[var(--fg-muted)]">Note 4.9/5 par +50 000 utilisateurs.</p>
             </div>
           </ScrollReveal>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {TESTIMONIALS.map((r, i) => (
               <ScrollReveal key={i} delay={i * 0.08} direction="up">
-                <div className="magnetic-card p-6 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] relative overflow-hidden">
-                  <div className="flex gap-0.5 mb-3">
+                <div className="magnetic-card p-7 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] relative overflow-hidden card-interactive">
+                  <div className="flex gap-0.5 mb-4">
                     {[...Array(5)].map((_, j) => <Star key={j} size={12} className="fill-amber-400 text-amber-400" />)}
                   </div>
-                  <p className="text-[15px] text-[var(--fg)] leading-[1.6] mb-5 font-medium">"{r.text}"</p>
-                  <div className="flex items-center gap-3">
-                    <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${r.color} flex items-center justify-center text-[12px] font-bold text-white shrink-0`}>
+                  <p className="text-[15px] text-[var(--fg)] leading-[1.65] mb-6 font-medium">"{r.text}"</p>
+                  <div className="flex items-center gap-3.5">
+                    <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${r.color} flex items-center justify-center text-[13px] font-bold text-white shrink-0 shadow-md`}>
                       {r.avatar}
                     </div>
                     <div>
@@ -578,14 +699,14 @@ export function LandingPage() {
       </section>
 
       {/* ═══════════════════ FAQ ═══════════════════ */}
-      <section className="border-t border-[var(--border)] py-24">
+      <section className="border-t border-[var(--border)] py-28">
         <div className="max-w-2xl mx-auto px-6">
-          <ScrollReveal>
-            <div className="text-center mb-10">
-              <h2 className="text-[28px] md:text-[36px] font-bold tracking-[-0.03em]">Questions fréquentes</h2>
+          <ScrollReveal direction="up">
+            <div className="text-center mb-12">
+              <h2 className="text-[32px] md:text-[42px] font-bold tracking-[-0.035em]">Questions fréquentes</h2>
             </div>
           </ScrollReveal>
-          <div className="space-y-2">
+          <div className="space-y-3">
             {FAQ.map((f, i) => (
               <FaqItem key={i} q={f.q} a={f.a} delay={i * 0.06} />
             ))}
@@ -594,54 +715,66 @@ export function LandingPage() {
       </section>
 
       {/* ═══════════════════ FINAL CTA ═══════════════════ */}
-      <section className="relative border-t border-[var(--border)] py-32 overflow-hidden">
+      <section className="relative border-t border-[var(--border)] py-36 overflow-hidden">
         <AuroraBackground intensity="subtle" showGrid={false} />
+        <motion.div
+          className="absolute inset-0 pointer-events-none"
+          animate={{ opacity: [0.3, 0.5, 0.3] }}
+          transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+        >
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] rounded-full" style={{ background: 'radial-gradient(ellipse, rgba(124,58,237,0.08), transparent 60%)' }} />
+        </motion.div>
         <div className="max-w-2xl mx-auto px-6 text-center relative">
-          <ScrollReveal>
-            <h2 className="text-[40px] md:text-[60px] font-bold tracking-[-0.045em] leading-[0.98] mb-5">
+          <ScrollReveal direction="up">
+            <h2 className="text-[44px] md:text-[64px] font-bold tracking-[-0.05em] leading-[0.98] mb-6">
               {t.pricing?.title1 ?? 'Commencez en 30 secondes.'}<br />
               <span className="hero-gradient-text">{t.pricing?.title2 ?? 'Gratuit pour toujours.'}</span>
             </h2>
-            <p className="text-[17px] text-[var(--fg-muted)] max-w-md mx-auto mb-10">
+            <p className="text-[18px] text-[var(--fg-muted)] max-w-md mx-auto mb-12">
               {t.pricing?.subtitle ?? 'Aucune carte bancaire requise. Annulez quand vous voulez.'}
             </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href="/register">
                 <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.96 }}
-                  className="group h-13 px-8 text-[15px] font-semibold rounded-full bg-[var(--accent)] text-[var(--bg)] hover:bg-[var(--accent-hover)] transition-all inline-flex items-center gap-2.5 shadow-md hover:shadow-xl"
-                  style={{ height: 52 }}
+                  whileHover={{ scale: 1.06 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="group h-14 px-10 text-[16px] font-semibold rounded-full bg-[var(--accent)] text-[var(--bg)] hover:bg-[var(--accent-hover)] transition-all inline-flex items-center gap-3 shadow-lg hover:shadow-xl hover:shadow-[var(--accent)]/20"
                 >
                   {t.pricing?.cta ?? 'Commencer gratuitement'}
-                  <ArrowRight size={15} className="group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                 </motion.button>
               </Link>
               <Link href="/tarifs">
-                <button className="h-13 px-8 text-[15px] font-medium rounded-full border border-[var(--border)] hover:bg-[var(--bg-soft)] hover:border-[var(--border-strong)] transition-all" style={{ height: 52 }}>
+                <motion.button
+                  whileHover={{ scale: 1.04 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="h-14 px-10 text-[16px] font-medium rounded-full border border-[var(--border)] hover:bg-[var(--bg-soft)] hover:border-[var(--border-strong)] transition-all"
+                >
                   {t.pricing?.seePricing ?? 'Voir les tarifs'}
-                </button>
+                </motion.button>
               </Link>
             </div>
-            <div className="flex items-center justify-center gap-6 mt-10 text-[12px] text-[var(--fg-subtle)]">
-              <span className="flex items-center gap-1.5"><Check size={11} className="text-emerald-500" strokeWidth={3} /> Sans CB</span>
-              <span className="flex items-center gap-1.5"><Check size={11} className="text-emerald-500" strokeWidth={3} /> Annulable</span>
-              <span className="flex items-center gap-1.5"><Shield size={11} /> Privé</span>
+            <div className="flex items-center justify-center gap-8 mt-12 text-[13px] text-[var(--fg-subtle)]">
+              <span className="flex items-center gap-1.5"><Check size={12} className="text-emerald-500" strokeWidth={3} /> Sans CB</span>
+              <span className="flex items-center gap-1.5"><Check size={12} className="text-emerald-500" strokeWidth={3} /> Annulable</span>
+              <span className="flex items-center gap-1.5"><Shield size={12} /> Privé</span>
             </div>
           </ScrollReveal>
         </div>
       </section>
 
       {/* ═══════════════════ FOOTER ═══════════════════ */}
-      <footer className="border-t border-[var(--border)] py-10">
+      <footer className="border-t border-[var(--border)] py-12">
         <div className="max-w-6xl mx-auto px-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div className="flex items-center gap-2.5">
-              <NetralLogo size={20} />
-              <span className="font-semibold text-[14px]">Netral</span>
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg,#7c3aed,#f97316)' }}>
+                <NetralLogo size={20} />
+              </div>
+              <span className="font-bold text-[15px]">Netral</span>
               <span className="text-[12px] text-[var(--fg-subtle)] ml-1">© {new Date().getFullYear()}</span>
             </div>
-            <div className="flex items-center flex-wrap gap-x-6 gap-y-2 text-[12.5px] text-[var(--fg-muted)]">
+            <div className="flex items-center flex-wrap gap-x-7 gap-y-2 text-[13px] text-[var(--fg-muted)]">
               <Link href="/fonctionnalites" className="hover:text-[var(--fg)] transition-colors">Fonctionnalités</Link>
               <Link href="/tarifs" className="hover:text-[var(--fg)] transition-colors">Tarifs</Link>
               <Link href="/extensions" className="hover:text-[var(--fg)] transition-colors">VS Code</Link>
@@ -661,18 +794,18 @@ export function LandingPage() {
    SUB-COMPONENTS
    ────────────────────────────────────────────────────────────── */
 
-/* ─── SPLIT LINE (letter-by-letter reveal) ─── */
+/* ─── SPLIT LINE — letter by letter with stagger ─── */
 function SplitLine({ text, delayBase }: { text: string; delayBase: number }) {
   return (
     <span className="inline-block">
       {text.split('').map((char, i) => (
         <motion.span
           key={`c-${i}`}
-          initial={{ opacity: 0, y: 28, filter: 'blur(10px)' }}
-          animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+          initial={{ opacity: 0, y: 32, filter: 'blur(14px)', rotateX: 20 }}
+          animate={{ opacity: 1, y: 0, filter: 'blur(0px)', rotateX: 0 }}
           transition={{
-            delay: delayBase + i * 0.022,
-            duration: 0.55,
+            delay: delayBase + i * 0.025,
+            duration: 0.6,
             ease: [0.16, 1, 0.3, 1],
           }}
           className="inline-block"
@@ -685,7 +818,7 @@ function SplitLine({ text, delayBase }: { text: string; delayBase: number }) {
   )
 }
 
-/* ─── CHATGPT-STYLE TEXT LOOP (smooth crossfade, no delete) ─── */
+/* ─── CHATGPT-STYLE TEXT LOOP ─── */
 function ChatGPTLoop({ words }: { words: string[] }) {
   const [wordIndex, setWordIndex] = useState(0)
 
@@ -701,10 +834,10 @@ function ChatGPTLoop({ words }: { words: string[] }) {
       <AnimatePresence mode="wait">
         <motion.span
           key={words[wordIndex]}
-          initial={{ opacity: 0, y: 10, filter: 'blur(6px)' }}
-          animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-          exit={{ opacity: 0, y: -10, filter: 'blur(6px)' }}
-          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          initial={{ opacity: 0, y: 14, filter: 'blur(8px)', scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, filter: 'blur(0px)', scale: 1 }}
+          exit={{ opacity: 0, y: -14, filter: 'blur(8px)', scale: 1.05 }}
+          transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
           className="inline-block"
         >
           {words[wordIndex]}
@@ -727,16 +860,16 @@ function StatCard({
 }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 24 }}
+      initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
       className="text-center"
     >
-      <p className="text-[44px] md:text-[56px] font-bold tracking-[-0.045em] leading-none">
+      <p className="text-[48px] md:text-[64px] font-bold tracking-[-0.05em] leading-none">
         <AnimatedCounter value={value} display={display} suffix={suffix} className="hero-gradient-text" />
       </p>
-      <p className="text-[12px] text-[var(--fg-muted)] mt-2.5 uppercase tracking-[0.15em] font-medium">
+      <p className="text-[13px] text-[var(--fg-muted)] mt-3 uppercase tracking-[0.18em] font-semibold">
         {label}
       </p>
     </motion.div>
@@ -748,18 +881,22 @@ function FaqItem({ q, a, delay }: { q: string; a: string; delay: number }) {
   const [open, setOpen] = useState(false)
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
+      initial={{ opacity: 0, y: 16 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      transition={{ delay, duration: 0.5 }}
-      className="rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] overflow-hidden hover:border-[var(--border-strong)] transition-colors"
+      transition={{ delay, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+      className="rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] overflow-hidden hover:border-[var(--border-strong)] transition-all duration-200"
     >
       <button
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between gap-4 px-5 py-4 text-left"
+        className="w-full flex items-center justify-between gap-4 px-6 py-5 text-left"
       >
         <span className="text-[15px] font-semibold tracking-[-0.005em]">{q}</span>
-        <motion.span animate={{ rotate: open ? 45 : 0 }} transition={{ duration: 0.2 }} className="text-[var(--fg-muted)] shrink-0">
+        <motion.span
+          animate={{ rotate: open ? 135 : 0 }}
+          transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+          className="text-[var(--fg-muted)] shrink-0"
+        >
           <Plus size={16} />
         </motion.span>
       </button>
@@ -769,10 +906,10 @@ function FaqItem({ q, a, delay }: { q: string; a: string; delay: number }) {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
             className="overflow-hidden"
           >
-            <div className="px-5 pb-5 text-[14px] text-[var(--fg-muted)] leading-[1.65]">{a}</div>
+            <div className="px-6 pb-6 text-[14.5px] text-[var(--fg-muted)] leading-[1.7]">{a}</div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -780,34 +917,34 @@ function FaqItem({ q, a, delay }: { q: string; a: string; delay: number }) {
   )
 }
 
-/* ─── SCROLL REVEAL (generic wrapper) ─── */
+/* ─── SCROLL REVEAL ─── */
 function ScrollReveal({ children, delay = 0, direction = 'up' }: { children: React.ReactNode; delay?: number; direction?: 'up' | 'down' | 'left' | 'right' }) {
   const dirMap = {
-    up: { y: 40, x: 0 },
-    down: { y: -40, x: 0 },
-    left: { x: 40, y: 0 },
-    right: { x: -40, y: 0 },
+    up: { y: 50, x: 0 },
+    down: { y: -50, x: 0 },
+    left: { x: 50, y: 0 },
+    right: { x: -50, y: 0 },
   }
   const offset = dirMap[direction]
   return (
     <motion.div
-      initial={{ opacity: 0, ...offset, filter: 'blur(4px)' }}
+      initial={{ opacity: 0, ...offset, filter: 'blur(6px)' }}
       whileInView={{ opacity: 1, x: 0, y: 0, filter: 'blur(0px)' }}
-      viewport={{ once: true, margin: '-60px' }}
-      transition={{ delay, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+      viewport={{ once: true, margin: '-80px' }}
+      transition={{ delay, duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
     >
       {children}
     </motion.div>
   )
 }
 
-/* ─── TILT CARD (3D perspective on hover) ─── */
+/* ─── TILT CARD (3D perspective) ─── */
 function TiltCard({ children }: { children: React.ReactNode }) {
   const ref = useRef<HTMLDivElement>(null)
   const x = useMotionValue(0)
   const y = useMotionValue(0)
-  const rotateX = useSpring(useTransform(y, [-0.5, 0.5], [1.5, -1.5]), { stiffness: 200, damping: 40 })
-  const rotateY = useSpring(useTransform(x, [-0.5, 0.5], [-1.5, 1.5]), { stiffness: 200, damping: 40 })
+  const rotateX = useSpring(useTransform(y, [-0.5, 0.5], [2, -2]), { stiffness: 200, damping: 40 })
+  const rotateY = useSpring(useTransform(x, [-0.5, 0.5], [-2, 2]), { stiffness: 200, damping: 40 })
 
   const handleMouseMove = (e: React.MouseEvent) => {
     const rect = ref.current?.getBoundingClientRect()
@@ -826,7 +963,7 @@ function TiltCard({ children }: { children: React.ReactNode }) {
       ref={ref}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      style={{ rotateX, rotateY, perspective: 800 }}
+      style={{ rotateX, rotateY, perspective: 1000 }}
       className="transform-gpu"
     >
       {children}
@@ -838,16 +975,16 @@ function TiltCard({ children }: { children: React.ReactNode }) {
 function DecorativeFeature({ kind }: { kind: string }) {
   if (kind === 'memory') {
     return (
-      <div aria-hidden className="absolute top-5 right-5 opacity-50 group-hover:opacity-100 transition-opacity">
-        <div className="flex flex-col gap-1">
+      <div aria-hidden className="absolute top-6 right-6 opacity-50 group-hover:opacity-100 transition-opacity duration-400">
+        <div className="flex flex-col gap-1.5">
           {['Designer', 'TypeScript', 'Paris'].map((tag, i) => (
             <motion.span
               key={tag}
-              initial={{ opacity: 0, x: 10 }}
+              initial={{ opacity: 0, x: 12 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: 0.3 + i * 0.1, duration: 0.4 }}
-              className="text-[9px] px-1.5 py-0.5 rounded-md bg-violet-500/10 text-violet-500 dark:text-violet-300 border border-violet-500/20 self-end font-mono"
+              transition={{ delay: 0.3 + i * 0.12, duration: 0.45 }}
+              className="text-[9.5px] px-2 py-0.5 rounded-md bg-violet-500/10 text-violet-500 dark:text-violet-300 border border-violet-500/20 self-end font-mono"
             >
               {tag}
             </motion.span>
@@ -858,14 +995,19 @@ function DecorativeFeature({ kind }: { kind: string }) {
   }
   if (kind === 'web') {
     return (
-      <div aria-hidden className="absolute top-5 right-5 opacity-60">
-        <Globe size={36} className="text-blue-500/40 animate-spin" style={{ animationDuration: '12s' }} />
+      <div aria-hidden className="absolute top-6 right-6 opacity-60 group-hover:opacity-100 transition-opacity duration-400">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 12, repeat: Infinity, ease: 'linear' }}
+        >
+          <Globe size={40} className="text-blue-500/40" />
+        </motion.div>
       </div>
     )
   }
   if (kind === 'speed') {
     return (
-      <div aria-hidden className="absolute top-5 right-5 opacity-60 flex flex-col items-end gap-0.5 font-mono text-[9px] text-amber-500/80">
+      <div aria-hidden className="absolute top-6 right-6 opacity-60 flex flex-col items-end gap-0.5 font-mono text-[9.5px] text-amber-500/80">
         <span>180ms</span>
         <span>192ms</span>
         <span>201ms</span>
@@ -874,7 +1016,7 @@ function DecorativeFeature({ kind }: { kind: string }) {
   }
   if (kind === 'code') {
     return (
-      <div aria-hidden className="absolute top-5 right-5 opacity-50 font-mono text-[10px] text-emerald-500/80 leading-tight">
+      <div aria-hidden className="absolute top-6 right-6 opacity-50 group-hover:opacity-80 transition-opacity duration-400 font-mono text-[10px] text-emerald-500/80 leading-tight">
         <div>{'function fix() {'}</div>
         <div className="ml-2">{'// done by Netral'}</div>
         <div>{'}'}</div>
@@ -883,15 +1025,15 @@ function DecorativeFeature({ kind }: { kind: string }) {
   }
   if (kind === 'integrations') {
     return (
-      <div aria-hidden className="absolute top-5 right-5 opacity-70 flex gap-1">
+      <div aria-hidden className="absolute top-6 right-6 opacity-70 flex gap-1.5">
         {['✉️', '📅', '📁'].map((e, i) => (
           <motion.span
             key={i}
-            initial={{ opacity: 0, y: -4 }}
+            initial={{ opacity: 0, y: -6 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ delay: 0.3 + i * 0.1 }}
-            className="text-[14px]"
+            transition={{ delay: 0.3 + i * 0.12 }}
+            className="text-[15px]"
           >
             {e}
           </motion.span>
@@ -901,8 +1043,8 @@ function DecorativeFeature({ kind }: { kind: string }) {
   }
   if (kind === 'privacy') {
     return (
-      <div aria-hidden className="absolute top-5 right-5 opacity-60">
-        <Shield size={28} className="text-slate-500/60" />
+      <div aria-hidden className="absolute top-6 right-6 opacity-60 group-hover:opacity-100 transition-opacity duration-400">
+        <Shield size={32} className="text-slate-500/60" />
       </div>
     )
   }
@@ -910,9 +1052,7 @@ function DecorativeFeature({ kind }: { kind: string }) {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   ANIMATED CHAT DEMO WINDOW — IMPROVED
-   Realistic coding assistant conversation with streaming,
-   web search, reasoning, code blocks and citations.
+   ANIMATED CHAT DEMO WINDOW
    ═══════════════════════════════════════════════════════════════ */
 
 const DEMO_CYCLES: {
@@ -944,7 +1084,7 @@ const DEMO_CYCLES: {
     searchLabel: 'Recherche Next.js App Router Zod validation...',
     reasoningTime: '2.1s',
     lines: [
-      { text: 'Dans l\'App Router Next.js, les <strong>Route Handlers</strong> remplacent les API Routes classiques. Voici le pattern avec Zod :', citations: [] },
+      { text: "Dans l'App Router Next.js, les <strong>Route Handlers</strong> remplacent les API Routes classiques. Voici le pattern avec Zod :", citations: [] },
       { text: '• Définir un schéma Zod pour valider le body entrant', citations: [1] },
       { text: '• Utiliser <code>safeParse</code> pour une validation sans throw', citations: [1] },
       { text: '• Retourner les erreurs formatées avec le bon status code', citations: [2] },
@@ -957,17 +1097,116 @@ const DEMO_CYCLES: {
   },
 ]
 
+/* ─── AI THINKING PREVIEW (petit aperçu du raisonnement) ─── */
+const THINKING_CYCLES = [
+  [
+    { phase: 'Recherche web…', detail: 'Interrogation des sources en temps réel' },
+    { phase: 'Analyse du contexte', detail: 'Mémoire : vous êtes développeur TypeScript' },
+    { phase: 'Raisonnement', detail: 'NTRL 2.0 évalue 3 approches possibles' },
+    { phase: 'Génération', detail: 'Rédaction de la réponse avec citations' },
+  ],
+  [
+    { phase: 'Scan des fichiers…', detail: 'Analyse du workspace VS Code' },
+    { phase: 'Recherche web…', detail: 'Documentation Next.js 15 + React 19' },
+    { phase: 'Validation', detail: 'Vérification syntaxe et bonnes pratiques' },
+    { phase: 'Génération', detail: 'Code prêt à être intégré' },
+  ],
+]
+
+function AIThinkingPreview() {
+  const [cycleIndex, setCycleIndex] = useState(0)
+  const [stepIndex, setStepIndex] = useState(0)
+  const cycle = THINKING_CYCLES[cycleIndex]
+
+  useEffect(() => {
+    const advance = setInterval(() => {
+      setStepIndex((prev) => {
+        if (prev >= cycle.length - 1) {
+          setCycleIndex((c) => (c + 1) % THINKING_CYCLES.length)
+          return 0
+        }
+        return prev + 1
+      })
+    }, 2000)
+    return () => clearInterval(advance)
+  }, [cycle.length])
+
+  return (
+    <div className="glass-card rounded-xl p-4 text-left overflow-hidden relative">
+      <div className="beam-scan" style={{ ['--beam-delay' as string]: '1s' }} />
+      <div className="flex items-center gap-2 mb-3">
+        <motion.div
+          animate={{ rotate: [0, 360] }}
+          transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
+          className="w-4 h-4 rounded-full border-2 border-violet-500/40 border-t-violet-500"
+        />
+        <span className="text-[11px] font-medium text-[var(--fg-muted)] uppercase tracking-[0.15em]">
+          NTRL 2.0 Thinking
+        </span>
+      </div>
+      <div className="space-y-0.5">
+        {cycle.map((step, i) => {
+          const isActive = i === stepIndex
+          const isDone = i < stepIndex
+          const isPending = i > stepIndex
+          return (
+            <motion.div
+              key={`${cycleIndex}-${i}`}
+              animate={{ opacity: isPending ? 0.2 : 1 }}
+              className={`flex items-center gap-3 px-2 py-1.5 rounded-lg transition-all ${isActive ? 'bg-violet-500/8 border border-violet-500/15' : isDone ? 'text-[var(--fg-muted)]' : 'text-[var(--fg-subtle)]'}`}
+            >
+              <span className="shrink-0">
+                {isDone ? (
+                  <motion.span
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="flex items-center justify-center w-5 h-5 rounded-full bg-emerald-500/15 text-emerald-500"
+                  >
+                    <Check size={11} strokeWidth={3} />
+                  </motion.span>
+                ) : isActive ? (
+                  <motion.span
+                    animate={{ scale: [1, 1.15, 1] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                    className="flex items-center justify-center w-5 h-5 rounded-full bg-violet-500/15 text-violet-500"
+                  >
+                    <Brain size={12} strokeWidth={2} />
+                  </motion.span>
+                ) : (
+                  <span className="flex items-center justify-center w-5 h-5 rounded-full bg-[var(--bg-soft)] text-[var(--fg-subtle)]">
+                    <div className="w-1.5 h-1.5 rounded-full bg-current/30" />
+                  </span>
+                )}
+              </span>
+              <div className="flex-1 min-w-0">
+                <p className={`text-[12px] font-medium ${isDone ? 'line-through decoration-emerald-500/30' : ''} ${isActive ? 'text-violet-400' : ''}`}>
+                  {step.phase}
+                </p>
+                {isActive && (
+                  <motion.p
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    className="text-[10px] text-[var(--fg-subtle)] mt-0.5 truncate"
+                  >
+                    {step.detail}
+                  </motion.p>
+                )}
+              </div>
+            </motion.div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 function ChatDemoWindow() {
   const [cycleIndex, setCycleIndex] = useState(0)
   const [step, setStep] = useState(0)
-
   const cycle = DEMO_CYCLES[cycleIndex]
   const maxSteps = 5 + (cycle.code ? 1 : 0)
 
-  // Reset when cycle changes
-  useEffect(() => {
-    setStep(0)
-  }, [cycleIndex])
+  useEffect(() => { setStep(0) }, [cycleIndex])
 
   useEffect(() => {
     if (step >= maxSteps) {
@@ -976,7 +1215,7 @@ function ChatDemoWindow() {
       }, 7000)
       return () => clearTimeout(t)
     }
-    const delays = [700, 1200, 1400, 1800, 1600, 2000]
+    const delays = [800, 1400, 1500, 1900, 1700, 2200]
     const t = setTimeout(() => setStep((s) => s + 1), delays[step] ?? 1500)
     return () => clearTimeout(t)
   }, [step, maxSteps])
@@ -984,213 +1223,123 @@ function ChatDemoWindow() {
   return (
     <div className="window-mock relative">
       {/* Title bar */}
-      <div className="h-11 flex items-center gap-2 px-4 border-b border-[var(--border)] bg-[var(--bg-soft)]/60">
-        <div className="flex gap-1.5">
-          <div className="w-3 h-3 rounded-full bg-[#ff5f57]" />
-          <div className="w-3 h-3 rounded-full bg-[#febc2e]" />
-          <div className="w-3 h-3 rounded-full bg-[#28c840]" />
+      <div className="h-12 flex items-center gap-2.5 px-5 border-b border-[var(--border)] bg-[var(--bg-soft)]/60 rounded-t-2xl">
+        <div className="flex gap-2">
+          <div className="w-3.5 h-3.5 rounded-full bg-[#ff5f57]" />
+          <div className="w-3.5 h-3.5 rounded-full bg-[#febc2e]" />
+          <div className="w-3.5 h-3.5 rounded-full bg-[#28c840]" />
         </div>
         <div className="flex-1 flex justify-center">
-          <div className="px-4 py-1.5 rounded-lg bg-[var(--bg)]/70 border border-[var(--glass-border)] text-[11px] font-mono text-[var(--fg-muted)] flex items-center gap-1.5">
-            <Lock size={9} className="text-emerald-500" />
+          <div className="px-4 py-1.5 rounded-lg bg-[var(--bg)]/70 border border-[var(--glass-border)] text-[11px] font-mono text-[var(--fg-muted)] flex items-center gap-2">
+            <Lock size={10} className="text-emerald-500" />
             netral.app/chat
           </div>
         </div>
-        <div className="w-10" />
+        <div className="w-12" />
       </div>
 
-      {/* Chat content */}
-      <div className="p-6 md:p-10 space-y-4 min-h-[500px]">
+      {/* Chat area */}
+      <div className="bg-[var(--bg-elevated)] border-x border-[var(--border)] p-6 space-y-6 rounded-b-2xl border-b">
         {/* User message */}
-        <AnimatePresence>
-          {step >= 1 && (
-            <motion.div
-              key="user-msg"
-              initial={{ opacity: 0, y: 8, scale: 0.96 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.3 }}
-              className="flex justify-end"
-            >
-              <div className="max-w-[80%] px-4 py-3 rounded-2xl rounded-br-md bg-[var(--accent)] text-[var(--bg)] text-[14px] leading-relaxed shadow-sm">
-                {cycle.user}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={step >= 1 ? { opacity: 1, y: 0 } : {}}
+          className="flex justify-end"
+        >
+          <div className="max-w-[80%] rounded-2xl rounded-br-md px-4 py-2.5 bg-[var(--accent)] text-[var(--bg)] text-[14px] leading-[1.55] shadow-sm">
+            {cycle.user}
+          </div>
+        </motion.div>
 
-        {/* Status pill — searching */}
+        {/* Thinking label + search */}
         <AnimatePresence>
-          {step >= 2 && step <= 3 && (
+          {step >= 2 && step < 3 && (
             <motion.div
-              key="searching"
-              initial={{ opacity: 0, y: 8 }}
+              initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="flex items-center gap-2.5 text-[12.5px] text-[var(--fg-muted)]"
+              className="flex items-center gap-3"
             >
-              <div className="relative w-4 h-4">
-                <span className="absolute inset-0 rounded-full bg-violet-500/40 animate-ping" />
-                <span className="relative w-full h-full rounded-full bg-gradient-to-br from-violet-500 to-pink-500 flex items-center justify-center">
-                  <Search size={9} className="text-white" />
-                </span>
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--border)] bg-[var(--bg-soft)] text-[11.5px] text-[var(--fg-muted)]">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
+                >
+                  <Globe size={11} className="text-violet-500" />
+                </motion.div>
+                <span className="streaming-shimmer">{cycle.searchLabel}</span>
               </div>
-              <span className="streaming-shimmer font-medium">
-                {step === 2 ? cycle.searchLabel : 'Analyse des résultats...'}
-              </span>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Reasoning */}
+        {/* Assistant response */}
         <AnimatePresence>
           {step >= 3 && (
             <motion.div
-              key="reasoning"
-              initial={{ opacity: 0, y: 8 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-              className="flex items-center gap-2 text-[12px] text-[var(--fg-muted)]"
+              className="flex gap-3"
             >
-              <span className="w-5 h-5 rounded-md bg-[var(--bg-soft)] border border-[var(--border)] flex items-center justify-center">
-                <Brain size={11} className="text-violet-500" />
-              </span>
-              <span className="font-medium">Réfléchi pendant {cycle.reasoningTime}</span>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Assistant response with streaming blocks */}
-        <div className="flex gap-3">
-          <AnimatePresence>
-            {step >= 4 && (
-              <motion.div
-                key="avatar"
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3 }}
-                className="shrink-0 mt-0.5"
-              >
-                <div className="w-7 h-7 rounded-lg glass-card flex items-center justify-center">
-                  <NetralLogo size={16} />
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          <AnimatePresence>
-            {step >= 4 && (
-              <motion.div
-                key="response"
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4 }}
-                className="flex-1 text-[14px] leading-[1.7] text-[var(--fg-soft)] space-y-2 max-w-prose"
-              >
-                {cycle.lines.map((line, i) => (
-                  <DemoLine key={i} show={step >= 4 + Math.floor(i / 2)} delay={i * 0.2}>
-                    <span dangerouslySetInnerHTML={{ __html: line.text }} />
-                    {line.citations?.map((n) => (
-                      <a key={n} data-citation>{n}</a>
-                    ))}
-                  </DemoLine>
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5" style={{ background: 'linear-gradient(135deg,#7c3aed,#f97316)' }}>
+                <NetralLogo size={14} />
+              </div>
+              <div className="flex-1 min-w-0 space-y-3">
+                {/* Lines */}
+                {cycle.lines.map((line, li) => (
+                  <motion.p
+                    key={li}
+                    initial={{ opacity: 0, x: -6 }}
+                    animate={step >= 4 + li * 0.5 ? { opacity: 1, x: 0 } : {}}
+                    transition={{ duration: 0.4 }}
+                    className="text-[14px] text-[var(--fg)] leading-[1.6]"
+                    dangerouslySetInnerHTML={{ __html: line.text }}
+                  />
                 ))}
 
                 {/* Code block */}
-                {step >= 5 && cycle.code && (
-                  <DemoLine show delay={0.3}>
-                    <StreamingCodeBlock code={cycle.code.content} lang={cycle.code.lang} />
-                  </DemoLine>
+                {step >= 4 && cycle.code && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={step >= 5 ? { opacity: 1, y: 0 } : {}}
+                    transition={{ duration: 0.5 }}
+                    className="relative rounded-lg bg-[var(--bg-soft)] border border-[var(--border)] overflow-hidden"
+                  >
+                    <div className="flex items-center justify-between px-4 py-2 border-b border-[var(--border)] text-[10px] font-mono text-[var(--fg-subtle)]">
+                      <span>{cycle.code.lang}</span>
+                      <span className="text-[var(--fg-subtle)]">Copier</span>
+                    </div>
+                    <pre className="p-4 text-[12px] font-mono text-[var(--fg)] leading-[1.6] overflow-x-auto">
+                      <code>{cycle.code.content}</code>
+                    </pre>
+                    {step < 6 && <motion.span className="stream-cursor" />}
+                  </motion.div>
                 )}
 
-                {/* Typing indicator at end */}
+                {/* Sources */}
                 {step >= 5 && (
-                  <span className="stream-cursor !mt-1" />
+                  <motion.div
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex gap-2"
+                  >
+                    {cycle.sources.map((src, si) => (
+                      <span
+                        key={si}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-[var(--border)] bg-[var(--bg-soft)] text-[11px] text-[var(--fg-muted)]"
+                      >
+                        <Globe size={10} />
+                        {src}
+                        <span className="font-mono text-[9px] text-[var(--fg-subtle)]">[{si + 1}]</span>
+                      </span>
+                    ))}
+                  </motion.div>
                 )}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* Sources */}
-        <AnimatePresence>
-          {step >= 5 && (
-            <motion.div
-              key="sources"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.3 }}
-              className="ml-10 pt-3 border-t border-[var(--border)]"
-            >
-              <p className="text-[10px] font-medium text-[var(--fg-muted)] uppercase tracking-wider mb-2">
-                Sources ({cycle.sources.length})
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {cycle.sources.map((d, i) => (
-                  <span key={d} className="flex items-center gap-1.5 px-2.5 py-1 rounded-md glass-card text-[11px] text-[var(--fg-muted)]">
-                    <span className="w-3 h-3 rounded-sm bg-gradient-to-br from-violet-400 to-orange-400" />
-                    {d}
-                    <span className="text-[var(--fg-subtle)] font-mono">[{i + 1}]</span>
-                  </span>
-                ))}
               </div>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
     </div>
-  )
-}
-
-/* ─── STREAMING CODE BLOCK (char-by-char reveal) ─── */
-function StreamingCodeBlock({ code, lang }: { code: string; lang: string }) {
-  const [displayed, setDisplayed] = useState('')
-  const [done, setDone] = useState(false)
-
-  useEffect(() => {
-    setDisplayed('')
-    setDone(false)
-  }, [code])
-
-  useEffect(() => {
-    if (displayed.length < code.length) {
-      // Type character by character, with variable speed to simulate streaming
-      const speed = displayed.length < 50 ? 15 : 8
-      const t = setTimeout(() => {
-        setDisplayed(code.slice(0, displayed.length + 1))
-      }, speed)
-      return () => clearTimeout(t)
-    } else {
-      setDone(true)
-    }
-  }, [displayed, code])
-
-  return (
-    <div className="relative my-3 rounded-lg overflow-hidden border border-[var(--border)] bg-[#0d1117] group">
-      <div className="flex items-center justify-between px-3 py-1.5 bg-[var(--bg-soft)]/40 border-b border-[var(--border)]">
-        <span className="text-[10.5px] font-mono text-[var(--fg-muted)] uppercase tracking-wider">{lang}</span>
-      </div>
-      <pre className="px-3.5 py-3 text-[12.5px] font-mono text-[#c9d1d9] leading-[1.7] overflow-x-auto max-h-[200px]">
-        <code>{displayed}</code>
-        {!done && (
-          <motion.span
-            animate={{ opacity: [1, 0.2, 1] }}
-            transition={{ duration: 0.7, repeat: Infinity }}
-            className="inline-block w-[8px] h-[14px] bg-[var(--accent)] ml-0.5 align-middle rounded-sm"
-          />
-        )}
-      </pre>
-    </div>
-  )
-}
-
-function DemoLine({ children, show, delay }: { children: React.ReactNode; show: boolean; delay: number }) {
-  return (
-    <motion.p
-      initial={{ opacity: 0, y: 6 }}
-      animate={show ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.4, delay }}
-    >
-      {children}
-    </motion.p>
   )
 }

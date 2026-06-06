@@ -276,8 +276,9 @@ export async function POST(req: NextRequest) {
 
       let fullAccumulated = ''
 
-      // Tool detection phase
-      if (tools && tools.length > 0) {
+      // Tool detection phase — only for fast models (skip for bluesminds/Grok which is too slow)
+      const isSlowModel = model.provider === 'bluesminds'
+      if (tools && tools.length > 0 && !isSlowModel) {
         for (let iteration = 0; iteration < MAX_TOOL_ITERATIONS - 1; iteration++) {
           send({ type: 'status', status: 'thinking' })
 
@@ -340,16 +341,7 @@ export async function POST(req: NextRequest) {
             })
 
             if (result.success) {
-              if (toolName === 'generate_image') {
-                const imageId = (result.data as any)?.imageId
-                if (imageId) {
-                  fullAccumulated += `\n🔧 **${toolName}** ✓ [IMAGE:${imageId}]\n`
-                } else {
-                  fullAccumulated += `\n🔧 **${toolName}** ✓\n`
-                }
-              } else {
-                fullAccumulated += `\n🔧 **${toolName}** ✓\n`
-              }
+              fullAccumulated += `\n🔧 **${toolName}** ✓\n`
             } else {
               fullAccumulated += `\n⚠️ **${toolName}**: ${result.error}\n`
             }
@@ -380,7 +372,7 @@ export async function POST(req: NextRequest) {
             method: 'POST',
             headers: adapter.buildHeaders(key),
             body: JSON.stringify(payload),
-            signal: AbortSignal.timeout(120000),
+            signal: AbortSignal.timeout(isSlowModel ? 120000 : 60000),
           })
           if (upstream.ok) break
         }

@@ -10,15 +10,18 @@ export interface ProviderAdapter {
   buildPayload(options: PayloadOptions): Record<string, unknown>
   /** Parse an SSE chunk line and return the text delta, or null if not a content chunk */
   parseChunk(data: string): string | null
+  /** Parse a non-streaming response and return content + tool_calls */
+  parseResponse(data: string): { content: string | null; toolCalls: Array<{ id: string; function: { name: string; arguments: string } }> | null }
 }
 
 export interface PayloadOptions {
   model: string
-  messages: Array<{ role: string; content: unknown }>
+  messages: Array<{ role: string; content: unknown; tool_calls?: unknown[]; tool_call_id?: string; name?: string }>
   stream: boolean
   temperature: number
   max_tokens: number
   top_p?: number
+  tools?: Record<string, unknown>[]
 }
 
 /**
@@ -42,6 +45,10 @@ const openaiCompatibleAdapter: ProviderAdapter = {
     if (options.top_p !== undefined) {
       payload.top_p = options.top_p
     }
+    if (options.tools?.length) {
+      payload.tools = options.tools
+      payload.tool_choice = 'auto'
+    }
     return payload
   },
   parseChunk(data: string): string | null {
@@ -51,6 +58,19 @@ const openaiCompatibleAdapter: ProviderAdapter = {
       return parsed.choices?.[0]?.delta?.content ?? null
     } catch {
       return null
+    }
+  },
+  parseResponse(data: string): { content: string | null; toolCalls: Array<{ id: string; function: { name: string; arguments: string } }> | null } {
+    try {
+      const parsed = JSON.parse(data)
+      const choice = parsed.choices?.[0]
+      const message = choice?.message
+      return {
+        content: message?.content ?? null,
+        toolCalls: message?.tool_calls ?? null,
+      }
+    } catch {
+      return { content: null, toolCalls: null }
     }
   },
 }

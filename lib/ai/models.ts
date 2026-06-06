@@ -38,10 +38,10 @@ export const MODELS: Record<ModelId, ModelConfig> = {
   'ntrl-2.0': {
     id: 'ntrl-2.0',
     displayName: 'NTRL 2.0',
-    description: 'Raisonnement avancé, contexte étendu, agent autonome. Propulsé par GLM 5.1.',
+    description: 'Raisonnement avancé, contexte étendu, agent autonome. Propulsé par Grok.',
     provider: 'bluesminds',
-    upstreamModel: 'z-ai/glm-5.1',
-    apiUrl: 'https://api.bluesminds.com/v1/chat/completions',
+    upstreamModel: 'grok-4.20-0309-non-reasoning',
+    apiUrl: 'https://api.bluesminds.ai/v1/chat/completions',
     envKey: 'BLUESMINDS_API_KEY',
     contextLength: 131072,
     defaultParams: { temperature: 0.7, max_tokens: 4096, top_p: 0.95 },
