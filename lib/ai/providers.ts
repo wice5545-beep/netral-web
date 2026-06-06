@@ -57,6 +57,7 @@ const openaiCompatibleAdapter: ProviderAdapter = {
 
 // Cerebras uses OpenAI-compatible format, so it maps to the generic adapter
 const adapterMap: Record<string, ProviderAdapter> = {
+  bluesminds: openaiCompatibleAdapter,
   cerebras: openaiCompatibleAdapter,
   mistral: openaiCompatibleAdapter,
   google: openaiCompatibleAdapter,

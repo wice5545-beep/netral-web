@@ -168,12 +168,31 @@ function IntegrationsContent() {
   const [notification, setNotification] = useState<{ type: 'error' | 'success'; message: string } | null>(null)
 
   useEffect(() => {
-    if (errorParam === 'db_error') {
-      setNotification({ type: 'error', message: 'Erreur de base de données — veuillez réessayer ou contacter le support.' })
+    if (errorParam === 'missing_params' || errorParam === 'invalid_state' || errorParam === 'invalid_state_payload') {
+      setNotification({ type: 'error', message: 'Session expirée — veuillez réessayer la connexion.' })
+    } else if (errorParam === 'access_denied') {
+      setNotification({ type: 'error', message: 'Vous avez refusé l\'accès. Réessayez si vous souhaitez connecter vos services.' })
+    } else if (errorParam === 'token_exchange_failed' || errorParam === 'token_exchange_network' || errorParam === 'invalid_grant') {
+      setNotification({ type: 'error', message: 'Erreur de connexion avec Google — veuillez réessayer.' })
+    } else if (errorParam === 'redirect_uri_mismatch') {
+      setNotification({ type: 'error', message: 'Erreur de configuration OAuth — URI de redirection incorrect. Contactez le support.' })
+    } else if (errorParam === 'google_not_configured') {
+      setNotification({ type: 'error', message: 'Google OAuth n\'est pas configuré sur ce serveur.' })
+    } else if (errorParam === 'no_access_token' || errorParam === 'db_error' || errorParam === 'db_save_failed' || errorParam === 'db_schema_error') {
+      setNotification({ type: 'error', message: 'Erreur serveur — veuillez réessayer ou contacter le support.' })
+    } else if (errorParam) {
+      setNotification({ type: 'error', message: `Erreur: ${errorParam}. Veuillez réessayer.` })
     } else if (successParam === 'google') {
-      setNotification({ type: 'success', message: 'Services Google connectés avec succès !' })
+      const services = searchParams.get('services')?.split(',') ?? []
+      const label = services.length > 0 ? services.map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(', ') : ''
+      setNotification({
+        type: 'success',
+        message: label
+          ? `${label} connecté${services.length > 1 ? 's' : ''} avec succès !`
+          : 'Services Google connectés avec succès !',
+      })
     }
-  }, [errorParam, successParam])
+  }, [errorParam, successParam, searchParams])
 
   useEffect(() => {
     fetch('/api/integrations')

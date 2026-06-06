@@ -4,7 +4,7 @@ export type ModelConfig = {
   id: ModelId
   displayName: string
   description: string
-  provider: 'mistral' | 'groq' | 'google' | 'nvidia' | 'cerebras'
+  provider: 'mistral' | 'groq' | 'google' | 'nvidia' | 'cerebras' | 'bluesminds'
   upstreamModel: string
   apiUrl: string
   envKey: string
@@ -38,12 +38,13 @@ export const MODELS: Record<ModelId, ModelConfig> = {
   'ntrl-2.0': {
     id: 'ntrl-2.0',
     displayName: 'NTRL 2.0',
-    description: 'Ultra rapide, intelligent, polyvalent. Reserve Pro & Pro+.',
-    provider: 'cerebras',
-    upstreamModel: 'qwen-3-32b',
-    apiUrl: 'https://api.cerebras.ai/v1/chat/completions',
-    envKey: 'CEREBRAS_API_KEY',
-    contextLength: 32768,
+    description: 'Raisonnement avancé, contexte étendu, agent autonome. Propulsé par GLM 5.1.',
+    provider: 'bluesminds',
+    upstreamModel: 'z-ai/glm-5.1',
+    apiUrl: 'https://api.bluesminds.com/v1/chat/completions',
+    envKey: 'BLUESMINDS_API_KEY',
+    contextLength: 131072,
+    defaultParams: { temperature: 0.7, max_tokens: 4096, top_p: 0.95 },
   },
 }
 
