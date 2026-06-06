@@ -275,7 +275,7 @@ export function LandingPage() {
             <SplitLine text={t.hero?.title1 ?? "L'IA qui"} delayBase={0.1} />
             {' '}
             <span className="hero-gradient-text inline-block">
-              <TypewriterLoop words={TYPING_WORDS} />
+              <ChatGPTLoop words={TYPING_WORDS} />
             </span>
             <br />
             <span className="inline-block">
@@ -685,53 +685,35 @@ function SplitLine({ text, delayBase }: { text: string; delayBase: number }) {
   )
 }
 
-/* ─── TYPEWRITER LOOP (cycles through words) ─── */
-function TypewriterLoop({ words }: { words: string[] }) {
+/* ─── CHATGPT-STYLE TEXT LOOP (smooth crossfade, no delete) ─── */
+function ChatGPTLoop({ words }: { words: string[] }) {
   const [wordIndex, setWordIndex] = useState(0)
-  const [charIndex, setCharIndex] = useState(0)
-  const [isDeleting, setIsDeleting] = useState(false)
-  const [isWaiting, setIsWaiting] = useState(false)
 
   useEffect(() => {
-    const currentWord = words[wordIndex]
-
-    if (isWaiting) {
-      const t = setTimeout(() => {
-        setIsWaiting(false)
-        setIsDeleting(true)
-      }, 2000)
-      return () => clearTimeout(t)
-    }
-
-    if (isDeleting) {
-      if (charIndex === 0) {
-        setIsDeleting(false)
-        setWordIndex((prev) => (prev + 1) % words.length)
-        return
-      }
-      const t = setTimeout(() => setCharIndex((p) => p - 1), 40)
-      return () => clearTimeout(t)
-    }
-
-    if (charIndex < currentWord.length) {
-      const t = setTimeout(() => setCharIndex((p) => p + 1), 60)
-      return () => clearTimeout(t)
-    }
-
-    // Word fully typed
-    const t = setTimeout(() => setIsWaiting(true), 1500)
-    return () => clearTimeout(t)
-  }, [charIndex, isDeleting, isWaiting, wordIndex, words])
-
-  const displayText = words[wordIndex].slice(0, charIndex)
+    const interval = setInterval(() => {
+      setWordIndex((prev) => (prev + 1) % words.length)
+    }, 2800)
+    return () => clearInterval(interval)
+  }, [words.length])
 
   return (
     <span className="relative inline-block">
-      {displayText}
+      <AnimatePresence mode="wait">
+        <motion.span
+          key={words[wordIndex]}
+          initial={{ opacity: 0, y: 10, filter: 'blur(6px)' }}
+          animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+          exit={{ opacity: 0, y: -10, filter: 'blur(6px)' }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          className="inline-block"
+        >
+          {words[wordIndex]}
+        </motion.span>
+      </AnimatePresence>
       <motion.span
-        animate={{ opacity: [1, 0] }}
-        transition={{ duration: 0.6, repeat: Infinity, repeatType: 'reverse' }}
-        className="inline-block w-[3px] h-[0.8em] bg-current ml-0.5 align-middle rounded-full"
+        animate={{ opacity: [0.8, 0.05, 0.8] }}
+        transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
+        className="inline-block w-[3px] h-[0.75em] bg-current ml-0.5 align-middle rounded-full"
       />
     </span>
   )
@@ -1198,45 +1180,6 @@ function StreamingCodeBlock({ code, lang }: { code: string; lang: string }) {
         )}
       </pre>
     </div>
-  )
-}
-
-/* ─── TYPING TEXT (word-by-word reveal) ─── */
-function TypingText({ text, speed = 40, loop = false }: { text: string; speed?: number; loop?: boolean }) {
-  const [displayed, setDisplayed] = useState('')
-  const [index, setIndex] = useState(0)
-
-  useEffect(() => {
-    if (index < text.length) {
-      const t = setTimeout(() => {
-        setDisplayed(text.slice(0, index + 1))
-        setIndex(index + 1)
-      }, speed)
-      return () => clearTimeout(t)
-    }
-    // When loop is enabled (for the demo), restart after full typing
-    if (loop) return
-  }, [index, text, speed, loop])
-
-  // Reset on text change or loop
-  useEffect(() => {
-    if (loop) {
-      setDisplayed('')
-      setIndex(0)
-    }
-  }, [loop])
-
-  return (
-    <span>
-      {displayed}
-      {index < text.length && (
-        <motion.span
-          animate={{ opacity: [1, 0.2, 1] }}
-          transition={{ duration: 0.7, repeat: Infinity }}
-          className="inline-block w-[2px] h-[15px] bg-current ml-0.5 align-middle rounded-full"
-        />
-      )}
-    </span>
   )
 }
 
