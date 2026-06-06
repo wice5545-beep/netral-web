@@ -806,8 +806,8 @@ function TiltCard({ children }: { children: React.ReactNode }) {
   const ref = useRef<HTMLDivElement>(null)
   const x = useMotionValue(0)
   const y = useMotionValue(0)
-  const rotateX = useSpring(useTransform(y, [-0.5, 0.5], [4, -4]), { stiffness: 200, damping: 30 })
-  const rotateY = useSpring(useTransform(x, [-0.5, 0.5], [-4, 4]), { stiffness: 200, damping: 30 })
+  const rotateX = useSpring(useTransform(y, [-0.5, 0.5], [1.5, -1.5]), { stiffness: 200, damping: 40 })
+  const rotateY = useSpring(useTransform(x, [-0.5, 0.5], [-1.5, 1.5]), { stiffness: 200, damping: 40 })
 
   const handleMouseMove = (e: React.MouseEvent) => {
     const rect = ref.current?.getBoundingClientRect()

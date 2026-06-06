@@ -46,6 +46,7 @@ export function MarketingNav() {
           <NavLink href="/tarifs">{t.nav.pricing}</NavLink>
           <NavLink href="/extensions">VS Code</NavLink>
           <NavLink href="/changelog">Changelog</NavLink>
+          <NavLink href="/docs">Docs</NavLink>
         </div>
         <div className="flex items-center gap-1.5 ml-2">
           <LanguageSwitcher />

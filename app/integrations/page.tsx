@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, Check, ExternalLink, Loader2, Unlink } from 'lucide-react'
+import { AlertTriangle, ArrowLeft, Check, ExternalLink, Loader2, Unlink } from 'lucide-react'
 import { NetralLogo } from '@/components/ui/NetralLogo'
 
 // ─── Animated API Icon ───────────────────────────────────────────────────────
@@ -157,10 +158,22 @@ const SERVICES = [
 
 // ─── Page ────────────────────────────────────────────────────────────────────
 
-export default function IntegrationsPage() {
+function IntegrationsContent() {
   const [integrations, setIntegrations] = useState<{ service: string; updatedAt: string }[]>([])
   const [loading, setLoading] = useState(true)
   const [disconnecting, setDisconnecting] = useState<string | null>(null)
+  const searchParams = useSearchParams()
+  const errorParam = searchParams.get('error')
+  const successParam = searchParams.get('success')
+  const [notification, setNotification] = useState<{ type: 'error' | 'success'; message: string } | null>(null)
+
+  useEffect(() => {
+    if (errorParam === 'db_error') {
+      setNotification({ type: 'error', message: 'Erreur de base de données — veuillez réessayer ou contacter le support.' })
+    } else if (successParam === 'google') {
+      setNotification({ type: 'success', message: 'Services Google connectés avec succès !' })
+    }
+  }, [errorParam, successParam])
 
   useEffect(() => {
     fetch('/api/integrations')
@@ -199,6 +212,26 @@ export default function IntegrationsPage() {
       </nav>
 
       <div className="max-w-3xl mx-auto px-6 pt-28 pb-24">
+        {/* Notification banner */}
+        <AnimatePresence>
+          {notification && (
+            <motion.div
+              initial={{ opacity: 0, y: -12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl mb-6 text-[13px] font-medium ${
+                notification.type === 'error'
+                  ? 'bg-red-500/10 border border-red-500/25 text-red-600 dark:text-red-400'
+                  : 'bg-emerald-500/10 border border-emerald-500/25 text-emerald-600 dark:text-emerald-400'
+              }`}
+            >
+              {notification.type === 'error' ? <AlertTriangle size={16} /> : <Check size={16} />}
+              {notification.message}
+              <button onClick={() => setNotification(null)} className="ml-auto opacity-60 hover:opacity-100 transition-opacity">✕</button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Back */}
         <Link href="/chat" className="inline-flex items-center gap-1.5 text-[13px] text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors mb-10">
           <ArrowLeft size={14} />
@@ -324,5 +357,13 @@ export default function IntegrationsPage() {
         </motion.div>
       </div>
     </div>
+  )
+}
+
+export default function IntegrationsPage() {
+  return (
+    <Suspense fallback={null}>
+      <IntegrationsContent />
+    </Suspense>
   )
 }
