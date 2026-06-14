@@ -11,7 +11,7 @@ const SESSION_SECRET = new TextEncoder().encode(
   })()
 )
 
-const protectedPaths = ['/chat', '/onboarding']
+const protectedPaths = ['/chat', '/onboarding', '/integrations']
 const authPaths = ['/login', '/register']
 
 // Allowed CORS origins — restrict to known domains

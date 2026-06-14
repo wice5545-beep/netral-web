@@ -76,6 +76,7 @@ export async function GET(req: NextRequest) {
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET
   const clientId = process.env.GOOGLE_CLIENT_ID
   const redirectUri =
+    process.env.GOOGLE_INTEGRATIONS_REDIRECT_URI ??
     process.env.GOOGLE_REDIRECT_URI ??
     `${origin}/api/integrations/callback/google`
 

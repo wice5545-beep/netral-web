@@ -37,7 +37,8 @@ export async function GET(req: NextRequest) {
     ...services.flatMap(s => SCOPES[s] ?? []),
   ]
 
-  const redirectUri = process.env.GOOGLE_REDIRECT_URI
+  const redirectUri = process.env.GOOGLE_INTEGRATIONS_REDIRECT_URI
+    ?? process.env.GOOGLE_REDIRECT_URI
     ?? `${origin}/api/integrations/callback/google`
 
   const state = Buffer.from(JSON.stringify({ userId: session.userId, services })).toString('base64url')

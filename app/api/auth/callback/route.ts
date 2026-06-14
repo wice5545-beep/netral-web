@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
 
   const clientId = process.env.GOOGLE_CLIENT_ID
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET
-  const redirectUri = process.env.GOOGLE_REDIRECT_URI ?? `${origin}/api/auth/callback`
+  const redirectUri = process.env.GOOGLE_AUTH_REDIRECT_URI ?? `${origin}/api/auth/callback`
 
   if (!clientId || !clientSecret) {
     return NextResponse.redirect(`${origin}/login?error=google_not_configured`)
@@ -66,14 +66,12 @@ export async function GET(req: NextRequest) {
   const name = googleUser.name || googleUser.given_name || email.split('@')[0]
 
   // Upsert user in DB
-  const { rows } = await db.query(`SELECT id, onboarded FROM "User" WHERE email = $1`, [email])
+  const { rows } = await db.query(`SELECT id FROM "User" WHERE email = $1`, [email])
 
   let userId: string
-  let onboarded: boolean
 
   if (rows[0]) {
     userId = rows[0].id
-    onboarded = rows[0].onboarded
   } else {
     userId = randomBytes(12).toString('hex')
     await db.query(
@@ -81,13 +79,12 @@ export async function GET(req: NextRequest) {
        VALUES ($1, $2, $3, false, 'ntrl-1.3', 'free', 0, $4, now())`,
       [userId, name, email, new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1)]
     )
-    onboarded = false
   }
 
   await createSession(userId)
 
-  // Clear the state cookie
-  const response = NextResponse.redirect(`${origin}${onboarded ? '/chat' : '/onboarding'}`)
+  // Clear the state cookie and always land in a fresh chat after login.
+  const response = NextResponse.redirect(`${origin}/chat`)
   response.cookies.delete('oauth_state')
 
   return response

@@ -20,8 +20,9 @@ export async function GET(req: NextRequest) {
     )
   }
 
-  // Build redirect URI — prefer env var, fallback to current origin
-  const redirectUri = process.env.GOOGLE_REDIRECT_URI
+  // Build redirect URI for sign-in only. Do not reuse the Google integration
+  // callback here, or Google sign-in will be handled as a Gmail/Drive link flow.
+  const redirectUri = process.env.GOOGLE_AUTH_REDIRECT_URI
     ?? `${origin}/api/auth/callback`
 
   // Generate a cryptographically random state parameter to prevent CSRF
