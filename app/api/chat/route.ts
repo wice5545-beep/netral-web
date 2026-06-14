@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { z } from 'zod'
 import { getSession } from '@/lib/session'
 import { db } from '@/lib/db'
-import { getModel, getApiKey, getFallbackKeys } from '@/lib/ai/models'
+import { getModel, getApiKey, getFallbackKeys, MODELS, type ModelId } from '@/lib/ai/models'
 import { buildSystemPrompt } from '@/lib/ai/prompt'
 import { webSearch, readPage, needsWebSearch, type SearchResult } from '@/lib/ai/websearch'
 import { rateLimit } from '@/lib/rate-limit'
@@ -160,21 +160,55 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) return new Response('Invalid request', { status: 400 })
 
   const { messages, modelId, conversationId: rawConvId, webSearch: useWebSearch } = parsed.data
-  const model = getModel(modelId)
+  let model = getModel(modelId)
 
-  if ((model.id === 'ntrl-1.2' || model.id === 'ntrl-2.0') && !isPaid) {
-    return new Response(`${model.id.toUpperCase()} nécessite un abonnement payant.`, { status: 403 })
+  if (model.id === 'ntrl-1.2' && !isPaid) {
+    return new Response(`NTRL 1.2 (Gemini) nécessite un abonnement payant.`, { status: 403 })
   }
+  // NTRL 2.0 is free (BluesMinds / GPT-5 Nano)
 
   const tokenCheck = checkTokenBudget(userId, userPlan)
   if (!tokenCheck.allowed) {
     return new Response('Limite de tokens atteinte.', { status: 429 })
   }
 
-  const primaryKey = getApiKey(model.envKey)
+  let primaryKey = getApiKey(model.envKey)
   const fallbackKeys = getFallbackKeys(model.envKey)
   const allKeys = [primaryKey, ...fallbackKeys].filter(Boolean)
-  if (!allKeys.length) return new Response('Missing API key', { status: 500 })
+
+  // Auto-fallback : si la clé API du modèle sélectionné est absente, basculer sur un modèle dispo
+  let modelFallback = false
+  let fallbackNote: string | undefined
+  if (!allKeys.length) {
+    // Sauvegarder le modèle original avant fallback
+    const originalDisplayName = model.displayName
+    const fallbackOrder: ModelId[] = ['ntrl-1.3', 'ntrl-1.2', 'ntrl-2.0']
+    let found = false
+    for (const fbId of fallbackOrder) {
+      if (fbId === model.id) continue
+      const fbModel = MODELS[fbId]
+      const fbKey = getApiKey(fbModel.envKey)
+      if (fbKey) {
+        // Vérifier le paywall pour les modèles payants (NTRL 1.2 uniquement)
+        if (fbModel.id === 'ntrl-1.2' && !isPaid) continue
+        model = fbModel
+        primaryKey = fbKey
+        fallbackKeys.length = 0
+        allKeys.length = 0
+        allKeys.push(fbKey)
+        const extra = getFallbackKeys(fbModel.envKey)
+        if (extra.length) allKeys.push(...extra)
+        modelFallback = true
+        fallbackNote = `⚠️ ${originalDisplayName} non disponible (clé API manquante) → redirigé vers ${fbModel.displayName}`
+        found = true
+        break
+      }
+    }
+    if (!found) {
+      console.error(`[CHAT] Aucune clé API disponible pour le modèle ${model.id}`)
+      return new Response("Aucune clé API configurée. Vérifiez les variables d'environnement (MISTRAL_API_KEY, GEMINI_API_KEY, BLUESMINDS_API_KEY).", { status: 500 })
+    }
+  }
 
   const userMessage = messages[messages.length - 1]
   const textContent = userMessage?.role === 'user'
@@ -209,6 +243,11 @@ export async function POST(req: NextRequest) {
       }
 
       send({ type: 'meta', conversationId: isVSCode ? undefined : convId, model: model.id })
+
+      // Notifier le fallback si le modèle a été changé automatiquement
+      if (modelFallback && fallbackNote) {
+        send({ type: 'fallback', message: fallbackNote, to: model.id })
+      }
 
       // Google context
       let integrationActivity: { services: string[]; summary: string } | undefined
@@ -253,12 +292,39 @@ export async function POST(req: NextRequest) {
       const temperature = model.defaultParams?.temperature ?? 0.7
       const max_tokens = model.defaultParams?.max_tokens ?? 2048
 
-      // Get active tools
+      // Get active tools — available to ALL users (integrations ≠ AI model)
       let tools: Record<string, unknown>[] | undefined
-      if (!isVSCode && isPaid) {
+      let toolModel = model // model for tool execution (may differ from display model)
+      let toolAdapter = adapter // adapter for tool calls (may differ from display adapter)
+      let toolKeys: string[] = [] // separate keys for tool API calls
+      if (!isVSCode) {
         const active = await getActiveTools(userId)
         if (active.length > 0) {
-          tools = active as unknown as Record<string, unknown>[]
+          // If current model doesn't support function calling, skip tools entirely
+          // (BluesMinds/gpt-5-nano crashes when receiving tools)
+          if (model.supportsTools) {
+            tools = active as unknown as Record<string, unknown>[]
+          } else {
+            // Auto-switch to a tool-compatible model
+            const toolFallbackOrder: ModelId[] = ['ntrl-1.3', 'ntrl-1.2']
+            for (const fbId of toolFallbackOrder) {
+              const fbModel = MODELS[fbId]
+              if (!fbModel.supportsTools) continue
+              const fbKey = getApiKey(fbModel.envKey)
+              if (fbKey) {
+                toolModel = fbModel
+                toolAdapter = getProviderAdapter(fbModel.provider)
+                toolKeys = [fbKey, ...getFallbackKeys(fbModel.envKey)].filter(Boolean)
+                tools = active as unknown as Record<string, unknown>[]
+                send({ type: 'fallback', message: `🔧 ${model.displayName} ne supporte pas les intégrations → outils exécutés via ${fbModel.displayName}`, to: fbModel.id })
+                break
+              }
+            }
+            if (!toolKeys.length) {
+              // No tool-capable model available, skip tools
+              tools = undefined
+            }
+          }
         }
       }
 
@@ -281,20 +347,21 @@ export async function POST(req: NextRequest) {
         for (let iteration = 0; iteration < MAX_TOOL_ITERATIONS - 1; iteration++) {
           send({ type: 'status', status: 'thinking' })
 
-          const nonStreamPayload = adapter.buildPayload({
-            model: model.upstreamModel,
+          const nonStreamPayload = toolAdapter.buildPayload({
+            model: toolModel.upstreamModel,
             messages: conversationMessages as any,
             stream: false,
             temperature: 0.3,
-            max_tokens: 512,
+            max_tokens: 1024,
             tools,
           })
 
+          const keys = toolKeys.length > 0 ? toolKeys : allKeys
           let toolResponse: Response | null = null
-          for (const key of allKeys) {
-            toolResponse = await fetch(model.apiUrl, {
+          for (const key of keys) {
+            toolResponse = await fetch(toolModel.apiUrl, {
               method: 'POST',
-              headers: adapter.buildHeaders(key),
+              headers: toolAdapter.buildHeaders(key),
               body: JSON.stringify(nonStreamPayload),
               signal: AbortSignal.timeout(15000),
             })
@@ -304,7 +371,7 @@ export async function POST(req: NextRequest) {
           if (!toolResponse || !toolResponse.ok) break
 
           const responseText = await toolResponse.text()
-          const { content: nonStreamContent, toolCalls } = adapter.parseResponse(responseText)
+          const { content: nonStreamContent, toolCalls } = toolAdapter.parseResponse(responseText)
 
           if (!toolCalls || toolCalls.length === 0) {
             break
@@ -324,6 +391,7 @@ export async function POST(req: NextRequest) {
             try { args = JSON.parse(toolCall.function.arguments) } catch {}
 
             send({ type: 'tool_use', toolCallId: toolCall.id, tool: toolName, args })
+            send({ type: 'status', status: 'executing', tool: toolName })
 
             const executor = TOOL_EXECUTORS[toolName]
             const result: ToolResult = executor
@@ -360,10 +428,26 @@ export async function POST(req: NextRequest) {
       // Final streaming call
       send({ type: 'status', status: 'thinking' })
 
-      const streamingMessages = conversationMessages.map(m => ({
-        role: m.role,
-        content: m.content,
-      }))
+      // If the final streaming model doesn't support tools, strip tool-related fields
+      // to avoid confusing APIs like BluesMinds (gpt-5-nano) that crash on unknown fields
+      const shouldStripTools = !model.supportsTools && conversationMessages.some(m => m.tool_calls || m.tool_call_id)
+      const streamingMessages = conversationMessages.map(m => {
+        const msg: Record<string, unknown> = { role: m.role, content: m.content }
+        if (!shouldStripTools) {
+          if (m.tool_calls) msg.tool_calls = m.tool_calls
+          if (m.tool_call_id) msg.tool_call_id = m.tool_call_id
+          if (m.name) msg.name = m.name
+        }
+        return msg
+      })
+      // If tools were stripped, inject a summary of what happened instead
+      if (shouldStripTools && fullAccumulated) {
+        const systemIdx = streamingMessages.findIndex((m: any) => m.role === 'system')
+        const toolSummary = { role: 'user' as const, content: `[Intégrations exécutées en arrière-plan]\n${fullAccumulated.trim()}\n\nRéponds à la question initiale en tenant compte de ces résultats.` }
+        if (systemIdx >= 0) {
+          streamingMessages.splice(systemIdx + 1, 0, toolSummary)
+        }
+      }
       const payload = adapter.buildPayload({
         model: model.upstreamModel,
         messages: streamingMessages as any,

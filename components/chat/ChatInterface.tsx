@@ -10,7 +10,7 @@ import { Message } from './Message'
 import { ChatComposer } from './ChatComposer'
 import { UpgradePopup } from './UpgradePopup'
 import { AnnouncementPopup } from './AnnouncementPopup'
-import { Globe, FileText, Sparkles, ArrowUp, ArrowRight } from 'lucide-react'
+import { Globe, FileText, Sparkles, ArrowUp, ArrowRight, Brain, Wrench, Check, X } from 'lucide-react'
 
 interface ChatInterfaceProps {
   initialMessages?: ChatMessage[]
@@ -19,18 +19,36 @@ interface ChatInterfaceProps {
   userName?: string
 }
 
-export type SearchStatus = null | 'searching' | 'reading' | 'thinking'
+export type SearchStatus = null | 'searching' | 'reading' | 'thinking' | 'executing'
+
+export type ThinkingStep = { id: string; label: string; status: 'running' | 'done' | 'error'; detail?: string }
 
 function friendlyError(msg: string): string {
-  if (msg.includes('model_unavailable')) {
-    return 'Ce modèle est temporairement indisponible (quota atteint). Essayez un autre modèle ou réessayez plus tard. ⏳'
+  const cleaned = msg.replace(/^Erreur:\s*/i, '').trim()
+  if (cleaned.includes('model_unavailable')) {
+    return `Ce modèle est temporairement indisponible. Essayez un autre modèle ou réessayez plus tard. ⏳`
   }
-  if (msg.includes('429') || msg.includes('quota') || msg.includes('rate') || msg.includes('capacity') || msg.includes('Limit') || msg.includes('TPM') || msg.includes('too large') || msg.includes('upstream') || msg.includes('service_tier')) {
-    return 'Netral rencontre une forte demande en ce moment. Réessayez dans quelques secondes. 🙏'
+  if (cleaned.includes('abonnement payant') || cleaned.includes('nécessite un abonnement')) {
+    return `🔒 ${cleaned}\n\nPassez à Netral Plus pour débloquer ce modèle.`
   }
-  if (msg.includes('Limite de messages')) return msg
-  if (msg.includes('Trop de messages') || msg.includes('Trop de requêtes')) return msg
-  return 'Netral a rencontré un problème temporaire. Veuillez réessayer. 🔄'
+  if (cleaned.includes('429') || cleaned.includes('quota') || cleaned.includes('rate') || cleaned.includes('capacity') || cleaned.includes('Limit') || cleaned.includes('TPM') || cleaned.includes('too large') || cleaned.includes('upstream') || cleaned.includes('service_tier') || cleaned.includes('overloaded') || cleaned.includes('temporarily')) {
+    return `Netral est saturé — réessayez dans quelques secondes. 🙏`
+  }
+  if (cleaned.includes('Limite de messages')) return cleaned
+  if (cleaned.includes('Trop de messages') || cleaned.includes('Trop de requêtes')) return cleaned
+  if (cleaned.includes('401') || cleaned.includes('403') || cleaned.includes('Unauthorized') || cleaned.includes('Forbidden')) {
+    return `🔐 Session expirée ou accès refusé. Reconnectez-vous ou vérifiez votre abonnement.`
+  }
+  if (cleaned.includes('timeout') || cleaned.includes('ETIMEDOUT') || cleaned.includes('ECONNREFUSED')) {
+    return `🌐 Problème réseau — le serveur API est injoignable.`
+  }
+  if (cleaned.includes('Aucune clé API')) {
+    return `⚙️ ${cleaned}`
+  }
+  if (cleaned.length > 0) {
+    return `⚠️ ${cleaned.slice(0, 250)}`
+  }
+  return 'Une erreur inattendue est survenue. Réessayez ou changez de modèle. 🔄'
 }
 
 export function ChatInterface({ initialMessages = [], conversationId: initialConversationId, userInitial, userName }: ChatInterfaceProps) {
@@ -45,6 +63,9 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
   const [showUpgrade, setShowUpgrade] = useState(false)
   const [upgradeMsg, setUpgradeMsg] = useState('')
   const [integrationStatus, setIntegrationStatus] = useState<string | null>(null)
+  const [fallbackNotice, setFallbackNotice] = useState<string | null>(null)
+  const [thinkingSteps, setThinkingSteps] = useState<ThinkingStep[]>([])
+  const [thinkingExpanded, setThinkingExpanded] = useState(true)
   const scrollRef = useRef<HTMLDivElement>(null)
   const abortRef = useRef<AbortController | null>(null)
   const [didInit, setDidInit] = useState(false)
@@ -59,12 +80,11 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
 
   useEffect(() => {
     if (!scrollRef.current || userScrolledUp) return
-    // Use RAF for smooth scroll without blocking
     requestAnimationFrame(() => {
       const el = scrollRef.current
       if (el) el.scrollTop = el.scrollHeight
     })
-  }, [messages, userScrolledUp])
+  }, [messages, userScrolledUp, thinkingSteps])
 
   // Detect user scrolling up — debounced
   useEffect(() => {
@@ -100,7 +120,7 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
     return () => { document.removeEventListener('mouseup', handleSelection); document.removeEventListener('touchend', handleSelection) }
   }, [])
 
-  // Keyboard shortcuts: ⌘N new chat, ⌘↑ focus input
+  // Keyboard shortcuts
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'n') {
@@ -116,14 +136,11 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
     const text = (overrideText ?? input).trim()
     if ((!text && !attachments?.length) || isStreaming) return
 
-    // Anti-double-request guard
     if (currentRequestId && isStreaming) return
 
-    // Generate and track request ID
     const requestId = crypto.randomUUID()
     setCurrentRequestId(requestId)
 
-    // Prepend reply context if present
     const fullText = replyContext ? `> ${replyContext}\n\n${text}` : text
     setReplyContext(null)
 
@@ -135,11 +152,12 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
     setInput('')
     setStreaming(true)
     setUserScrolledUp(false)
+    setThinkingSteps([])
+    setThinkingExpanded(true)
 
     const abort = new AbortController()
     abortRef.current = abort
 
-    // Timeout: abort if no first chunk within 90s
     let receivedFirstChunk = false
     const timeoutId = setTimeout(() => {
       if (!receivedFirstChunk) abort.abort()
@@ -148,7 +166,6 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
     try {
       const history = [...messages, userMessage].map((m) => ({ role: m.role, content: m.content }))
 
-      // If attachments, modify the last user message to include images
       if (attachments?.length) {
         const lastMsg = history[history.length - 1]
         const content: unknown[] = [{ type: 'text', text: lastMsg.content || 'Analyse cette image.' }]
@@ -216,12 +233,48 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
             } else if (parsed.type === 'integrations') {
               setIntegrationStatus(parsed.summary || `Lecture ${parsed.services?.join(', ')}...`)
               setTimeout(() => setIntegrationStatus(null), 4000)
+            } else if (parsed.type === 'fallback') {
+              setFallbackNotice(parsed.message)
+              setTimeout(() => setFallbackNotice(null), 8000)
+            } else if (parsed.type === 'tool_use') {
+              if (!receivedFirstChunk) {
+                receivedFirstChunk = true
+                clearTimeout(timeoutId)
+              }
+              setSearchStatus(null)
+              const stepId = parsed.toolCallId || crypto.randomUUID()
+              const label = parsed.tool.replace(/_/g, ' ')
+              setThinkingSteps(prev => [...prev, { id: stepId, label, status: 'running' }])
+            } else if (parsed.type === 'tool_result') {
+              const result = parsed.result || {}
+              const toolLabel = parsed.tool.replace(/_/g, ' ')
+              setThinkingSteps(prev =>
+                prev.map(s =>
+                  s.status === 'running' && s.label === toolLabel
+                    ? { ...s, status: result.success ? 'done' : 'error', detail: result.success ? undefined : (result.error || 'Erreur') }
+                    : s
+                )
+              )
+              if (result.success && parsed.tool === 'generate_image') {
+                const imageId = result.data?.imageId
+                if (imageId) {
+                  chunkBuffer += `\n\n![Image générée](/api/images/${imageId})\n`
+                }
+              }
+              if (!flushScheduled) {
+                flushScheduled = true
+                requestAnimationFrame(flushChunks)
+              }
             } else if (parsed.type === 'chunk') {
               if (!receivedFirstChunk) {
                 receivedFirstChunk = true
                 clearTimeout(timeoutId)
               }
               setSearchStatus(null)
+              // Collapse thinking when actual response starts
+              if (thinkingExpanded && thinkingSteps.length > 0) {
+                setThinkingExpanded(false)
+              }
               chunkBuffer += parsed.text
               if (!flushScheduled) {
                 flushScheduled = true
@@ -240,7 +293,6 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
         }
       }
 
-      // Flush remaining buffered chunks
       flushChunks()
 
       if (newConversationId && !initialConversationId) {
@@ -255,6 +307,8 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
       setStreaming(false)
       setSearchStatus(null)
       setCurrentRequestId(null)
+      // Mark all remaining running steps as done
+      setThinkingSteps(prev => prev.map(s => s.status === 'running' ? { ...s, status: 'done' as const } : s))
       const last = useChatStore.getState().messages
       if (last.length > 0) {
         const lastMsg = last[last.length - 1]
@@ -265,7 +319,7 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
     }
   }
 
-  const handleStop = () => { abortRef.current?.abort(); setStreaming(false); setSearchStatus(null) }
+  const handleStop = () => { abortRef.current?.abort(); setStreaming(false); setSearchStatus(null); setThinkingSteps(prev => prev.map(s => s.status === 'running' ? { ...s, status: 'done' as const } : s)) }
   const handleRegenerate = () => {
     if (messages.length < 2) return
     const lastUser = [...messages].reverse().find((m) => m.role === 'user')
@@ -289,7 +343,6 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
   }
 
   const handleEdit = (msgIndex: number, newContent: string) => {
-    // Replace the message and remove everything after it, then re-submit
     const newMessages = messages.slice(0, msgIndex)
     setMessages(newMessages)
     handleSubmit(newContent)
@@ -297,6 +350,16 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
 
   const isEmpty = didInit && messages.length === 0
   const firstName = userName?.split(' ')[0]
+  const isLastMessageStreaming = messages.length > 0 && messages[messages.length - 1].isStreaming
+
+  // Determine which icon to show for thinking steps
+  const getStepIcon = (step: ThinkingStep) => {
+    switch (step.status) {
+      case 'running': return <span className="w-3 h-3 rounded-full bg-gradient-to-r from-violet-500 to-amber-500 animate-pulse" />
+      case 'done': return <Check size={11} className="text-emerald-400" />
+      case 'error': return <X size={11} className="text-red-400" />
+    }
+  }
 
   return (
     <div className="flex flex-col h-full relative">
@@ -306,7 +369,7 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
       <div ref={scrollRef} className="flex-1 overflow-y-auto">
         {isEmpty ? (
           <div className="min-h-full flex flex-col items-center justify-center px-6 pb-44 max-w-2xl mx-auto w-full relative">
-            {/* Cinematic ambient background — 3 morphing aurora blobs */}
+            {/* Cinematic ambient background */}
             <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
               <div
                 className="aurora-blob aurora-1 opacity-40 dark:opacity-50"
@@ -415,20 +478,92 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
           </div>
         ) : (
           <div className="max-w-3xl mx-auto w-full px-4 md:px-6 pt-8 pb-44">
-            {messages.map((m, i) => (
-              <div key={m.id} className="animate-slide-up" style={{ animationDelay: i === messages.length - 1 ? '0ms' : '0ms' }}>
-                <Message
-                  role={m.role}
-                  content={m.content}
-                  isStreaming={m.isStreaming && i === messages.length - 1}
-                  isLast={i === messages.length - 1 && !isStreaming}
-                  onRegenerate={handleRegenerate}
-                  onEdit={m.role === 'user' ? (newContent) => handleEdit(i, newContent) : undefined}
-                  userInitial={userInitial}
-                  searchStatus={i === messages.length - 1 ? searchStatus : null}
-                />
-              </div>
-            ))}
+            {messages.map((m, i) => {
+              const isLast = i === messages.length - 1
+              const showThinking = isLast && isLastMessageStreaming && thinkingSteps.length > 0
+
+              return (
+                <div key={m.id} className="animate-slide-up">
+                  {/* Thinking preview — shown above the last assistant message during streaming */}
+                  {showThinking && (
+                    <AnimatePresence>
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                        className="mb-3"
+                      >
+                        <button
+                          onClick={() => setThinkingExpanded(!thinkingExpanded)}
+                          className="w-full flex items-center gap-2 text-[12px] text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors group"
+                        >
+                          <motion.span
+                            animate={{ rotate: thinkingExpanded ? 90 : 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="text-[10px]"
+                          >
+                            ▶
+                          </motion.span>
+                          <Brain size={13} className="text-violet-400" />
+                          <span className="font-medium">Réflexion</span>
+                          <span className="text-[10px] text-[var(--fg-subtle)] ml-1">
+                            {thinkingSteps.filter(s => s.status === 'done').length}/{thinkingSteps.length} étapes
+                          </span>
+                          {thinkingSteps.some(s => s.status === 'running') && (
+                            <span className="ml-auto flex items-center gap-1 text-[10px] text-violet-400">
+                              <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
+                              En cours...
+                            </span>
+                          )}
+                        </button>
+
+                        <AnimatePresence>
+                          {thinkingExpanded && (
+                            <motion.div
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: 'auto' }}
+                              exit={{ opacity: 0, height: 0 }}
+                              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                              className="mt-2 ml-5 space-y-1.5 overflow-hidden"
+                            >
+                              {thinkingSteps.map((step) => (
+                                <motion.div
+                                  key={step.id}
+                                  initial={{ opacity: 0, x: -8 }}
+                                  animate={{ opacity: 1, x: 0 }}
+                                  transition={{ duration: 0.2 }}
+                                  className="flex items-center gap-2.5 text-[11.5px]"
+                                >
+                                  {getStepIcon(step)}
+                                  <span className={step.status === 'running' ? 'text-[var(--fg-muted)]' : step.status === 'error' ? 'text-red-400' : 'text-emerald-400'}>
+                                    {step.label}
+                                  </span>
+                                  {step.detail && (
+                                    <span className="text-[10px] text-red-400/70 truncate max-w-[180px]">{step.detail}</span>
+                                  )}
+                                </motion.div>
+                              ))}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </motion.div>
+                    </AnimatePresence>
+                  )}
+
+                  <Message
+                    role={m.role}
+                    content={m.content}
+                    isStreaming={m.isStreaming && isLast}
+                    isLast={isLast && !isStreaming}
+                    onRegenerate={handleRegenerate}
+                    onEdit={m.role === 'user' ? (newContent) => handleEdit(i, newContent) : undefined}
+                    userInitial={userInitial}
+                    searchStatus={isLast ? searchStatus : null}
+                  />
+                </div>
+              )
+            })}
           </div>
         )}
       </div>
@@ -453,7 +588,7 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
       {/* Composer area */}
       <div className="absolute bottom-0 left-0 right-0 pointer-events-none">
         <div className="max-w-3xl mx-auto px-4 md:px-6 pb-4 pb-safe">
-          {/* Status pill */}
+          {/* Integration status pill */}
           <AnimatePresence>
             {integrationStatus && (
               <motion.div
@@ -475,6 +610,28 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* Fallback notice */}
+          <AnimatePresence>
+            {fallbackNotice && (
+              <motion.div
+                initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 6, scale: 0.95 }}
+                transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                className="flex justify-center mb-2"
+              >
+                <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full glass-card shadow-colored text-[12px] text-[var(--fg-muted)] border border-yellow-500/20 bg-yellow-500/5">
+                  <span className="text-[14px]">⚠️</span>
+                  <motion.span initial={{ opacity: 0, x: -4 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.15 }}>
+                    {fallbackNotice}
+                  </motion.span>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Search status pill */}
           <AnimatePresence>
             {searchStatus && (
               <motion.div
@@ -490,7 +647,7 @@ export function ChatInterface({ initialMessages = [], conversationId: initialCon
                     <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: 'linear-gradient(135deg, #7c3aed, #f97316)' }} />
                   </span>
                   <motion.span key={searchStatus} initial={{ opacity: 0, x: -4 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.15 }}>
-                    {t.chat[searchStatus as 'searching' | 'reading' | 'thinking']}
+                    {t.chat[searchStatus as 'searching' | 'reading' | 'thinking'] || searchStatus}
                   </motion.span>
                 </div>
               </motion.div>

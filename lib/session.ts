@@ -2,8 +2,16 @@ import 'server-only'
 import { SignJWT, jwtVerify } from 'jose'
 import { cookies } from 'next/headers'
 
-const secretKey = process.env.SESSION_SECRET ?? 'fallback-secret-32-characters-min'
-const encodedKey = new TextEncoder().encode(secretKey)
+// CRITICAL: SESSION_SECRET must be set in production.
+// No fallback — if missing, the app will crash rather than use an insecure key.
+const secretKey = process.env.SESSION_SECRET
+if (!secretKey) {
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('FATAL: SESSION_SECRET environment variable is required in production. Set it to a random 32+ character string.')
+  }
+  console.warn('⚠️ SESSION_SECRET not set — using insecure dev key. DO NOT use in production.')
+}
+const encodedKey = new TextEncoder().encode(secretKey || 'dev-only-insecure-secret-do-not-use-in-prod')
 
 export type SessionPayload = {
   userId: string

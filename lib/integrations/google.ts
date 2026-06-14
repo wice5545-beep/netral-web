@@ -1,7 +1,27 @@
 import 'server-only'
 import { db } from '@/lib/db'
+import { encryptToken, decryptToken } from '@/lib/encryption'
 
 // ─── Token management ────────────────────────────────────────────────────────
+
+/**
+ * Decrypt a token that may be encrypted (new format: "iv:authTag:ciphertext")
+ * or plaintext (legacy). Automatically migrates legacy tokens to encrypted format.
+ */
+function safeDecryptToken(stored: string, userId: string, service: string, field: 'accessToken' | 'refreshToken'): string {
+  try {
+    return decryptToken(stored)
+  } catch {
+    // Legacy: token was stored unencrypted — migrate it
+    try {
+      db.query(
+        `UPDATE "Integration" SET "${field}" = $1, "updatedAt" = now() WHERE "userId" = $2 AND service = $3`,
+        [encryptToken(stored), userId, service]
+      ).catch(() => {})
+    } catch {}
+    return stored
+  }
+}
 
 async function getValidToken(userId: string, service: string): Promise<string | null> {
   const { rows } = await db.query(
@@ -11,8 +31,15 @@ async function getValidToken(userId: string, service: string): Promise<string | 
   )
   if (!rows[0]) return null
   const { accessToken, refreshToken, expiresAt } = rows[0]
-  if (expiresAt && new Date(expiresAt).getTime() > Date.now() + 60_000) return accessToken
+
+  // Decrypt access token from storage
+  const plainAccessToken = safeDecryptToken(accessToken, userId, service, 'accessToken')
+
+  if (expiresAt && new Date(expiresAt).getTime() > Date.now() + 60_000) return plainAccessToken
   if (!refreshToken) return null
+
+  // Decrypt refresh token for the refresh request
+  const plainRefreshToken = safeDecryptToken(refreshToken, userId, service, 'refreshToken')
 
   const res = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
@@ -20,15 +47,16 @@ async function getValidToken(userId: string, service: string): Promise<string | 
     body: new URLSearchParams({
       client_id: process.env.GOOGLE_CLIENT_ID!,
       client_secret: process.env.GOOGLE_CLIENT_SECRET!,
-      refresh_token: refreshToken,
+      refresh_token: plainRefreshToken,
       grant_type: 'refresh_token',
     }),
   })
   if (!res.ok) return null
   const data = await res.json() as { access_token: string; expires_in: number }
+  // Encrypt the new access token before storing
   await db.query(
     `UPDATE "Integration" SET "accessToken" = $1, "expiresAt" = $2, "updatedAt" = now() WHERE "userId" = $3 AND service = $4`,
-    [data.access_token, new Date(Date.now() + data.expires_in * 1000), userId, service]
+    [encryptToken(data.access_token), new Date(Date.now() + data.expires_in * 1000), userId, service]
   )
   return data.access_token
 }

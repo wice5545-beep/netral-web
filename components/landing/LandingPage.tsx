@@ -89,14 +89,14 @@ const TESTIMONIALS = [
 const FAQ = [
   { q: 'En quoi Netral diffère de ChatGPT ?', a: "Netral combine plusieurs modèles (Mistral, Gemini) avec une mémoire persistante et une recherche web temps réel native. Pas de plugins à activer — tout est intégré." },
   { q: 'Mes données sont-elles utilisées pour entraîner des modèles ?', a: "Jamais. Vos messages restent strictement privés. Aucun fournisseur tiers n'a accès aux conversations pour entraîner ses modèles." },
-  { q: 'Puis-je essayer gratuitement ?', a: "Oui. Le plan Free vous donne accès à NTRL 1.3 (1 message/jour). Les plans payants commencent à 5€/mois." },
+  { q: 'Puis-je essayer gratuitement ?', a: "Oui. Le plan Free vous donne accès à Netral IA (1 message/jour). Les plans payants commencent à 5€/mois." },
   { q: "L'extension VS Code est-elle disponible ?", a: "Oui, gratuite et open-source. Elle se synchronise avec votre compte Netral via un token API généré depuis les paramètres." },
 ]
 
 const MODELS_LOGOS = [
-  { name: 'Mistral Large', tag: 'NTRL 2.0' },
-  { name: 'Gemini 2.5', tag: 'NTRL 1.2' },
-  { name: 'Mistral', tag: 'NTRL 1.3' },
+  { name: 'Mistral Large', tag: 'Premium' },
+  { name: 'Gemini 2.5', tag: 'Pro' },
+  { name: 'Mistral', tag: 'Standard' },
   { name: 'Web Search', tag: 'Live' },
   { name: 'Gmail', tag: 'API' },
   { name: 'Calendar', tag: 'API' },
@@ -176,7 +176,7 @@ export function LandingPage() {
     const rect = e.currentTarget.getBoundingClientRect()
     mouseX.set((e.clientX - rect.left) / rect.width)
     mouseY.set((e.clientY - rect.top) / rect.height)
-    if (!cursorVisible) setCursorVisible(true)
+    
   }
 
   const statsLabels = [t.stats?.latency ?? 'Latence', t.stats?.uptime ?? 'Uptime', t.stats?.users ?? 'Utilisateurs']
@@ -347,7 +347,7 @@ export function LandingPage() {
               <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-60 animate-ping" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
             </span>
-            <span className="tracking-wide font-medium">{t.hero?.badge ?? 'NTRL 2.0 — Disponible maintenant'}</span>
+            <span className="tracking-wide font-medium">{t.hero?.badge ?? 'Netral IA — Disponible maintenant'}</span>
             <ArrowRight size={11} className="text-[var(--fg-subtle)] group-hover:translate-x-0.5 transition-transform opacity-60 group-hover:opacity-100" />
           </motion.div>
 
@@ -412,7 +412,7 @@ export function LandingPage() {
               <div className="flex items-center justify-between border-t border-[var(--glass-border)] px-4 py-2.5 text-[11.5px] text-[var(--fg-subtle)]">
                 <div className="flex items-center gap-2">
                   <Cpu size={10} />
-                  <span className="font-medium">NTRL 1.3</span>
+                  <span className="font-medium">Netral</span>
                   <span className="opacity-40">·</span>
                   <Globe size={10} />
                   <span>Web</span>
@@ -1102,8 +1102,8 @@ const THINKING_CYCLES = [
   [
     { phase: 'Recherche web…', detail: 'Interrogation des sources en temps réel' },
     { phase: 'Analyse du contexte', detail: 'Mémoire : vous êtes développeur TypeScript' },
-    { phase: 'Raisonnement', detail: 'NTRL 2.0 évalue 3 approches possibles' },
-    { phase: 'Génération', detail: 'Rédaction de la réponse avec citations' },
+    { phase: 'Raisonnement', detail: 'Évaluation multi-angle des approches' },
+    { phase: 'Synthèse', detail: 'Rédaction de la réponse avec citations' },
   ],
   [
     { phase: 'Scan des fichiers…', detail: 'Analyse du workspace VS Code' },
@@ -1137,11 +1137,17 @@ function AIThinkingPreview() {
       <div className="flex items-center gap-2 mb-3">
         <motion.div
           animate={{ rotate: [0, 360] }}
-          transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
-          className="w-4 h-4 rounded-full border-2 border-violet-500/40 border-t-violet-500"
-        />
+          transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
+          className="w-5 h-5 rounded-full bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 border border-violet-500/30 flex items-center justify-center"
+        >
+          <motion.div
+            animate={{ scale: [1, 1.4, 1], opacity: [0.6, 1, 0.6] }}
+            transition={{ duration: 2, repeat: Infinity }}
+            className="w-1.5 h-1.5 rounded-full bg-violet-400"
+          />
+        </motion.div>
         <span className="text-[11px] font-medium text-[var(--fg-muted)] uppercase tracking-[0.15em]">
-          NTRL 2.0 Thinking
+          Netral IA · Thinking
         </span>
       </div>
       <div className="space-y-0.5">

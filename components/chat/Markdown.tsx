@@ -5,11 +5,23 @@ import { motion, AnimatePresence } from 'framer-motion'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
-import { Check, Copy, Terminal } from 'lucide-react'
+import { Check, Copy } from 'lucide-react'
 import 'highlight.js/styles/github-dark.css'
 
 interface MarkdownProps {
   content: string
+}
+
+const SAFE_PROTOCOLS = new Set(['http:', 'https:', 'mailto:'])
+
+function isSafeHref(href: string | undefined): boolean {
+  if (!href) return false
+  if (href.startsWith('#') || href.startsWith('/')) return true
+  try {
+    return SAFE_PROTOCOLS.has(new URL(href).protocol)
+  } catch {
+    return false
+  }
 }
 
 function CodeBlock({ children, className }: { children?: React.ReactNode; className?: string }) {
@@ -78,6 +90,20 @@ export function Markdown({ content }: MarkdownProps) {
             return <CodeBlock className={child.props.className}>{child.props.children}</CodeBlock>
           }
           return <pre>{children}</pre>
+        },
+        a: ({ href, children, ...props }) => {
+          if (!isSafeHref(href)) return <span>{children}</span>
+          const isExternal = href?.startsWith('http://') || href?.startsWith('https://')
+          return (
+            <a
+              {...props}
+              href={href}
+              target={isExternal ? '_blank' : undefined}
+              rel={isExternal ? 'noopener noreferrer nofollow' : undefined}
+            >
+              {children}
+            </a>
+          )
         },
       }}
     >

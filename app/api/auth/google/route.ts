@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/session'
+import { randomBytes } from 'crypto'
 
 export async function GET(req: NextRequest) {
   const { origin } = req.nextUrl
@@ -9,7 +10,6 @@ export async function GET(req: NextRequest) {
 
   const clientId = process.env.GOOGLE_CLIENT_ID
   if (!clientId) {
-    // Show a helpful error page instead of a cryptic redirect
     return new NextResponse(
       `<html><body style="font-family:sans-serif;padding:40px;max-width:500px;margin:auto">
         <h2>⚠️ Google OAuth non configuré</h2>
@@ -24,6 +24,9 @@ export async function GET(req: NextRequest) {
   const redirectUri = process.env.GOOGLE_REDIRECT_URI
     ?? `${origin}/api/auth/callback`
 
+  // Generate a cryptographically random state parameter to prevent CSRF
+  const state = randomBytes(32).toString('hex')
+
   const url = new URL('https://accounts.google.com/o/oauth2/v2/auth')
   url.searchParams.set('client_id', clientId)
   url.searchParams.set('redirect_uri', redirectUri)
@@ -31,7 +34,17 @@ export async function GET(req: NextRequest) {
   url.searchParams.set('scope', 'openid email profile')
   url.searchParams.set('access_type', 'offline')
   url.searchParams.set('prompt', 'consent')
-  url.searchParams.set('state', 'login')
+  url.searchParams.set('state', state)
 
-  return NextResponse.redirect(url.toString())
+  // Set state as a short-lived cookie so the callback can verify it
+  const response = NextResponse.redirect(url.toString())
+  response.cookies.set('oauth_state', state, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 600, // 10 minutes
+    path: '/',
+  })
+
+  return response
 }

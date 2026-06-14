@@ -394,21 +394,36 @@ export const TOOL_EXECUTORS: Record<string, ToolExecutor> = {
       }
       const resolvedSize = sizeMap[size] || '1024x1024'
 
-      const response = await fetch('https://api.blueminds.cloud/v1/images/generations', {
+      const body = JSON.stringify({
+        model: 'grok-image',
+        prompt: prompt.slice(0, 1500),
+        n: 1,
+        size: resolvedSize,
+        response_format: 'b64_json',
+      })
+
+      // Try .ai domain first, fallback to .cloud
+      let response = await fetch('https://api.bluesminds.ai/v1/images/generations', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${apiKey}`,
         },
-        body: JSON.stringify({
-          model: 'grok-image',
-          prompt: prompt.slice(0, 1500),
-          n: 1,
-          size: resolvedSize,
-          response_format: 'b64_json',
-        }),
-        signal: AbortSignal.timeout(90000),
+        body,
+        signal: AbortSignal.timeout(60000),
       })
+
+      if (!response.ok && response.status >= 500) {
+        response = await fetch('https://api.blueminds.cloud/v1/images/generations', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body,
+          signal: AbortSignal.timeout(60000),
+        })
+      }
 
       if (!response.ok) {
         const errData = await response.json().catch(() => null)

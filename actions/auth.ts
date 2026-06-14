@@ -4,7 +4,8 @@ import { z } from 'zod'
 import { redirect } from 'next/navigation'
 import { createSession, deleteSession } from '@/lib/session'
 import { db } from '@/lib/db'
-import { rateLimit } from '@/lib/rate-limit'
+import { rateLimit, checkAuthBackoff, recordAuthFailure, resetAuthBackoff } from '@/lib/rate-limit'
+import { auditLog } from '@/lib/audit'
 import bcrypt from 'bcryptjs'
 import { randomBytes } from 'crypto'
 import { signInWithPassword, signUpWithPassword } from '@/lib/supabase-auth'
@@ -36,16 +37,17 @@ export async function signup(state: AuthState, formData: FormData): Promise<Auth
   if (!result.success) return { errors: result.error.flatten().fieldErrors }
 
   const { name, email, password } = result.data
+  const emailLower = email.toLowerCase()
 
-  const rl = rateLimit(`signup:${email.toLowerCase()}`, 3, 60 * 60 * 1000)
+  const rl = rateLimit(`signup:${emailLower}`, 3, 60 * 60 * 1000)
   if (!rl.allowed) return { message: 'Trop de tentatives. Réessayez plus tard.' }
 
   try {
-    const { rows: existing } = await db.query(`SELECT id FROM "User" WHERE email = $1`, [email.toLowerCase()])
+    const { rows: existing } = await db.query(`SELECT id FROM "User" WHERE email = $1`, [emailLower])
     if (existing[0]) return { errors: { email: ['Cet email est déjà utilisé'] } }
 
     // Create in Supabase Auth (non-blocking — ignore error if Supabase not configured)
-    await signUpWithPassword(email.toLowerCase(), password, name).catch(() => null)
+    await signUpWithPassword(emailLower, password, name).catch(() => null)
 
     const id = randomBytes(12).toString('hex')
     const hash = await bcrypt.hash(password, 12)
@@ -53,9 +55,10 @@ export async function signup(state: AuthState, formData: FormData): Promise<Auth
     await db.query(
       `INSERT INTO "User" (id, name, email, password, onboarded, "preferredModel", plan, "messagesUsed", "messagesResetAt", "createdAt")
        VALUES ($1, $2, $3, $4, false, 'ntrl-1.3', 'free', 0, $5, now())`,
-      [id, name, email.toLowerCase(), hash, new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1)]
+      [id, name, emailLower, hash, new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1)]
     )
 
+    await auditLog({ userId: id, action: 'auth.signup', metadata: { email: emailLower } })
     await createSession(id)
   } catch (e: unknown) {
     if ((e as { digest?: string })?.digest?.includes('NEXT_REDIRECT')) throw e
@@ -73,27 +76,49 @@ export async function login(state: AuthState, formData: FormData): Promise<AuthS
   if (!result.success) return { errors: result.error.flatten().fieldErrors }
 
   const { email, password } = result.data
+  const emailLower = email.toLowerCase()
 
-  const rl = rateLimit(`login:${email.toLowerCase()}`, 5, 15 * 60 * 1000)
+  // Check exponential backoff before rate limit
+  const backoff = checkAuthBackoff(`login:${emailLower}`)
+  if (!backoff.allowed) {
+    await auditLog({ action: 'auth.backoff.triggered', metadata: { email: emailLower, retryAfterMs: backoff.retryAfterMs } })
+    return { message: `Trop de tentatives. Réessayez dans ${Math.ceil(backoff.retryAfterMs / 1000)} secondes.` }
+  }
+
+  const rl = rateLimit(`login:${emailLower}`, 5, 15 * 60 * 1000)
   if (!rl.allowed) return { message: 'Trop de tentatives. Réessayez dans 15 minutes.' }
 
   try {
-    const { rows } = await db.query(`SELECT id, password, onboarded FROM "User" WHERE email = $1`, [email.toLowerCase()])
-    if (!rows[0]) return { errors: { email: ['Email ou mot de passe incorrect'] } }
+    const { rows } = await db.query(`SELECT id, password, onboarded FROM "User" WHERE email = $1`, [emailLower])
+    if (!rows[0]) {
+      recordAuthFailure(`login:${emailLower}`)
+      await auditLog({ action: 'auth.login.failure', metadata: { email: emailLower, reason: 'not_found' } })
+      return { errors: { email: ['Email ou mot de passe incorrect'] } }
+    }
 
     const user = rows[0]
 
     if (!user.password) {
       // First login after migration — try Supabase then set local password
-      const { error } = await signInWithPassword(email.toLowerCase(), password)
-      if (error) return { errors: { email: ['Email ou mot de passe incorrect'] } }
+      const { error } = await signInWithPassword(emailLower, password)
+      if (error) {
+        recordAuthFailure(`login:${emailLower}`)
+        await auditLog({ userId: user.id, action: 'auth.login.failure', metadata: { reason: 'supabase_mismatch' } })
+        return { errors: { email: ['Email ou mot de passe incorrect'] } }
+      }
       const hash = await bcrypt.hash(password, 12)
       await db.query(`UPDATE "User" SET password = $1 WHERE id = $2`, [hash, user.id])
     } else {
       const valid = await bcrypt.compare(password, user.password)
-      if (!valid) return { errors: { email: ['Email ou mot de passe incorrect'] } }
+      if (!valid) {
+        recordAuthFailure(`login:${emailLower}`)
+        await auditLog({ userId: user.id, action: 'auth.login.failure', metadata: { reason: 'wrong_password' } })
+        return { errors: { email: ['Email ou mot de passe incorrect'] } }
+      }
     }
 
+    resetAuthBackoff(`login:${emailLower}`)
+    await auditLog({ userId: user.id, action: 'auth.login.success' })
     await createSession(user.id)
   } catch (e: unknown) {
     if ((e as { digest?: string })?.digest?.includes('NEXT_REDIRECT')) throw e
@@ -104,6 +129,13 @@ export async function login(state: AuthState, formData: FormData): Promise<AuthS
 }
 
 export async function logout() {
+  try {
+    const { getSession } = await import('@/lib/session')
+    const session = await getSession()
+    if (session?.userId) {
+      await auditLog({ userId: session.userId, action: 'auth.logout' })
+    }
+  } catch {}
   await deleteSession()
   redirect('/login')
 }

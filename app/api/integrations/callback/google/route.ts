@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { randomBytes } from 'crypto'
+import { encryptToken } from '@/lib/encryption'
 
 function cuid() {
   return 'intg_' + randomBytes(12).toString('hex')
@@ -155,6 +156,10 @@ export async function GET(req: NextRequest) {
     )
   }
 
+  // Encrypt tokens before storing in DB
+  const encryptedAccessToken = encryptToken(tokens.access_token)
+  const encryptedRefreshToken = tokens.refresh_token ? encryptToken(tokens.refresh_token) : null
+
   // Save tokens for each service
   let savedCount = 0
   for (const service of state.services) {
@@ -173,8 +178,8 @@ export async function GET(req: NextRequest) {
           cuid(),
           state.userId,
           service,
-          tokens.access_token,
-          tokens.refresh_token ?? null,
+          encryptedAccessToken,
+          encryptedRefreshToken,
           expiresAt,
           tokens.scope,
         ]

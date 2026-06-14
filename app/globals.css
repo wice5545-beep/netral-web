@@ -1284,3 +1284,54 @@ img.loaded { opacity: 1; }
   filter: blur(2px);
   opacity: 0.4;
 }
+
+/* ════════════════════════════════════════════════════════════════
+   ASSISTANT RESPONSE CARD POLISH
+   ════════════════════════════════════════════════════════════════ */
+
+.assistant-message-card .prose-chat {
+  position: relative;
+  border: 1px solid color-mix(in srgb, var(--border) 86%, transparent);
+  border-radius: 1.5rem;
+  padding: 1rem 1.125rem;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--bg-elevated) 94%, transparent), color-mix(in srgb, var(--bg-soft) 88%, transparent));
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.45) inset,
+    0 20px 60px -42px rgba(15, 23, 42, 0.32);
+  transition:
+    border-color var(--duration-normal) var(--ease-out),
+    box-shadow var(--duration-normal) var(--ease-out),
+    transform var(--duration-normal) var(--ease-out);
+}
+
+.dark .assistant-message-card .prose-chat {
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 24px 70px -42px rgba(0, 0, 0, 0.7);
+}
+
+.assistant-message-card .prose-chat::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.08), rgba(249, 115, 22, 0.04), transparent 56%);
+  opacity: 0.55;
+}
+
+.assistant-message-card:hover .prose-chat {
+  border-color: color-mix(in srgb, var(--border-strong) 80%, rgba(124, 58, 237, 0.28));
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.5) inset,
+    0 26px 78px -46px rgba(124, 58, 237, 0.38);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 640px) {
+  .assistant-message-card .prose-chat {
+    border-radius: 1.125rem;
+    padding: 0.875rem 0.95rem;
+  }
+}

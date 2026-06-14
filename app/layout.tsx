@@ -43,6 +43,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="h-full bg-[var(--bg)] text-[var(--fg)] antialiased">
+        {/* Accessibility: Skip link for keyboard users */}
+        <a href="#main-content" className="skip-link">
+          Aller au contenu principal
+        </a>
         <ThemeProvider><I18nProvider>{children}</I18nProvider></ThemeProvider>
       </body>
     </html>

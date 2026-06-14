@@ -10,6 +10,7 @@ export type ModelConfig = {
   envKey: string
   contextLength: number
   multimodal?: boolean
+  supportsTools?: boolean
   defaultParams?: { temperature?: number; max_tokens?: number; top_p?: number }
 }
 
@@ -23,6 +24,7 @@ export const MODELS: Record<ModelId, ModelConfig> = {
     apiUrl: 'https://api.mistral.ai/v1/chat/completions',
     envKey: 'MISTRAL_API_KEY',
     contextLength: 32000,
+    supportsTools: true,
   },
   'ntrl-1.2': {
     id: 'ntrl-1.2',
@@ -34,16 +36,18 @@ export const MODELS: Record<ModelId, ModelConfig> = {
     envKey: 'GEMINI_API_KEY',
     contextLength: 1000000,
     multimodal: true,
+    supportsTools: true,
   },
   'ntrl-2.0': {
     id: 'ntrl-2.0',
     displayName: 'NTRL 2.0',
-    description: 'Raisonnement avancé, contexte étendu, agent autonome. Propulsé par Grok.',
+    description: 'IA ultra-rapide, réponses instantanées. Propulsé par GPT-5 Nano.',
     provider: 'bluesminds',
-    upstreamModel: 'grok-4.20-0309-non-reasoning',
+    upstreamModel: 'gpt-5-nano',
     apiUrl: 'https://api.bluesminds.ai/v1/chat/completions',
     envKey: 'BLUESMINDS_API_KEY',
     contextLength: 131072,
+    supportsTools: false,
     defaultParams: { temperature: 0.7, max_tokens: 4096, top_p: 0.95 },
   },
 }

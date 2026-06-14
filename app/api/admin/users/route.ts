@@ -1,6 +1,17 @@
 import { NextRequest } from 'next/server'
+import { z } from 'zod'
 import { getSession } from '@/lib/session'
 import { db } from '@/lib/db'
+
+const UserIdSchema = z.string().uuid()
+const UpdateUserSchema = z.object({
+  userId: UserIdSchema,
+  plan: z.enum(['free', 'pro', 'business', 'enterprise']).optional(),
+  role: z.enum(['user', 'admin', 'ceo', 'banned']).optional(),
+  banned: z.boolean().optional(),
+  messagesUsed: z.number().int().min(0).max(1_000_000).optional(),
+}).strict()
+const DeleteUserSchema = z.object({ userId: UserIdSchema }).strict()
 
 async function requireAdmin(req: NextRequest) {
   const session = await getSession()
@@ -26,8 +37,13 @@ export async function PUT(req: NextRequest) {
   const admin = await requireAdmin(req)
   if (!admin) return Response.json({ error: 'Forbidden' }, { status: 403 })
 
-  const { userId, plan, role, banned, messagesUsed } = await req.json().catch(() => ({}))
-  if (!userId) return Response.json({ error: 'userId required' }, { status: 400 })
+  const parsed = UpdateUserSchema.safeParse(await req.json().catch(() => ({})))
+  if (!parsed.success) return Response.json({ error: 'Invalid payload' }, { status: 400 })
+  const { userId, plan, role, banned, messagesUsed } = parsed.data
+
+  if (userId === admin && (banned === true || role === 'banned')) {
+    return Response.json({ error: 'Cannot ban yourself' }, { status: 400 })
+  }
 
   const updates: string[] = []
   const values: any[] = []
@@ -55,8 +71,13 @@ export async function DELETE(req: NextRequest) {
   const admin = await requireAdmin(req)
   if (!admin) return Response.json({ error: 'Forbidden' }, { status: 403 })
 
-  const { userId } = await req.json().catch(() => ({}))
-  if (!userId) return Response.json({ error: 'userId required' }, { status: 400 })
+  const parsed = DeleteUserSchema.safeParse(await req.json().catch(() => ({})))
+  if (!parsed.success) return Response.json({ error: 'Invalid payload' }, { status: 400 })
+  const { userId } = parsed.data
+
+  if (userId === admin) {
+    return Response.json({ error: 'Cannot delete yourself' }, { status: 400 })
+  }
 
   await db.query(`DELETE FROM "User" WHERE id = $1`, [userId])
   return Response.json({ ok: true })

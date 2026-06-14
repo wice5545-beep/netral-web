@@ -5,7 +5,19 @@ import { db } from '@/lib/db'
 import { randomBytes } from 'crypto'
 import { rateLimit } from '@/lib/rate-limit'
 
-const API_TOKEN_SECRET = new TextEncoder().encode(process.env.API_TOKEN_SECRET || process.env.SESSION_SECRET || 'fallback')
+// CRITICAL: API_TOKEN_SECRET must be set in production (falls back to SESSION_SECRET)
+const API_TOKEN_SECRET = new TextEncoder().encode(
+  process.env.API_TOKEN_SECRET || process.env.SESSION_SECRET || (() => {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('FATAL: API_TOKEN_SECRET or SESSION_SECRET is required in production')
+    }
+    console.warn('⚠️ No API_TOKEN_SECRET — using insecure dev key')
+    return 'dev-only-insecure-api-key-do-not-use-in-prod'
+  })()
+)
+
+// Token expiration: 30 days (reduced from 365d for security)
+const API_TOKEN_EXPIRY = '30d'
 
 // Ensure the table exists (idempotent)
 async function ensureTable() {
@@ -83,7 +95,7 @@ export async function PUT(req: NextRequest) {
   const jwt = await new SignJWT({ userId: session.userId, tokenId, type: 'api' })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
-    .setExpirationTime('365d')
+    .setExpirationTime(API_TOKEN_EXPIRY)
     .sign(API_TOKEN_SECRET)
 
   const token = `ntrl_${jwt}`

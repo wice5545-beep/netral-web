@@ -108,7 +108,7 @@ export const Message = memo(function Message({
             </motion.div>
           ) : (
             <div className="relative">
-              <div className="rounded-2xl rounded-br-md px-4 py-2.5 bg-[var(--accent)] text-[var(--bg)] text-[14.5px] leading-[1.55] whitespace-pre-wrap break-words shadow-colored">
+              <div className="rounded-[22px] rounded-br-md px-4 py-2.5 bg-[var(--accent)] text-[var(--bg)] text-[14.5px] leading-[1.55] whitespace-pre-wrap break-words shadow-colored border border-white/10">
                 {content}
               </div>
               {onEdit && (
@@ -153,7 +153,7 @@ export const Message = memo(function Message({
   const hasImages = segments.some(s => s.type === 'image')
 
   return (
-    <div className="flex gap-3.5 mb-9 group">
+    <div className="flex gap-3.5 mb-9 group assistant-message-card">
       <div className="shrink-0 mt-1">
         <motion.div
           initial={{ scale: 0.7, opacity: 0 }}

@@ -1,8 +1,18 @@
 import { NextRequest } from 'next/server'
+import { z } from 'zod'
 import { getSession } from '@/lib/session'
 import { db } from '@/lib/db'
 
-export async function GET(_req: NextRequest, ctx: RouteContext<'/api/conversations/[id]'>) {
+const UpdateConversationSchema = z.object({
+  title: z.string().trim().min(1).max(120).optional(),
+  pinned: z.boolean().optional(),
+}).strict()
+
+type ConversationRouteContext = {
+  params: Promise<{ id: string }>
+}
+
+export async function GET(_req: NextRequest, ctx: ConversationRouteContext) {
   const session = await getSession()
   if (!session?.userId) return Response.json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -21,7 +31,7 @@ export async function GET(_req: NextRequest, ctx: RouteContext<'/api/conversatio
   return Response.json({ conversation: { ...convRows[0], messages } })
 }
 
-export async function DELETE(_req: NextRequest, ctx: RouteContext<'/api/conversations/[id]'>) {
+export async function DELETE(_req: NextRequest, ctx: ConversationRouteContext) {
   const session = await getSession()
   if (!session?.userId) return Response.json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -34,13 +44,14 @@ export async function DELETE(_req: NextRequest, ctx: RouteContext<'/api/conversa
   return Response.json({ ok: true })
 }
 
-export async function PATCH(req: NextRequest, ctx: RouteContext<'/api/conversations/[id]'>) {
+export async function PATCH(req: NextRequest, ctx: ConversationRouteContext) {
   const session = await getSession()
   if (!session?.userId) return Response.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await ctx.params
-  const body = await req.json().catch(() => ({}))
-  const { title, pinned } = body as { title?: string; pinned?: boolean }
+  const parsed = UpdateConversationSchema.safeParse(await req.json().catch(() => ({})))
+  if (!parsed.success) return Response.json({ error: 'Invalid payload' }, { status: 400 })
+  const { title, pinned } = parsed.data
 
   const sets: string[] = []
   const vals: unknown[] = []

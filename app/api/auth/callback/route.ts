@@ -6,6 +6,7 @@ import { randomBytes } from 'crypto'
 export async function GET(req: NextRequest) {
   const { searchParams, origin } = req.nextUrl
   const code = searchParams.get('code')
+  const state = searchParams.get('state')
   const error = searchParams.get('error')
 
   if (error) {
@@ -13,6 +14,13 @@ export async function GET(req: NextRequest) {
   }
   if (!code) {
     return NextResponse.redirect(`${origin}/login?error=missing_code`)
+  }
+
+  // Verify state parameter to prevent CSRF attacks
+  const stateCookie = req.cookies.get('oauth_state')?.value
+  if (!state || state !== stateCookie) {
+    console.error('[OAUTH] State mismatch or missing — possible CSRF attack')
+    return NextResponse.redirect(`${origin}/login?error=invalid_state`)
   }
 
   const clientId = process.env.GOOGLE_CLIENT_ID
@@ -77,5 +85,10 @@ export async function GET(req: NextRequest) {
   }
 
   await createSession(userId)
-  return NextResponse.redirect(`${origin}${onboarded ? '/chat' : '/onboarding'}`)
+
+  // Clear the state cookie
+  const response = NextResponse.redirect(`${origin}${onboarded ? '/chat' : '/onboarding'}`)
+  response.cookies.delete('oauth_state')
+
+  return response
 }

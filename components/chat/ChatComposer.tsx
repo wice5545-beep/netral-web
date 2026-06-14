@@ -8,6 +8,20 @@ import { AutoAnimate } from '@/components/ui/AutoAnimate'
 import { ModelSelector } from './ModelSelector'
 import { cn } from '@/lib/utils'
 
+const MAX_ATTACHMENTS = 4
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024
+const MAX_FILE_BYTES = 2 * 1024 * 1024
+const ALLOWED_FILE_TYPES = new Set([
+  'text/plain',
+  'text/markdown',
+  'text/csv',
+  'application/json',
+  'application/xml',
+  'text/xml',
+  'text/html',
+  'application/pdf',
+])
+
 interface ChatComposerProps {
   value: string
   onChange: (v: string) => void
@@ -32,6 +46,7 @@ export function ChatComposer({
   const imageInputRef = useRef<HTMLInputElement>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [attachments, setAttachments] = useState<{ type: 'image' | 'file'; data: string; name: string }[]>([])
+  const [attachmentError, setAttachmentError] = useState<string | null>(null)
   const [isFocused, setIsFocused] = useState(false)
 
   useEffect(() => { if (autoFocus) textareaRef.current?.focus() }, [autoFocus])
@@ -71,13 +86,38 @@ export function ChatComposer({
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'file') => {
     const file = e.target.files?.[0]
+    e.target.value = ''
     if (!file) return
+
+    setAttachmentError(null)
+
+    if (attachments.length >= MAX_ATTACHMENTS) {
+      setAttachmentError(`Maximum ${MAX_ATTACHMENTS} pièces jointes par message.`)
+      return
+    }
+
+    const maxBytes = type === 'image' ? MAX_IMAGE_BYTES : MAX_FILE_BYTES
+    if (file.size > maxBytes) {
+      setAttachmentError(type === 'image' ? 'Image trop lourde : 5 Mo maximum.' : 'Fichier trop lourd : 2 Mo maximum.')
+      return
+    }
+
+    if (type === 'image' && !file.type.startsWith('image/')) {
+      setAttachmentError('Format image non valide.')
+      return
+    }
+
+    if (type === 'file' && file.type && !ALLOWED_FILE_TYPES.has(file.type)) {
+      setAttachmentError('Type de fichier non autorisé.')
+      return
+    }
+
     const reader = new FileReader()
     reader.onload = () => {
-      setAttachments(prev => [...prev, { type, data: reader.result as string, name: file.name }])
+      setAttachments(prev => [...prev, { type, data: reader.result as string, name: file.name.slice(0, 120) }])
     }
+    reader.onerror = () => setAttachmentError('Impossible de lire ce fichier.')
     reader.readAsDataURL(file)
-    e.target.value = ''
     setDrawerOpen(false)
   }
 
@@ -110,8 +150,16 @@ export function ChatComposer({
         )}
       </AnimatePresence>
 
+      <AnimatePresence>
+        {attachmentError && (
+          <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 6 }} className="mb-2.5 px-3 py-2 rounded-xl border border-red-500/20 bg-red-500/10 text-[12px] text-red-600 dark:text-red-300">
+            {attachmentError}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className={cn(
-        "relative rounded-2xl glass-card mega-input transition-all duration-300",
+        "relative rounded-[24px] border border-[var(--border)] bg-[linear-gradient(180deg,var(--bg-elevated),var(--bg-soft))] shadow-[0_18px_60px_rgba(0,0,0,0.08)] dark:shadow-[0_22px_70px_rgba(0,0,0,0.42)] transition-all duration-300 overflow-hidden before:absolute before:inset-x-5 before:top-0 before:h-px before:bg-[var(--gradient-primary)] before:opacity-60",
         isFocused ? "border-[var(--border-strong)] shadow-colored" : "hover:border-[var(--border-strong)]"
       )}>
         {replyContext && (
@@ -142,6 +190,8 @@ export function ChatComposer({
             <button
               type="button"
               onClick={() => setDrawerOpen(!drawerOpen)}
+              aria-label="Ajouter une pièce jointe ou un outil"
+              aria-expanded={drawerOpen}
               className={cn(
                 'h-8 w-8 rounded-lg flex items-center justify-center transition-all duration-200',
                 drawerOpen ? 'bg-[var(--accent)] text-[var(--bg)] rotate-45 scale-90' : 'text-[var(--fg-muted)] hover:bg-[var(--bg-soft)] hover:text-[var(--fg)]'

@@ -163,12 +163,12 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
                   <Link
                     href={`/chat/${c.id}`}
                     onClick={() => isMobile && setSidebarOpen(false)}
-                    className={cn(
-                      'group flex items-center gap-2.5 px-3 py-2 mx-1.5 rounded-lg text-[13px] transition-all duration-150 relative',
-                      isActive
-                        ? 'bg-[var(--bg)] text-[var(--fg)] shadow-[var(--shadow-xs)] border border-[var(--border)]'
-                        : 'text-[var(--fg-muted)] hover:bg-[var(--bg)] hover:text-[var(--fg)]'
-                    )}
+                      className={cn(
+                        'group flex items-center gap-2.5 px-3 py-2 mx-1.5 rounded-xl text-[13px] transition-all duration-150 relative border',
+                        isActive
+                          ? 'bg-[var(--bg-elevated)] text-[var(--fg)] shadow-[var(--shadow-sm)] border-[var(--border)]'
+                          : 'text-[var(--fg-muted)] border-transparent hover:bg-[var(--bg-elevated)] hover:text-[var(--fg)] hover:border-[var(--border)]'
+                      )}
                   >
                     {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-r-full" style={{ background: 'linear-gradient(180deg, #7c3aed, #f97316)' }} />}
                     <span className="flex-1 truncate">{c.title}</span>
@@ -247,7 +247,7 @@ export function Sidebar({ user, onOpenSettings }: SidebarProps) {
         transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
         className={cn(
           'fixed md:relative top-0 left-0 z-50 h-screen flex flex-col shrink-0 overflow-hidden',
-          'border-r border-[var(--border)] bg-[var(--sidebar-bg)]'
+          'border-r border-[var(--border)] bg-[linear-gradient(180deg,var(--sidebar-bg),var(--bg-soft))] shadow-[12px_0_60px_rgba(0,0,0,0.04)] dark:shadow-[12px_0_70px_rgba(0,0,0,0.28)]'
         )}
       >
         {/* Header */}
