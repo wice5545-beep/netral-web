@@ -24,9 +24,19 @@ function isSafeHref(href: string | undefined): boolean {
   }
 }
 
+function extractText(node: React.ReactNode): string {
+  if (node === null || node === undefined || typeof node === 'boolean') return ''
+  if (typeof node === 'string' || typeof node === 'number') return String(node)
+  if (Array.isArray(node)) return node.map(extractText).join('')
+  if (typeof node === 'object' && 'props' in node) {
+    return extractText((node as { props?: { children?: React.ReactNode } }).props?.children)
+  }
+  return ''
+}
+
 function CodeBlock({ children, className }: { children?: React.ReactNode; className?: string }) {
   const [copied, setCopied] = useState(false)
-  const code = typeof children === 'string' ? children : String(children ?? '').replace(/\n$/, '')
+  const code = extractText(children).replace(/\n$/, '')
   const language = className?.replace('language-', '').replace('hljs', '').trim() || ''
   const lineCount = code.split('\n').length
 
@@ -70,7 +80,7 @@ function CodeBlock({ children, className }: { children?: React.ReactNode; classN
       </div>
       {/* Code */}
       <pre className="!m-0 !rounded-none !border-0 !bg-transparent px-4 py-3.5 overflow-x-auto text-[13px] leading-[1.7]">
-        <code className={className}>{children}</code>
+        <code className={className}>{code}</code>
       </pre>
     </div>
   )

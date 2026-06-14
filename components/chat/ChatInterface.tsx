@@ -42,6 +42,9 @@ function friendlyError(msg: string): string {
   if (cleaned.includes('timeout') || cleaned.includes('ETIMEDOUT') || cleaned.includes('ECONNREFUSED')) {
     return `🌐 Problème réseau — le serveur API est injoignable.`
   }
+  if (cleaned.includes('ne supporte pas les images') || cleaned.includes('does not support image') || cleaned.includes('model does not support image') || cleaned.includes('modèle multimodal') || cleaned.includes('GEMINI_API_KEY')) {
+    return `🖼️ ${cleaned}`
+  }
   if (cleaned.includes('Aucune clé API')) {
     return `⚙️ ${cleaned}`
   }

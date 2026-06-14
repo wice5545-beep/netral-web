@@ -40,6 +40,15 @@ function estimateTokens(text: string): number {
   return Math.ceil(text.length / 4)
 }
 
+function messageHasImage(content: unknown): boolean {
+  if (!Array.isArray(content)) return false
+  return content.some((part) => {
+    if (!part || typeof part !== 'object') return false
+    const record = part as Record<string, unknown>
+    return record.type === 'image_url' || record.type === 'input_image'
+  })
+}
+
 const ChatRequestSchema = z.object({
   messages: z.array(z.object({
     role: z.enum(['user', 'assistant', 'system']),
@@ -175,10 +184,34 @@ export async function POST(req: NextRequest) {
   let primaryKey = getApiKey(model.envKey)
   const fallbackKeys = getFallbackKeys(model.envKey)
   const allKeys = [primaryKey, ...fallbackKeys].filter(Boolean)
-
-  // Auto-fallback : si la clé API du modèle sélectionné est absente, basculer sur un modèle dispo
   let modelFallback = false
   let fallbackNote: string | undefined
+
+  const requestHasImage = messages.some((message) => messageHasImage(message.content))
+
+  if (requestHasImage && !model.multimodal) {
+    const originalDisplayName = model.displayName
+    const visionModel = MODELS['ntrl-1.2']
+    const visionKey = getApiKey(visionModel.envKey)
+    if (visionKey && isPaid) {
+      model = visionModel
+      primaryKey = visionKey
+      fallbackKeys.length = 0
+      const visionFallbackKeys = getFallbackKeys(visionModel.envKey)
+      fallbackKeys.push(...visionFallbackKeys)
+      allKeys.length = 0
+      allKeys.push(visionKey, ...visionFallbackKeys)
+      modelFallback = true
+      fallbackNote = `🖼️ ${originalDisplayName} ne supporte pas les images → analyse via ${visionModel.displayName}`
+    } else {
+      const message = isPaid
+        ? 'Ce modèle ne supporte pas les images et le modèle multimodal NTRL 1.2 n’est pas configuré.'
+        : 'Les images nécessitent le modèle multimodal NTRL 1.2 avec un abonnement payant.'
+      return new Response(message, { status: 400 })
+    }
+  }
+
+  // Auto-fallback : si la clé API du modèle sélectionné est absente, basculer sur un modèle dispo
   if (!allKeys.length) {
     // Sauvegarder le modèle original avant fallback
     const originalDisplayName = model.displayName
@@ -187,6 +220,7 @@ export async function POST(req: NextRequest) {
     for (const fbId of fallbackOrder) {
       if (fbId === model.id) continue
       const fbModel = MODELS[fbId]
+      if (requestHasImage && !fbModel.multimodal) continue
       const fbKey = getApiKey(fbModel.envKey)
       if (fbKey) {
         // Vérifier le paywall pour les modèles payants (NTRL 1.2 uniquement)
@@ -206,7 +240,10 @@ export async function POST(req: NextRequest) {
     }
     if (!found) {
       console.error(`[CHAT] Aucune clé API disponible pour le modèle ${model.id}`)
-      return new Response("Aucune clé API configurée. Vérifiez les variables d'environnement (NTRL_2_API_KEY, MISTRAL_API_KEY, GEMINI_API_KEY).", { status: 500 })
+      const errorMessage = requestHasImage
+        ? "Aucun modèle multimodal n'est configuré. Ajoutez GEMINI_API_KEY pour analyser les images avec NTRL 1.2."
+        : "Aucune clé API configurée. Vérifiez les variables d'environnement (NTRL_2_API_KEY, MISTRAL_API_KEY, GEMINI_API_KEY)."
+      return new Response(errorMessage, { status: 500 })
     }
   }
 
