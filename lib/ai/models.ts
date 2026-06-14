@@ -44,7 +44,7 @@ export const MODELS: Record<ModelId, ModelConfig> = {
     description: 'Raisonnement fluide et réponses structurées via un endpoint OpenAI-compatible.',
     provider: 'openai-compatible',
     upstreamModel: 'glm-5.1',
-    apiUrl: 'https://open.bigmodel.cn/api/paas/v4/chat/completions',
+    apiUrl: 'https://api.iamhc.cn/v1/chat/completions',
     envKey: 'NTRL_2_API_KEY',
     contextLength: 131072,
     supportsTools: false,
