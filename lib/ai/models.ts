@@ -4,7 +4,7 @@ export type ModelConfig = {
   id: ModelId
   displayName: string
   description: string
-  provider: 'mistral' | 'groq' | 'google' | 'nvidia' | 'cerebras' | 'bluesminds'
+  provider: 'mistral' | 'groq' | 'google' | 'nvidia' | 'cerebras' | 'bluesminds' | 'openai-compatible'
   upstreamModel: string
   apiUrl: string
   envKey: string
@@ -41,11 +41,11 @@ export const MODELS: Record<ModelId, ModelConfig> = {
   'ntrl-2.0': {
     id: 'ntrl-2.0',
     displayName: 'NTRL 2.0',
-    description: 'IA ultra-rapide, réponses instantanées. Propulsé par GPT-5 Nano.',
-    provider: 'bluesminds',
-    upstreamModel: 'gpt-5-nano',
-    apiUrl: 'https://api.bluesminds.ai/v1/chat/completions',
-    envKey: 'BLUESMINDS_API_KEY',
+    description: 'Raisonnement fluide et réponses structurées via un endpoint OpenAI-compatible.',
+    provider: 'openai-compatible',
+    upstreamModel: 'glm-5.1',
+    apiUrl: 'https://open.bigmodel.cn/api/paas/v4/chat/completions',
+    envKey: 'NTRL_2_API_KEY',
     contextLength: 131072,
     supportsTools: false,
     defaultParams: { temperature: 0.7, max_tokens: 4096, top_p: 0.95 },

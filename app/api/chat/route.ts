@@ -206,7 +206,7 @@ export async function POST(req: NextRequest) {
     }
     if (!found) {
       console.error(`[CHAT] Aucune clé API disponible pour le modèle ${model.id}`)
-      return new Response("Aucune clé API configurée. Vérifiez les variables d'environnement (MISTRAL_API_KEY, GEMINI_API_KEY, BLUESMINDS_API_KEY).", { status: 500 })
+      return new Response("Aucune clé API configurée. Vérifiez les variables d'environnement (NTRL_2_API_KEY, MISTRAL_API_KEY, GEMINI_API_KEY).", { status: 500 })
     }
   }
 

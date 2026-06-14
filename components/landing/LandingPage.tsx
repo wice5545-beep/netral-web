@@ -169,6 +169,11 @@ export function LandingPage() {
   // Custom cursor
   const cursorX = useSpring(mouseX, { stiffness: 150, damping: 20 })
   const cursorY = useSpring(mouseY, { stiffness: 150, damping: 20 })
+  const cursorLeft = useTransform(cursorX, (value) => `${value * 100}%`)
+  const cursorTop = useTransform(cursorY, (value) => `${value * 100}%`)
+  const spotXPercent = useTransform(spotX, (value) => `${value * 100}%`)
+  const spotYPercent = useTransform(spotY, (value) => `${value * 100}%`)
+  const spotlightBackground = useMotionTemplate`radial-gradient(700px circle at ${spotXPercent} ${spotYPercent}, rgba(124,58,237,0.6), rgba(236,72,153,0.2), transparent 60%)`
   const [isHovering, setIsHovering] = useState(false)
   const [cursorVisible, setCursorVisible] = useState(false)
 
@@ -193,8 +198,8 @@ export function LandingPage() {
       <motion.div
         className="fixed pointer-events-none z-[9999] hidden md:block"
         style={{
-          left: useMotionTemplate`calc(${cursorX.get() * 100}% + 0px)`,
-          top: useMotionTemplate`calc(${cursorY.get() * 100}% + 0px)`,
+          left: cursorLeft,
+          top: cursorTop,
           x: '-50%',
           y: '-50%',
         }}
@@ -226,9 +231,12 @@ export function LandingPage() {
       {/* ═══════════════════ HERO ═══════════════════ */}
       <section
         ref={heroRef}
-        className="relative pt-32 md:pt-44 pb-24 overflow-hidden"
+        className="relative pt-32 md:pt-44 pb-24 overflow-hidden landing-hero-water"
       >
         <AuroraBackground intensity="strong" />
+        <div className="water-caustics" aria-hidden="true" />
+        <div className="water-ripple water-ripple--one" aria-hidden="true" />
+        <div className="water-ripple water-ripple--two" aria-hidden="true" />
 
         {/* ─── ANIMATED ORBS ─── */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -318,9 +326,7 @@ export function LandingPage() {
         {/* ─── SPOTLIGHT ─── */}
         <motion.div
           className="absolute inset-0 pointer-events-none opacity-[0.06] dark:opacity-[0.1]"
-          style={{
-            background: useMotionTemplate`radial-gradient(700px circle at ${spotX.get() * 100}% ${spotY.get() * 100}%, rgba(124,58,237,0.6), rgba(236,72,153,0.2), transparent 60%)`,
-          }}
+          style={{ background: spotlightBackground }}
         />
 
         {/* ─── GRID MESH PATTERN ─── */}
@@ -334,7 +340,7 @@ export function LandingPage() {
 
         <motion.div
           style={{ y: heroY, opacity: heroOpacity, scale: heroScale }}
-          className="max-w-4xl mx-auto px-6 text-center relative"
+          className="max-w-5xl mx-auto px-5 sm:px-6 text-center relative landing-hero-frame"
         >
           {/* Live badge */}
           <motion.div

@@ -3,12 +3,13 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronDown, Brain } from 'lucide-react'
+import { useI18n } from '@/lib/i18n'
 import { Markdown } from './Markdown'
 
 /**
  * Collapsible chain-of-thought block, ChatGPT/Claude o1-style.
  * When `isReasoning` is true (model still thinking), shows shimmer label + expanded by default.
- * When done, collapses to a single-line summary "Reflechi pendant Xs" with click-to-expand.
+ * When done, collapses to a discreet localized summary with click-to-expand.
  *
  * The reasoning content is parsed as markdown (italic-styled).
  *
@@ -23,23 +24,30 @@ export function ReasoningBlock({
   isReasoning?: boolean
   durationSec?: number
 }) {
+  const { t } = useI18n()
   const [open, setOpen] = useState(isReasoning)
   const trimmed = content.trim()
 
   if (!trimmed) return null
 
+  const tapLabel = t.chat?.reasoningTapToSee ?? 'Tap to see my mind'
+  const thinkingLabel = t.chat?.reasoningThinking ?? 'Je réfléchis…'
+  const durationLabel = t.chat?.reasoningDuration
+    ? t.chat.reasoningDuration.replace('{seconds}', String(durationSec ?? 0))
+    : `Pensée en ${durationSec ?? 0}s`
+
   const summary = isReasoning
-    ? 'Raisonnement en cours...'
-    : durationSec
-    ? `Reflechi pendant ${durationSec}s`
-    : 'Voir le raisonnement'
+    ? thinkingLabel
+    : durationSec !== undefined
+    ? `${tapLabel} · ${durationLabel}`
+    : tapLabel
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-      className="my-4 reasoning-block pl-3.5 pr-2 py-2"
+      className="my-4 reasoning-block reasoning-block--discreet pl-3.5 pr-2 py-2"
     >
       <button
         onClick={() => setOpen((v) => !v)}
